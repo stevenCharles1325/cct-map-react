@@ -1,0 +1,38 @@
+.nav-panel{
+    position: absolute;
+    top: 0%;
+    right: 0%;
+
+    width: 25vw;
+    height: 100vh;
+
+    background-color: #AB4E4E;
+}
+
+.np-img-container{
+    width: 64px;
+    height: 64px;
+
+    border-radius: 100%;
+
+    background-color: var(--components-color);
+}
+
+.np-name-container{
+    color: white;
+    padding-left: 20px;
+}
+
+.np-divider{
+    height: 4px !important;
+    background-color: rgba( 255, 255, 255, 0.7) !important;
+    opacity: 1;
+}
+
+.np-logout-btn{
+    background: none;
+    border: none;
+    outline: none;
+
+    color: var(--components-color);
+}

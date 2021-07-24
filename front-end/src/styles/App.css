@@ -1,0 +1,9 @@
+.App{
+  background-color: rgb(230, 230, 230) !important;
+
+  width: 100vw;
+  height: 100vh;
+  
+  margin: 0%;
+  padding: 0%;
+}

@@ -1,0 +1,28 @@
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+:root{
+   --components-color: rgba(255, 255, 255, 0.6);
+   --components-text-color: rgba(0, 0, 0, 0.95);
+   --card-color: rgba(255, 255, 255, 0.5);
+   --title-color: rgb( 255, 255, 255 );
+}
+
+::-webkit-scrollbar{
+  width: 8px;
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb{
+  background-color: rgba(0, 0, 0, 0.3);
+}

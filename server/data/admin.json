@@ -1,0 +1,10 @@
+{
+    "status": {
+        "exist": false,
+        "loggedIn": false
+    },
+    "username": null,
+    "password": null,
+    "email": null,
+    "number": null
+}

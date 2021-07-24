@@ -1,0 +1,26 @@
+.btn-link{
+    width: 21vw;
+    height: 50px !important;
+
+    border-top-left-radius: 50px;
+    border-bottom-left-radius: 50px;
+}
+
+.btn-link:hover {
+    background-color: rgba( 255, 255, 255, 0.3);   
+    color: var(--component-text-color);
+}
+
+.btn-link-active{
+    background-color: rgba( 255, 255, 255, 0.95);   
+    color: var(--component-text-color) !important;
+}
+
+a{
+    color: rgba(255, 255, 255, 0.6) !important;
+    text-decoration: none !important;
+}
+
+.btn-link-title-box{
+    width: 50%;
+}
