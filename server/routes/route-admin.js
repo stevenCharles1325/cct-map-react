@@ -4,6 +4,8 @@ var fs = require('fs');
 var path = require('path');
 
 const data_path = path.join(__dirname, '../data/admin.json');
+const graph_path = path.join(__dirname, '../data/records.json');
+
 
 /* GET home page. */
 router.get('/', async (req, res, next) => {
@@ -11,6 +13,35 @@ router.get('/', async (req, res, next) => {
   const admin_data = JSON.parse(fs.readFileSync( data_path ));
 
   return res.status(200).json( admin_data );  
+});
+
+router.get('/graph-data', async (req, res, next) => {
+
+  const graph_data = JSON.parse(fs.readFileSync( graph_path ));
+
+  return res.status(200).json( graph_data );  
+});
+
+router.put('/sign-in', async (req, res, next) => {
+  const { username, password } = req.body;
+  const admin_data = JSON.parse(fs.readFileSync( data_path ));
+  
+  if(  username === admin_data.username ){
+    if( password === admin_data.password ){
+      admin_data.status.loggedIn = true;
+      fs.writeFile( data_path, JSON.stringify(admin_data, null, 4), (err) => {
+        console.log( `Error: ${err}` );
+      });
+      return res.status( 200 ).json({ redirect_url: '/admin/dashboard' });
+    }
+    else{
+      return res.status( 401 ).json({ which: 'password' });
+    }
+  }
+  else{
+    return res.status( 401 ).json({ which: 'username' });
+  }
+
 });
 
 router.post('/sign-up', async(req, res, next) => {
@@ -26,12 +57,11 @@ router.post('/sign-up', async(req, res, next) => {
     number : number
   };
 
-  
   fs.writeFile( data_path, JSON.stringify(data, null, 4), (err) => {
     console.log( `Error: ${err}` );
   });
   
-  return res.status(201);
+  return res.status(201).json({ redirect_url: "/admin" });
 });
 
 router.put('/log-out', async(req, res, next) => {

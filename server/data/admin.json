@@ -1,10 +1,10 @@
 {
     "status": {
-        "exist": false,
-        "loggedIn": false
+        "exist": true,
+        "loggedIn": true
     },
-    "username": null,
-    "password": null,
-    "email": null,
-    "number": null
+    "username": "steven",
+    "password": "steven123123",
+    "email": "stevencharles1325@gmail.com",
+    "number": "09454610579"
 }

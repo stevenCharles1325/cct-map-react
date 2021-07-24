@@ -37,11 +37,9 @@ export default class AdminBrowser extends React.Component {
   render() {
     if( this.state.admin ){
       if( this.state.admin.loggedIn ){
-        console.log('here')
         return <Redirect to="/admin/dashboard"/>
       } 
       else if( !this.state.admin.loggedIn ){
-        console.log('here2')
 
         return (
             <div className="Admin">

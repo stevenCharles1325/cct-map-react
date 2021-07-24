@@ -9,7 +9,6 @@ export default class FormCard extends React.Component{
         this.props = props;
 
         this.title = this.props.title;
-        this.url = this.props.url;
         this.action = this.props.action;
 
         this.method = 'POST';

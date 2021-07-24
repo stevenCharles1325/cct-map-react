@@ -3,19 +3,29 @@
     top: 0%;
     right: 0%;
 
-    width: 25vw;
+    width: 30vw;
     height: 100vh;
+}
 
+#menu-btn{
+    transition: .2s ease-in-out;
+}
+
+.np-menu-bar{
+    background-color: transparent;
+}
+
+.np-content{
     background-color: #AB4E4E;
+    overflow: hidden;
 }
 
 .np-img-container{
-    width: 64px;
-    height: 64px;
-
     border-radius: 100%;
 
     background-color: var(--components-color);
+
+    transition: .3s ease-in-out;
 }
 
 .np-name-container{
