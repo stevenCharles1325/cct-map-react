@@ -23,7 +23,6 @@ class App extends React.Component {
   }
 
   setToLoggedIn( data ){
-    console.log( data );
     this.setState({
       admin:{
         status: {
@@ -37,7 +36,6 @@ class App extends React.Component {
       }
     });
 
-    console.log( this.state.admin );
     axios.put('http://localhost:7000/admin/log-status', { status: data.status.loggedIn })
     .then( res => {
       console.log( res.data.message );
@@ -45,8 +43,6 @@ class App extends React.Component {
     .catch( err => {
       console.log( err );
     });
-
-    
   }
 
   componentDidMount(){
@@ -76,7 +72,6 @@ class App extends React.Component {
       }
       else{
         // Redirect to dashboard
-        console.log(this.state.admin.status);
         view = <Redirect to="/dashboard" />;
       }
 
@@ -116,49 +111,6 @@ class App extends React.Component {
         </div>
       );
     }
-
-    // let view;
-    // if( this.state.admin ){
-    //   if( !this.state.admin.status.exist ){
-    //     view = <Redirect to="/sign-up" />;
-    //   }
-    //   else if( this.state.admin.status.exist && !this.state.admin.status.loggedIn ){
-    //     view = <Redirect to="/sign-in" />;
-    //   }
-    //   else if( this.state.admin.status.exist && this.state.admin.status.loggedIn ){
-    //     view = <Redirect to="/dashboard" />;
-    //   }   
-    // }
-    // else{
-    //   view = <Loading />
-    // }
-
-    // return (
-    //   <div className="admin">
-    //     { view }
-    //     <Switch>
-    //       <Route path="/sign-up" exact>
-    //         <Signup statusKey={this.setToLoggedIn} />;
-    //       </Route>
-
-    //       <Route path="/sign-in" exact>
-    //         <Signin admin={this.state.admin} statusKey={this.setToLoggedIn} />;
-    //       </Route>
-
-    //       <Route path="/dashboard" exact>
-    //         <Dashboard admin={this.state.admin} statusKey={this.setToLoggedIn}/>;
-    //       </Route>
-
-    //       <Route path="/settings" exact>
-    //         <Settings admin={this.state.admin} statusKey={this.setToLoggedIn}/>;
-    //       </Route>
-
-    //       <Route path="/map" exact>
-    //         <Map admin={this.state.admin} statusKey={this.setToLoggedIn}/>;
-    //       </Route>
-    //     </Switch>
-    //   </div>
-    // );
   }
 }
 

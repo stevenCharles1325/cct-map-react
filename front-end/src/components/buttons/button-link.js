@@ -20,7 +20,7 @@ export default class ButtonLink extends React.Component{
 
     render() {
         return(
-            <Link to={this.url}  className={ this.setClassName( document.location.pathname === this.url ) }>                  
+            <Link to={this.url}  className={ this.setClassName( document.location.pathname === ('/admin' + this.url) ) }>                  
                 <div className="btn-link-icon-box">
                     {/* insert link icon here */}
                     { this.icon || null }

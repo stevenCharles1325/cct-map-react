@@ -1,6 +1,5 @@
 import React from 'react';
 import axios from 'axios';
-import { Redirect } from 'react-router-dom';
 
 import ButtonLink from '../buttons/button-link';
 
@@ -24,12 +23,14 @@ export default class NavPanel extends React.Component {
     createLinks(){
         const dirList = []
         for( let dir of this.dirs ){
-            let customDir = <ButtonLink
-                                key={'btn-link-'.concat(this.dirs.indexOf(dir).toString())}
-                                url={dir.url}
-                                icon={dir.icon}
-                                title={dir.title}    
-                            />
+            let customDir = (
+                <ButtonLink
+                    key={'btn-link-'.concat(this.dirs.indexOf(dir).toString())}
+                    url={dir.url}
+                    icon={dir.icon}
+                    title={dir.title}    
+                />
+            );
             dirList.push( customDir );
         }
         return dirList;
@@ -52,11 +53,7 @@ export default class NavPanel extends React.Component {
             isOpen: false
         });
     }
-
-    componentDidUpdate(){
-        console.log('updatesssss');
-    }
-
+    
     componentDidMount(){
         const menuBtn = document.querySelector('#menu-btn');
         menuBtn.addEventListener('click', () => this.state.isOpen ? this.close() : this.open());

@@ -50,9 +50,9 @@ export default class Dashboard extends React.Component{
                       <NavPanel 
                         dirs={
                             [
-                                {url: '/admin/dashboard', icon: null, title:'Dashboard'},
-                                {url: '/admin/map', icon: null, title:'Map'},
-                                {url: '/admin/settings', icon: null, title:'Settings'}
+                                {url: '/dashboard', icon: null, title:'Dashboard'},
+                                {url: '/map', icon: null, title:'Map'},
+                                {url: '/settings', icon: null, title:'Settings'}
                             ]
                         }
                         admin={this.admin}
