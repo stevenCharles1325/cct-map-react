@@ -14,53 +14,50 @@ export default class Dashboard extends React.Component{
     constructor( props ){
         super( props );
 
+        this.statusKey = props.statusKey;
+        this.admin = props.admin;
+        
         this.state = {
-            admin: null,
             graph_data: null
         };
 
-        this.admin_data_url = 'http://localhost:7000/admin';
         this.graph_data_url = 'http://localhost:7000/admin/graph-data';
 
     }
 
-    _changeState( res ) {
-        this.setState({ 
-            admin : res.data.status,
-            graph_data : this.state.graph_data
-        })
-    }
-
     componentDidMount() {
+        console.log('[Display dashboard]');
 
-        const changeState = this._changeState.bind( this );
-
-        axios.get(this.admin_data_url).then( changeState );
         axios.get(this.graph_data_url)
         .then( res => {
-            console.log(res.data)
             this.setState({
-                admin: this.state.admin,
                 graph_data:{
                     annRate: res.data.annRate,
                     currRate: res.data.currRate
                 }
             });
-        });
+        })
+        .catch( err => {
+            console.log( err )
+        })
     }
 
     render() {
-        if( this.state.admin ){
-            if( this.state.admin.loggedIn ){
+        if( this.admin ){
+            if( this.admin.status.loggedIn ){
               return (
                   <div className="dashboard">
-                      <NavPanel dirs={
-                          [
-                              {url: '/admin/dashboard', icon: null, title:'Dashboard'},
-                              {url: '/admin/map', icon: null, title:'Map'},
-                              {url: '/admin/settings', icon: null, title:'Settings'}
-                          ]
-                      }/>
+                      <NavPanel 
+                        dirs={
+                            [
+                                {url: '/admin/dashboard', icon: null, title:'Dashboard'},
+                                {url: '/admin/map', icon: null, title:'Map'},
+                                {url: '/admin/settings', icon: null, title:'Settings'}
+                            ]
+                        }
+                        admin={this.admin}
+                        statusKey={this.statusKey}
+                      />
 
                       {/* Dashboard Header */}
                       <div className="dash-header d-flex flex-row">
@@ -242,7 +239,7 @@ export default class Dashboard extends React.Component{
                   </div>
               );
             } 
-            else if( !this.state.admin.loggedIn ){
+            else if( !this.admin.status.loggedIn ){
               return (
                   <div className="dashboard">
                     <Redirect to="/admin" />         

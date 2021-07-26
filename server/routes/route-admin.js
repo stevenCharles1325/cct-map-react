@@ -22,6 +22,21 @@ router.get('/graph-data', async (req, res, next) => {
   return res.status(200).json( graph_data );  
 });
 
+router.put('/log-status', async(req, res, next) => {
+  const admin_data = JSON.parse( fs.readFileSync(data_path) );
+
+  admin_data.status.loggedIn = req.body.status; 
+
+  try{
+    fs.writeFileSync( data_path, JSON.stringify(admin_data, null, 4));
+  }
+  catch( err ){
+    console.log( err );
+  }
+
+  return res.status(200).json({message: 'online'});
+})
+
 router.put('/sign-in', async (req, res, next) => {
   const { username, password } = req.body;
   const admin_data = JSON.parse(fs.readFileSync( data_path ));
@@ -32,7 +47,7 @@ router.put('/sign-in', async (req, res, next) => {
       fs.writeFile( data_path, JSON.stringify(admin_data, null, 4), (err) => {
         console.log( `Error: ${err}` );
       });
-      return res.status( 200 ).json({ redirect_url: '/admin/dashboard' });
+      return res.status( 200 ).json({ message: 'signed-in' });
     }
     else{
       return res.status( 401 ).json({ which: 'password' });
@@ -61,20 +76,8 @@ router.post('/sign-up', async(req, res, next) => {
     console.log( `Error: ${err}` );
   });
   
-  return res.status(201).json({ redirect_url: "/admin" });
+  return res.status(201).json({ message: "signed-up" });
 });
 
-router.put('/log-out', async(req, res, next) => {
-  const admin_data = JSON.parse(fs.readFileSync( data_path ));
-  const { loggedIn } = req.body;
-
-  admin_data.status.loggedIn = loggedIn;
-
-  fs.writeFile( data_path, JSON.stringify(admin_data, null, 4), (err) => {
-    console.log( `Error: ${err}` );
-  });
-  
-  return res.status(200).json({ message: "Logging out" });
-});
 
 module.exports = router;

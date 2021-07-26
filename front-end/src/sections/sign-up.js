@@ -14,49 +14,26 @@ export default class Signup extends React.Component{
         this.url = 'http://localhost:7000/admin/sign-up';
 
         this.state = {
-            username: { isReady: false, value: null },
-            password: { isReady: false, value: null },
-            email: { isReady: false, value: null },
-            number: { isReady: false, value: null }
+            username: null,
+            password: null,
+            email: null,
+            number: null
         }
+
+        this.isReady = false;
 
         this.size = {
             width: '90%'
         }
 
-        this.updateState = this.updateState.bind( this );
+        this.statusKey = props.statusKey;
+
         this.submit = this.submit.bind( this );
-
-        this.nameListener = this.nameListener.bind( this );
-        this.passListener = this.passListener.bind( this );
-        this.cPassListener = this.cPassListener.bind( this );
-        this.emailListener = this.emailListener.bind( this );
-        this.cNumberListener = this.cNumberListener.bind( this );
-
-        this.monitor = null;
 
     }
 
     displayMessage( msg, id ){
         const DECAY_TIME = 2000;
-
-        switch( id ){
-            case 'name':
-                this.state.username.isReady = false;
-                break;
-            case 'password':
-                this.state.password.isReady = false;
-                break;
-            case 'email':
-                this.state.email.isReady = false;
-                break;
-            case 'cnumber':
-                this.state.number.isReady = false;
-                break;
-            default:
-                console.log('Something is not right!');
-                break;
-        }
 
         const cover = document.querySelector(`#${id.concat('-msg-box')}`);
         const message = document.querySelector(`#${id.concat('-msg')}`);
@@ -73,8 +50,8 @@ export default class Signup extends React.Component{
 
     }
 
-    nameListener( name ) {
-        const id = 'name';
+    nameEval( name, isVerbose = false) {
+        console.log(isVerbose)
         const isValidName = ( name ) => {
             let valids = /\w/g
             let filtered = name.replaceAll(valids, '');
@@ -83,85 +60,58 @@ export default class Signup extends React.Component{
         }
 
         if( !name.length ){
-            const msg = `Hey! You left me empty!`;
-            this.displayMessage(msg, id);
-
+            return isVerbose ? {msg: `Hey! You left me empty!`, result: false} : false;   
         }
         else if( !isValidName( name ) ){
-            const msg = `Oops! Invalid username.`;
-            this.displayMessage(msg, id);
-
+            return isVerbose ? {msg: `Oops! Invalid username.`, result: false} : false;   
         }
         else if( name.length > 0 && name.length <= 2 ){
-            const msg = `It must be greater-than 2.`;
-            this.displayMessage(msg, id);
-
+            return isVerbose ? {msg:`It must be greater-than 2.`, result: false} : false;   
         }
         else{
-            console.log('username ready');
-            this.state.username.isReady = true;
-            this.state.username.value = name.value;
+            return isVerbose ? {msg:`Username is ready!`, result: true} : true;   
         }
     }
 
-    passListener( pass ) {
-        const id = 'password';
+    passEval( pass, isVerbose = false) {
 
         if( !pass.length ){
-            const msg = `Hey! You left me empty!`;
-            this.displayMessage(msg, id);
-
+            return isVerbose ? {msg: `Hey! You left me empty!`, result: false} : false;   
         }
         else if( pass.length > 1 && pass.length < 7 ){
-            const msg = `It must be greater-than 7.`;
-            this.displayMessage(msg, id);
-
+            return isVerbose ? {msg: `It must be greater-than 7.`, result: false} : false;   
         }
         else{
-            console.log('password ready');
-            this.state.password.isReady = true;
-            this.state.password.value = pass.value;
-
+            return isVerbose ? {msg: `Password is ready!`, result: true} : true;   
         }
     }
 
-    cPassListener( cpass ) {
-        const id = 'conf-pass';
+    cPassEval( cpass, isVerbose = false ) {
 
         if( !cpass.length ){
-            const msg = `Hey! You left me empty!`;
-            this.displayMessage(msg, id);
-
+            return isVerbose ? {msg: `Hey! You left me empty!`, result: false} : false;
         }
         else if( cpass.length > 1 && cpass.length < 7 ){
-            const msg = `It must be greater-than 7.`;
-            this.displayMessage(msg, id);
-
+            return isVerbose ? {msg: `It must be greater-than 7.`, result: false} : false;
         }
-        else if( cpass !== this.state.password.value ){
-            const msg = `Didn\'t match!`;
-            this.displayMessage(msg, id);
-
-        }
-        
-    }
-
-    emailListener( email ) {
-        const id = 'email';
-
-        if( !email.length ){
-            const msg = `Hey! You left me empty!`;
-            this.displayMessage(msg, id);
+        else if( cpass !== this.state.password ){
+            return isVerbose ? {msg: `Didn't match!`, result: false} : false;
         }
         else{
-            console.log('email ready');
-            this.state.email.isReady = true;
-            this.state.email.value = email.value;
+            return isVerbose ? {msg: `You nailed it!`, result: true} : true;   
         }
     }
 
-    cNumberListener( cnum ) {
-        const id = 'cnumber';
+    emailEval( email, isVerbose = false ) {
+        if( !email.length ){
+            return isVerbose ? {msg: `Hey! You left me empty!`, result: false} : false;
+        }
+        else{
+            return isVerbose ? {msg: `Email is ready!`, result: true} : true;   
+        }
+    }
+
+    cNumberEval( cnum, isVerbose = false ) {
 
         const isValidNumber = ( number ) => {
             const isLengthAccepted = number.length === 11 ? true : false;
@@ -171,81 +121,144 @@ export default class Signup extends React.Component{
         }
 
         if( !cnum.length ){
-            const msg = `Hey! You left me empty!`;
-            this.displayMessage(msg, id);
-
+            return isVerbose ? {msg: `Hey! You left me empty!`, result: false} : false;   
         }
         else if( !isValidNumber( cnum ) ){
-            const msg = `Oops! Invalid number`;
-            this.displayMessage(msg, id);
-        
+            return isVerbose ? {msg: `Oops! Invalid number`, result: false} : false;   
         }
         else{
-            console.log('number ready');
-            this.state.number.isReady = true;
-            this.state.number.value = cnum.value;
+            return isVerbose ? {msg: `Number is ready!`, result: true} : true;   
         }
     }
 
-    updateState( name, pass, email, cnum ) {
-        this.state.username.value = name.value;
-        this.state.password.value = pass.value;
-        this.state.email.value = email.value;
-        this.state.number.value = cnum.value;
+    evaluationWithMessage( id, value ){
+        let evaluation = null;
+        switch( id ){
+            case 'name':
+                evaluation = this.nameEval( value, true );
+                console.log(evaluation);
+                if( !evaluation.result ){
+                    this.displayMessage( evaluation.msg, id );
+                }
+                else{
+                    console.log( evaluation.msg );
+                }
+                break;
+            case 'password':
+                evaluation = this.passEval( value, true );
+                if( !evaluation.result ){
+                    this.displayMessage( evaluation.msg, id );
+                }
+                else{
+                    console.log( evaluation.msg );
+                }
+                break;
+            case 'conf-pass':
+                evaluation = this.cPassEval( value, true );
+                if( !evaluation.result ){
+                    this.displayMessage( evaluation.msg, id );
+                }
+                else{
+                    console.log( evaluation.msg );
+                }
+                break;
+            case 'email':
+                evaluation = this.emailEval( value, true );
+                if( !evaluation.result ){
+                    this.displayMessage( evaluation.msg, id );
+                }
+                else{
+                    console.log( evaluation.msg );
+                }
+                break;
+            case 'cnumber':
+                evaluation = this.cNumberEval( value, true );
+                if( !evaluation.result ){
+                    this.displayMessage( evaluation.msg, id );
+                }
+                else{
+                    console.log( evaluation.msg );
+                }
+                break;
+            default:
+                return;
+        }
     }
 
-    submit() {
-        const new_data = {
-            username: this.state.username.value,
-            password: this.state.password.value,
-            email: this.state.email.value,
-            number: this.state.number.value,
-        }
-            
-        axios.post(this.url, new_data)
-        .then( (res) => {
-            if( res.status === 201 ){
-                window.location.href = res.data.redirect_url;
-            }
-        })
-        .catch( err => { 
-            console.log( err ) 
-            window.location.href = '/admin';
+    evaluationContainer( name, pass, email, cnum ){
+        const result = (this.nameEval( name.value ) &&
+                         this.passEval( pass.value ) &&
+                          this.emailEval( email.value ) &&
+                           this.cNumberEval( cnum.value ));
+
+        this.isReady = result;
+        
+        this.setState({
+            username: name.value,
+            password: pass.value,
+            email: email.value,
+            number: cnum.value
         });
     }
 
+    submit(e) {
+        e.preventDefault();
+
+        if( this.isReady ){
+            const new_data = {
+                username: this.state.username,
+                password: this.state.password,
+                email: this.state.email,
+                number: this.state.number,
+            }
+                
+            axios.post(this.url, new_data)
+            .then( (res) => {
+                if( res.status === 201 ){
+                    this.statusKey( {
+                        status: {
+                            exist: true,
+                            loggedIn: true
+                        },
+                        username: new_data.username,
+                        password: new_data.password,
+                        email: new_data.email,
+                        number: new_data.number
+                    });
+                }
+            })
+            .catch( err => { 
+                console.log( err );
+            });
+        }
+        console.log('came here');
+
+        
+    }
+
     componentDidMount(){
+        console.log('sign-up');
+
         const name = document.querySelector('#name');
         const pass = document.querySelector('#password');   
-        const cpass = document.querySelector('#conf-pass')
+        const cpass = document.querySelector('#conf-pass');
         const email = document.querySelector('#email');   
         const cnum = document.querySelector('#cnumber');  
         
         const checkReady = function(){
-            this.updateState(name, pass, email, cnum);
+            this.evaluationContainer(name, pass, email, cnum);
         }.bind( this );
 
-        for( let field of [name, pass, email, cnum]){
-            field.addEventListener('input', checkReady);
-            field.addEventListener('paste', checkReady);
-            field.addEventListener('change', checkReady);
+        for( let field of [name, pass, cpass, email, cnum]){
+            if( field.id !== 'conf-pass' ){
+                field.addEventListener('input', checkReady);
+                field.addEventListener('paste', checkReady);
+                field.addEventListener('change', checkReady);
+            }
+            
+            field.addEventListener('focusout', () => { this.evaluationWithMessage( field.id, field.value ); });
         }
 
-        name.addEventListener('focusout', () => { this.nameListener( name.value ) });
-        pass.addEventListener('focusout', () => { this.passListener( pass.value ) });
-        cpass.addEventListener('focusout', () => { this.cPassListener( cpass.value ) });
-        email.addEventListener('focusout', () => { this.emailListener( email.value ) });
-        cnum.addEventListener('focusout', () => { this.cNumberListener( cnum.value ) });
-
-        this.monitor = setInterval(() => {
-            const isReady = (
-                this.state.username.isReady &&
-                this.state.password.isReady &&
-                this.state.email.isReady &&
-                this.state.number.isReady
-            );
-            document.querySelector('#signup-submit').disabled = !isReady;
-        }, 500); 
     }
 
     render(){
@@ -262,7 +275,7 @@ export default class Signup extends React.Component{
                             <Input id="cnumber" type="text" name="cnumber" placeholder="Enter contact number" size={this.size}/>
                         </div>
 
-                        <Button disabled={true} id="signup-submit" name="Sign Up" type="Submit" onCLick={() => { clearInterval(this.monitor) }}/>
+                        <Button id="signup-submit" name="Sign Up" type="Submit" />
                     </FormCard>
                 </div>
                 <div className="sign-up-intro-box">

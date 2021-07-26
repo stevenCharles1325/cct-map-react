@@ -1,6 +1,6 @@
 import React from 'react';
 import axios from 'axios';
-import { Link, BrowserRouter as Router } from 'react-router-dom';
+import { Link, BrowserRouter as Router, Redirect } from 'react-router-dom';
 import '../styles/sign-in.css';
 
 import Input from '../components/inputs/input';
@@ -17,19 +17,14 @@ export default class Signin extends React.Component{
             width: '85%'
         };
 
+        this.admin = props.admin;
+        this.statusKey = props.statusKey;
         this.state = {
-            username : {
-                client: null,
-                server: null
-            },
-            password : {
-                client: null,
-                server: null
-            }
+            username: null,
+            password: null
         }
 
         this.submit = this.submit.bind( this );
-        this.updateStateServer = this.updateStateServer.bind( this);
     }
 
     displayMessage( msg, id ){
@@ -50,19 +45,21 @@ export default class Signin extends React.Component{
 
     }
 
-    async submit(e) {
+    submit(e) {
         e.preventDefault();
-        console.log(this.state);
-        if( this.state.username.client === this.state.username.server ){
-            if( this.state.password.client === this.state.password.server ){
+
+        if( this.admin.username === this.state.username ){
+            if( this.admin.password === this.state.password ){
                 
                 axios.put('http://localhost:7000/admin/sign-in', {
-                    username: this.state.username.client,
-                    password: this.state.password.client
+                    username: this.state.username,
+                    password: this.state.password
                 })
                 .then( res => {
-                    if( res.status === 200 && res.data.redirect_url ){
-                        window.location.href = res.data.redirect_url;
+                    if( res.status === 200 ){
+                        this.statusKey({
+                            status: {loggedIn: true}
+                        });
                     }
                 })
                 .catch( err => {
@@ -80,42 +77,18 @@ export default class Signin extends React.Component{
 
     updateState( name, pass ){
         this.setState({
-            username: {
-                client: name.value,
-                server: this.state.username.server
-            },
-            password:{
-                client: pass.value,
-                server: this.state.password.server
-            } 
-        });
-    }
-
-    updateStateServer( res ){
-        const name = document.querySelector('#name');
-        name.value = res.data.username;
-        this.setState({
-            username: {
-                client: this.state.username.client,
-                server: res.data.username
-            },
-            password: {
-                client: this.state.password.client,
-                server: res.data.password
-            }
+            username: name.value,
+            password: pass.value
         });
     }
 
     componentDidMount() {
+        console.log('sign-in');
         
         const name = document.querySelector('#name');
         const pass = document.querySelector('#password');
 
-        axios.get('http://localhost:7000/admin')
-        .then( this.updateStateServer )
-        .catch( err => {
-            console.log( err );
-        })
+        name.value = this.admin.username ? this.admin.username : "";
 
         name.addEventListener('input', () => { this.updateState(name, pass) });
         pass.addEventListener('input', () => { this.updateState(name, pass) });

@@ -1,9 +1,9 @@
 {
     "status": {
         "exist": true,
-        "loggedIn": true
+        "loggedIn": false
     },
-    "username": "steven",
+    "username": "papa_steven",
     "password": "steven123123",
     "email": "stevencharles1325@gmail.com",
     "number": "09454610579"

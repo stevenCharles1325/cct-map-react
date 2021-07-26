@@ -1,37 +1,164 @@
 import React from 'react';
-import { Route, Switch } from 'react-router-dom';
-import './styles/App.css';
-
-// Main routes:
-import AdminBrowser from './admin-gate';
-import UserBrowser from './user';
+import axios from 'axios';
+import { Redirect, Route, Switch } from 'react-router-dom';
+import './styles/admin.css';
 
 // Admin sub routes:
+import Loading from './components/load-bar/loading';
 import Dashboard from './sections/dashboard';
 import Settings from './sections/settings';
-
+import Map from './sections/map';
+import Signin from './sections/sign-in';
+import Signup from './sections/sign-up';
 
 class App extends React.Component {
+  constructor( props ){
+    super( props );
+
+    this.state = {
+      admin: null
+    };
+  
+    this.setToLoggedIn = this.setToLoggedIn.bind( this );
+  }
+
+  setToLoggedIn( data ){
+    console.log( data );
+    this.setState({
+      admin:{
+        status: {
+          exist: data.status.exist || this.state.admin.status.exist ,
+          loggedIn: data.status.loggedIn
+        },
+        username: data.username || this.state.admin.username,
+        password: data.password || this.state.admin.password,
+        email: data.email || this.state.admin.email,
+        number: data.number || this.state.admin.number
+      }
+    });
+
+    console.log( this.state.admin );
+    axios.put('http://localhost:7000/admin/log-status', { status: data.status.loggedIn })
+    .then( res => {
+      console.log( res.data.message );
+    })
+    .catch( err => {
+      console.log( err );
+    });
+
+    
+  }
+
+  componentDidMount(){
+    console.log('[Started the App]');
+    axios.get('http://localhost:7000/admin')
+    .then( res => {
+      this.setState({
+        admin: res.data
+      })
+    })
+    .catch( err => {
+      console.log(err)
+    })
+  }
 
   render() {
-    return(
-      <div className="App">
-        <Switch>
-          <Route path='/admin' exact>
-            <AdminBrowser />            
-          </Route>
-          <Route path='/admin/dashboard' exact>
-            <Dashboard />            
-          </Route>
-          <Route path='/admin/settings' exact>
-            <Settings />            
-          </Route>
-          <Route path='/' exact>
-            <UserBrowser />
-          </Route>
-        </Switch>
-      </div>
-    );
+    let view;
+
+    if( this.state.admin ){
+      if( !this.state.admin.status.exist ){
+        // Redirect to Sign up
+        view = <Redirect to="/sign-up" />;
+      }
+      else if( this.state.admin.status.exist && !this.state.admin.status.loggedIn ){
+        // Redirect to Sign in
+        view = <Redirect to="/sign-in" />;
+      }
+      else{
+        // Redirect to dashboard
+        console.log(this.state.admin.status);
+        view = <Redirect to="/dashboard" />;
+      }
+
+      return (
+        <div className="admin">
+          <Switch>
+            <Route path="/sign-up" exact>
+              <Signup statusKey={this.setToLoggedIn}/>
+            </Route>
+
+            <Route path="/sign-in" exact>
+              <Signin admin={this.state.admin} statusKey={this.setToLoggedIn}/>
+            </Route>
+
+            <Route path="/dashboard" exact>
+              <Dashboard admin={this.state.admin} statusKey={this.setToLoggedIn}/>
+            </Route>
+
+            <Route path="/settings" exact>
+              <Settings admin={this.state.admin} statusKey={this.setToLoggedIn}/>
+            </Route>
+
+            <Route path="/map" exact>
+              <Map admin={this.state.admin} statusKey={this.setToLoggedIn}/>
+            </Route>
+          </Switch>
+
+          {view}
+        </div>
+      );
+    }
+    else{
+      // loading
+      return (
+        <div className="admin">
+          <Loading />
+        </div>
+      );
+    }
+
+    // let view;
+    // if( this.state.admin ){
+    //   if( !this.state.admin.status.exist ){
+    //     view = <Redirect to="/sign-up" />;
+    //   }
+    //   else if( this.state.admin.status.exist && !this.state.admin.status.loggedIn ){
+    //     view = <Redirect to="/sign-in" />;
+    //   }
+    //   else if( this.state.admin.status.exist && this.state.admin.status.loggedIn ){
+    //     view = <Redirect to="/dashboard" />;
+    //   }   
+    // }
+    // else{
+    //   view = <Loading />
+    // }
+
+    // return (
+    //   <div className="admin">
+    //     { view }
+    //     <Switch>
+    //       <Route path="/sign-up" exact>
+    //         <Signup statusKey={this.setToLoggedIn} />;
+    //       </Route>
+
+    //       <Route path="/sign-in" exact>
+    //         <Signin admin={this.state.admin} statusKey={this.setToLoggedIn} />;
+    //       </Route>
+
+    //       <Route path="/dashboard" exact>
+    //         <Dashboard admin={this.state.admin} statusKey={this.setToLoggedIn}/>;
+    //       </Route>
+
+    //       <Route path="/settings" exact>
+    //         <Settings admin={this.state.admin} statusKey={this.setToLoggedIn}/>;
+    //       </Route>
+
+    //       <Route path="/map" exact>
+    //         <Map admin={this.state.admin} statusKey={this.setToLoggedIn}/>;
+    //       </Route>
+    //     </Switch>
+    //   </div>
+    // );
   }
 }
 
