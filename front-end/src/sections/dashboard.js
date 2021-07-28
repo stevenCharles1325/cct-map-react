@@ -7,7 +7,10 @@ import { Redirect } from 'react-router-dom';
 import Loading from '../components/load-bar/loading';
 import NavPanel from '../components/navigator/nav-panel'
 
+import userFace from '../images/happy.png';
+
 import '../styles/dashboard.css';
+
 
 export default class Dashboard extends React.Component{
 
@@ -16,13 +19,12 @@ export default class Dashboard extends React.Component{
 
         this.statusKey = props.statusKey;
         this.admin = props.admin;
-        
+        this.navPanel = props.navPanel;
         this.state = {
             graph_data: null
         };
 
         this.graph_data_url = 'http://localhost:7000/admin/graph-data';
-
     }
 
     componentDidMount() {
@@ -47,17 +49,6 @@ export default class Dashboard extends React.Component{
             if( this.admin.status.loggedIn ){
               return (
                   <div className="dashboard">
-                      <NavPanel 
-                        dirs={
-                            [
-                                {url: '/dashboard', icon: null, title:'Dashboard'},
-                                {url: '/map', icon: null, title:'Map'},
-                                {url: '/settings', icon: null, title:'Settings'}
-                            ]
-                        }
-                        admin={this.admin}
-                        statusKey={this.statusKey}
-                      />
 
                       {/* Dashboard Header */}
                       <div className="dash-header d-flex flex-row">
@@ -65,11 +56,9 @@ export default class Dashboard extends React.Component{
                             <h1>Dashboard</h1>
                           </div>
 
-                          {/* Put image for icon here */}
-
                           <div className="col-8 d-flex justify-content-end align-items-center">
-                            <div className="dash-profile-container d-flex justify-content-end">
-                                <img />
+                            <div className="dash-profile-container d-flex justify-content-center align-items-center">
+                                <img width="85%" height="85%" src={userFace} alt="userface"/>
                             </div>    
                           </div>
                       </div>

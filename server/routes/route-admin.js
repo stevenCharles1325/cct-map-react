@@ -44,9 +44,12 @@ router.put('/sign-in', async (req, res, next) => {
   if(  username === admin_data.username ){
     if( password === admin_data.password ){
       admin_data.status.loggedIn = true;
-      fs.writeFile( data_path, JSON.stringify(admin_data, null, 4), (err) => {
-        console.log( `Error: ${err}` );
-      });
+      try{
+        fs.writeFileSync( data_path, JSON.stringify(admin_data, null, 4));
+      }
+      catch( err ){
+        console.log( err );
+      }
       return res.status( 200 ).json({ message: 'signed-in' });
     }
     else{
@@ -72,11 +75,33 @@ router.post('/sign-up', async(req, res, next) => {
     number : number
   };
 
-  fs.writeFile( data_path, JSON.stringify(data, null, 4), (err) => {
-    console.log( `Error: ${err}` );
-  });
+  try{
+    fs.writeFileSync( data_path, JSON.stringify(data, null, 4));
+  }
+  catch( err ){
+    console.log( err );
+  }
   
   return res.status(201).json({ message: "signed-up" });
+});
+
+router.put('/set-admin', async(req, res, next) => {
+  const { username, password, email, number } = req.body;
+  const admin_data = JSON.parse( fs.readFileSync(data_path) );
+
+  admin_data.username = username;
+  admin_data.password = password;
+  admin_data.email = email;
+  admin_data.number = number;  
+
+  try{
+    fs.writeFileSync( data_path, JSON.stringify(admin_data, null, 4));
+  }
+  catch( err ){
+    console.log( err );
+  }
+  
+  return res.status(200).json({ message: "changes applied" });
 });
 
 

@@ -1,21 +1,15 @@
 import React from 'react';
 
-import '../styles/settings.css';
+import MapMenu from '../components/menu/map-menu';
+import '../styles/map.css';
 
-import NavPanel from '../components/navigator/nav-panel';
 
 export default class Settings extends React.Component{
 
     render(){
         return(
-            <div className="settings">
-                <NavPanel dirs={
-                    [
-                        {url: '/admin/dashboard', icon: null, title:'Dashboard'},
-                        {url: '/admin/map', icon: null, title:'Map'},
-                        {url: '/admin/settings', icon: null, title:'Settings'}
-                    ]
-                }/>
+            <div className="map">
+                <MapMenu />
             </div>
         );
     }

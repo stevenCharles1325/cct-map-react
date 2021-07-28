@@ -25,7 +25,8 @@ export default class NavPanel extends React.Component {
         for( let dir of this.dirs ){
             let customDir = (
                 <ButtonLink
-                    key={'btn-link-'.concat(this.dirs.indexOf(dir).toString())}
+                    key={this.dirs.indexOf(dir).toString()}
+                    id={'btn-link-'.concat(this.dirs.indexOf(dir).toString())}
                     url={dir.url}
                     icon={dir.icon}
                     title={dir.title}    

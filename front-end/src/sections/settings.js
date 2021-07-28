@@ -1,10 +1,8 @@
 import React from 'react';
 import axios from 'axios';
-import { Link } from 'react-router-dom';
 
 import '../styles/settings.css';
-
-import NavPanel from '../components/navigator/nav-panel';
+import userFace from '../images/happy.png';
 
 export default class Settings extends React.Component{
     
@@ -13,6 +11,20 @@ export default class Settings extends React.Component{
 
         this.admin = props.admin;
         this.statusKey = props.statusKey;
+        this.navPanel = props.navPanel;
+
+        this.reFetch = props.fetchData;
+
+        this.saveChanges = this.saveChanges.bind( this );
+        this.resetChanges = this.resetChanges.bind( this );
+
+        this.successMsg = null;
+
+        this.username = null;
+        this.email = null;
+        this.number = null;
+        this.pass = null;
+        this.cPass = null;
     }
 
     openPass( field ){
@@ -145,50 +157,87 @@ export default class Settings extends React.Component{
 
     }
 
+    saveChanges(){
+        this.successMsg.innerHTML = 'Please wait...';
+        const url = 'http://localhost:7000/admin/set-admin';
+        axios.put(url, {
+            username: this.username.value,
+            password: this.pass.value,
+            email: this.email.value,
+            number: this.number.value
+        })
+        .then( res => {
+            if( res.status === 200 ){
+                this.reFetch();   
+                this.admin.username = this.username.value;
+                this.admin.password = this.pass.value;
+                this.admin.email = this.email.value;
+                this.admin.number = this.number.value;
+
+                this.successMsg.innerHTML = res.data.message;             
+                setTimeout(() => {
+                    this.successMsg.innerHTML = 'You might wanna refresh the app for changes.';             
+                }, 2000);
+            }
+        })
+        .catch( err => {
+            console.log( err );
+        });
+    }
+
+    resetChanges(){
+        this.username.value = this.admin.username;
+        this.pass.value = this.admin.password;
+        this.email.value = this.admin.email;
+        this.number.value = this.admin.number;
+    }
+
     componentDidMount(){
         const passPeek = document.querySelector('#pass-peek');
         const cPassPeek = document.querySelector('#cPass-peek');
         
-        const username = document.querySelector('#set-username');
-        const email = document.querySelector('#set-email');
-        const number = document.querySelector('#set-number');
-        const pass = document.querySelector('#set-password');
-        const cPass = document.querySelector('#set-cPassword');
+        this.username = document.querySelector('#set-username');
+        this.email = document.querySelector('#set-email');
+        this.number = document.querySelector('#set-number');
+        this.pass = document.querySelector('#set-password');
+        this.cPass = document.querySelector('#set-cPassword');
+
+        this.username.value = this.admin.username;
+        this.email.value = this.admin.email;
+        this.number.value = this.admin.number;
+        this.pass.value = this.admin.password;
+
+        this.successMsg = document.querySelector('#settings-msg-success');
+
+        const save = document.querySelector('#settings-save');
+        const reset = document.querySelector('#settings-reset');
 
         // Peek event listener
-        passPeek.addEventListener('click', () => { this.openPass(pass) });
-        cPassPeek.addEventListener('click', () => { this.openPass(cPass) });
+        passPeek.addEventListener('click', () => { this.openPass(this.pass) });
+        cPassPeek.addEventListener('click', () => { this.openPass(this.cPass) });
 
-        username.addEventListener('input', () => { this.nameEval(username) });
-        pass.addEventListener('input', () => { this.passEval(pass) });
-        cPass.addEventListener('input', () => { this.cPassEval(cPass) });
-        email.addEventListener('input', () => { this.emailEval(email) });
-        number.addEventListener('input', () => { this.cNumberEval(number) });
+        this.username.addEventListener('input', () => { this.nameEval(this.username) });
+        this.pass.addEventListener('input', () => { this.passEval(this.pass) });
+        this.cPass.addEventListener('input', () => { this.cPassEval(this.cPass) });
+        this.email.addEventListener('input', () => { this.emailEval(this.email) });
+        this.number.addEventListener('input', () => { this.cNumberEval(this.number) });
+
+        save.addEventListener('click', this.saveChanges);
+        reset.addEventListener('click', this.resetChanges);
 
     }
 
     render(){
         return(
             <div className="settings">
-                <NavPanel 
-                    dirs={
-                        [
-                            {url: '/dashboard', icon: null, title:'Dashboard'},
-                            {url: '/map', icon: null, title:'Map'},
-                            {url: '/settings', icon: null, title:'Settings'}
-                        ]
-                    }
-
-                    admin={ this.admin }
-                    statusKey={ this.statusKey }
-                />
-
                 <div className="settings-bar">
                 </div>
 
                 <div className="settings-pic-bar d-flex flex-row">
 
-                    <div className="settings-pic-cont"></div>
+                    <div className="settings-pic-cont d-flex justify-content-center align-items-center">
+                        <img width="80%" height="80%" src={userFace}/>
+                    </div>
                     <div className="settings-title">Settings</div>
 
 
@@ -201,14 +250,14 @@ export default class Settings extends React.Component{
                             <div className="inp-label">
                                 <h5>Username:</h5>
                             </div>
-                            <input id="set-username" className="inp-bar" type="text" defaultValue={this.admin.username}/>
+                            <input id="set-username" className="inp-bar" type="text"/>
                         </div>
 
                         <div className="settings-inp-cont d-flex justify-content-center align-items-center">
                             <div className="inp-label">
                                 <h5>Password:</h5>
                             </div>
-                            <input id="set-password" className="inp-bar" type="password" defaultValue={this.admin.password}/>
+                            <input id="set-password" className="inp-bar" type="password"/>
                             <button id="pass-peek" className="peek-btn">peek</button>
                         </div>
 
@@ -224,20 +273,21 @@ export default class Settings extends React.Component{
                             <div className="inp-label">
                                 <h5>email:</h5>
                             </div>
-                            <input id="set-email" className="inp-bar" type="email" defaultValue={this.admin.email}/>
+                            <input id="set-email" className="inp-bar" type="email"/>
                         </div>
 
                         <div className="settings-inp-cont d-flex justify-content-center align-items-center">
                             <div className="inp-label">
                                 <h5>number:</h5>
                             </div>
-                            <input id="set-number" className="inp-bar" type="text" defaultValue={this.admin.number}/>
+                            <input id="set-number" className="inp-bar" type="text" />
                         </div>
 
                         <div className="settings-btn-box d-flex flex-row justify-content-around align-items-center">
                             <button id="settings-save" className="settings-btn">save</button>
                             <button id="settings-reset" className="settings-btn">reset</button>
                         </div>
+                        <h5 id="settings-msg-success"></h5>
                     </div>
 
                     <div className="settings-msg-box p-0 m-0 px-2 d-flex flex-column justify-content-between align-items-center">
@@ -247,8 +297,6 @@ export default class Settings extends React.Component{
                         <div className="email-msg msg-container"></div>
                         <div className="number-msg msg-container"></div>
                     </div>
-
-                    
                 </div>
             </div>
         );

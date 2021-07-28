@@ -23,4 +23,10 @@ a{
 
 .btn-link-title-box{
     width: 50%;
+    padding-left: 10px;
+}
+
+.btn-link-icon-box{
+    width: 11%;
+    height: 50%;
 }
