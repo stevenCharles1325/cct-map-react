@@ -3,6 +3,7 @@ var fs = require('fs');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
+var fileUpload = require('express-fileupload');
 var logger = require('morgan');
 
 var cors = require('cors');
@@ -18,6 +19,7 @@ app.set('view engine', 'jade');
 
 app.use(cors());
 
+app.use(fileUpload());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

@@ -6,6 +6,7 @@
     width: 5vw;
     height: 100vh;
 
+    z-index: 2;
     background-color: rgba(171, 78, 78, 0.85);
 
     border-top-right-radius: 5px;

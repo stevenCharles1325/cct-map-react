@@ -7,7 +7,7 @@
     background: linear-gradient(178.6deg, rgba(210, 49, 49, 0.8) 13.97%, rgba(255, 229, 90, 0.5) 158.68%);
 }
 
-.load-bar{
+.load-box{
     position: absolute;
     top: 50%;
     left: 50%;
@@ -17,4 +17,9 @@
 .load-gif{
     width: 50px;
     height: 10px;
+}
+
+.load-logo{
+    width:  100%;
+    height: 100%;
 }
