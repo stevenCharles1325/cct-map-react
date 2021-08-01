@@ -12,9 +12,10 @@ import Settings from './views/settings';
 import Map from './views/map';
 import PageNotFound from './views/pageNotFound';
 
+
 // Loading component
 import Loading from './components/load-bar/loading';
-
+import NavPanel from './components/navigator/nav-panel';
 
 // Styles
 import './styles/admin.css';
@@ -34,21 +35,38 @@ const VIEWS = [
 
 
 
-
-
-
-
 // Main App function.
 export default function App(){
 	console.log('Run: App');
 
 	const pathname = window.location.pathname;
-
+	const webUrl = truncateRoot(pathname)
 	const [admin, setAdmin] = useState(null);
 	const [graphData, setGraphData] = useState(null);
 	const [bundle, setBundle] = useState(null);
 	const [view, setView] = useState(null);
-	const [webUrl, setWebUrl] = useState( truncateRoot(pathname) );
+
+	const directories = [
+               {url: '/dashboard', icon: React.lazy( () => import('./images/dashboard.png') ), title:'Dashboard'},
+               {url: '/map', icon: React.lazy( () => import('./images/map.png') ), title:'Map'},
+               {url: '/settings', icon: React.lazy( () => import('./images/equalizer.png') ), title:'Settings'}
+            ]
+
+
+	const requestSetAdmin = ( data ) => { 
+		setAdmin( data );
+		requestServerSideSetAdmin( data ); 
+	}
+	
+	const requestServerSideSetAdmin = async ( data ) => { 
+		await axios.put('http://localhost:7000/admin/set-admin', data)
+		.then( res => {
+			console.log( res.data.message );
+		})
+		.catch( err => {
+	      	errorHandler( err );
+		});
+	}
 
 
 	// Fetches the data from the server and sets the admin.
@@ -58,7 +76,7 @@ export default function App(){
 	      	setAdmin( res.data );
 	    })
 	    .catch( err => {
-	      	console.log(err);
+	      	errorHandler( err );
 	    });
 	}
 
@@ -67,65 +85,57 @@ export default function App(){
 	const requestGraphData = async () => {
 		await axios.get('http://localhost:7000/admin/graph-data')
 	    .then( res => {
-	    	console.log( res );
 	      	setGraphData( res.data );
 	    })
 	    .catch( err => {
-	      	console.log(err);
+	      	errorHandler( err );
 	    });
 	}	
 
-	// useEffect( () => {
-	// 	window.addEventListener('hashchange', () => {
-	// 		console.log('hash change');
-	// 		setWebUrl( window.location.pathname );
-	// 	});
-
-	// 	return () => {
-	// 		window.removeEventListener('hashchange', null);
-	// 	}
-	// }, []);
-
-
-
 	// Fetch data on component mount.
 	useEffect( () => {
+		console.log('[Fetching Data]');
 		requestAdminData(); // Fetch admin data.
-	}, []);
-
-
-
-	useEffect( () => {
 		requestGraphData(); // Fetch graph data.
-	}, [view, webUrl]);
 
+	}, []);
 
 
 	// Set the View whenever either the url or the admin state changes.
 	useEffect( () => {
-		
+		console.log('[Inspecting url]');
 		if( urlExist( webUrl ) ){ // check if url exist
-			if( admin ) { setView( adminStatusCheck( admin, webUrl ) ); }
-			else{ setView( <Loading /> ); }
+			admin ? setView( adminStatusCheck( admin, webUrl ) ) : setView( <Loading /> ) 
 		}
 		else{
 			setView( <PageNotFound /> );
 		}
-	}, [admin, webUrl]);
+	}, []);
 
 
 
 	// Update the bundle if admin or graph data changes
 	useEffect( () => {
-		if( admin && graphData ) setBundle({ admin: admin, graphData: graphData});			
+		console.log('[Updating bundle]');
+		if( admin && graphData ){
+			console.log(admin);
+			console.log(graphData);
 
+			setBundle({ 
+				admin: admin, 
+				graphData: graphData, 
+				reqSetAdmin: requestSetAdmin, 
+				dirs: directories
+			});
+		}		
 	}, [admin, graphData]);
+
 
 
 	return (
 		<div className="admin">
-			{ bundle ? console.log( bundle ) : null}
-			{ bundle ? requestRouteHandler( bundle ) : <Loading /> }
+			{ bundle ? admin.status.exist && admin.status.loggedIn ? <NavPanel {...bundle}/> : null : null }
+			{ bundle ? requestRouteHandler( bundle ) : null }
 			{ bundle ? view : <Loading /> }
 		</div>
 	);
@@ -133,16 +143,14 @@ export default function App(){
 
 
 
-
-
-
-
 /////////////////////// REQUEST HANDLERS //////////////////////
 
 // Returns routes in the app
 function requestRouteHandler( bundle ){
+	console.log('Run: RequestRouteHandler function. This checks which route should be rendered')
 	return(
 		<Switch>
+
 			<Route exact path="/sign-in">
 				<Signin {...bundle}/>
 			</Route>
@@ -208,8 +216,14 @@ function urlHandler( url ){
 
 /////////////////////// OTHER LOGICS //////////////////////
 
+// Compose Navigation panel contents.
+
+
+
+
 //	Checks if the url does exist.
 function urlExist( url ){
+	console.log('[Checking url existence]');
 	return VIEWS.indexOf( url ) >= 0 ? true : false;
 }
 
@@ -220,7 +234,7 @@ function urlExist( url ){
 	of the url.
 */
 function truncateRoot( pathname ){
-
+	console.log('[Root truncating]');
 	if( pathname.indexOf('/admin') >= 0 ){
 		const newPath = pathname.replace('/admin', '');
 		return newPath ? newPath : '/admin';
@@ -231,5 +245,34 @@ function truncateRoot( pathname ){
 			\t-> There is no /admin in the pathname you have passed to truncateRoot function
 		`);
 		return pathname;
+	}
+}
+
+
+
+
+////////////////////// ERROR HANDLER ///////////////////////
+
+function errorHandler( err ){
+	console.log( err );
+	
+	if( !err.response.status ) return;
+
+	switch( err.response.status ){
+		case 404:
+			console.error('Page Not found');
+			break;
+
+		case 405:
+			console.error('Bad request');
+			break;
+
+		case 500:
+			console.log('Not Authorized');
+			break;
+
+		default:
+			console.log( err );
+			break;
 	}
 }

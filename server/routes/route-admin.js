@@ -9,7 +9,11 @@ const graph_path = path.join(__dirname, '../data/records.json');
 
 
 
-// GET home page. 
+
+
+///////////////////// ADMIN-DATA  &  GRAPH-DATA ////////////////////////
+
+// ADMIN-DATA route. 
 router.get('/', async (req, res, next) => {
 
   const admin_data = JSON.parse(fs.readFileSync( data_path ));
@@ -20,7 +24,7 @@ router.get('/', async (req, res, next) => {
 
 
 
-// GET data for graph
+// GRAPH-DATA route.
 router.get('/graph-data', async (req, res, next) => {
 
   const graph_data = JSON.parse(fs.readFileSync( graph_path ));
@@ -31,25 +35,15 @@ router.get('/graph-data', async (req, res, next) => {
 
 
 
-// PUT or set log-status to online or offline
-router.put('/log-status', async(req, res, next) => {
-  const admin_data = JSON.parse( fs.readFileSync(data_path) );
-
-  admin_data.status.loggedIn = req.body.status; 
-
-  try{
-    fs.writeFileSync( data_path, JSON.stringify(admin_data, null, 4));
-  }
-  catch( err ){
-    console.log( err );
-  }
-
-  return res.status(200).json({message: 'online'});
-})
 
 
 
-// PUT admin to sign-in
+
+
+
+///////////////////// SIGN-IN  &  SIGN-UP ////////////////////////////
+
+// SIGN-IN route.
 router.put('/sign-in', async (req, res, next) => {
   const { username, password } = req.body;
   const admin_data = JSON.parse(fs.readFileSync( data_path ));
@@ -77,31 +71,7 @@ router.put('/sign-in', async (req, res, next) => {
 
 
 
-
-// PUT or create the admin
-router.put('/set-admin', async(req, res, next) => {
-  const { username, password, email, number } = req.body;
-  const admin_data = JSON.parse( fs.readFileSync(data_path) );
-
-  admin_data.username = username;
-  admin_data.password = password;
-  admin_data.email = email;
-  admin_data.number = number;  
-
-  try{
-    fs.writeFileSync( data_path, JSON.stringify(admin_data, null, 4));
-  }
-  catch( err ){
-    console.log( err );
-  }
-  
-  return res.status(200).json({ message: "changes applied" });
-});
-
-
-
-
-// POST sign-up for admin
+// SIGN-UP route.
 router.post('/sign-up', async(req, res, next) => {
   const { username, password, email, number } = req.body;
   const data = {
@@ -128,7 +98,60 @@ router.post('/sign-up', async(req, res, next) => {
 
 
 
-// POST for uploading 3d objects
+
+
+
+
+///////////////////// CHANGE-ADMIN-DATA  &  SET-ADMIN-STATUS ( ONLINE and OFFLINE )  ////////////////////////
+
+// SET-ADMIN route.
+router.put('/set-admin', async(req, res, next) => {
+  console.log( req.body );
+  const { username, password, email, number } = req.body;
+  const admin_data = JSON.parse( fs.readFileSync(data_path) );
+
+  admin_data.username = username;
+  admin_data.password = password;
+  admin_data.email = email;
+  admin_data.number = number;  
+
+  try{
+    fs.writeFileSync( data_path, JSON.stringify(admin_data, null, 4));
+  }
+  catch( err ){
+    console.log( err );
+  }
+  
+  return res.status(200).json({ message: "changes applied" });
+});
+
+
+// ADMIN-STATUS route.
+router.put('/log-status', async(req, res, next) => {
+  const admin_data = JSON.parse( fs.readFileSync(data_path) );
+
+  admin_data.status.loggedIn = req.body.status; 
+
+  try{
+    fs.writeFileSync( data_path, JSON.stringify(admin_data, null, 4));
+  }
+  catch( err ){
+    console.log( err );
+  }
+
+  return res.status(200).json({message: 'online'});
+})
+
+
+
+
+
+
+
+
+///////////////////// UPLOAD 3D OBJECT ////////////////////////
+
+// UPLOAD-3D route.
 router.post('/obj-upload', (req, res, next) => {
 
   if( !req.files ) return res.status( 400 ).json({ message: 'There was no file with that name' });
@@ -147,6 +170,11 @@ router.post('/obj-upload', (req, res, next) => {
   });
 
 });
+
+
+
+
+
 
 
 

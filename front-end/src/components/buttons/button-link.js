@@ -1,50 +1,41 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../../styles/button-link.css';
 
-export default class ButtonLink extends React.Component{
 
-    constructor( props ){
-        super( props );
+export default function ButtonLink( props ) {
+    const [active, setActive] = useState( window.location.pathname === ('/admin' + props.url) );
 
-        this.id = props.id;
-        this.title = props.title || props.id;
-        this.url = props.url;
-        this.icon = props.icon;
-
-        this.state = {
-            active: document.location.pathname === ('/admin' + this.url)
-        };
+    const activityClassName = ( isActive ) => {
+        return `btn-link my-2 d-flex justify-content-center align-items-center ${ isActive ? 'btn-link-active' : ''}`;
     }
 
-    setClassName( active ) {
-        return `btn-link my-2 d-flex justify-content-center align-items-center ${ active ? 'btn-link-active' : ''}`;
+    const requestSetActive = () => {
+        setTimeout( async () => {
+            setActive(window.location.pathname === ('/admin' + props.url));        
+        }, 100);
     }
 
-    componentDidMount(){
+    useEffect( () => {
+        document.querySelector('.nav-panel').addEventListener('click', requestSetActive);
 
-        window.addEventListener('click', () => {
-            console.log('heey')
-            this.setState({
-                active: document.location.pathname === ('/admin' + this.url)
-            });
-        })
-    }
+        return () => { 
+            document.querySelector('.nav-panel').removeEventListener('click', requestSetActive);
+        }
+    });
 
-    render() {
-        return(
-            <Link id={this.id} to={this.url}  className={ this.setClassName( this.state.active ) }>                  
-                <div className="btn-link-icon-box d-flex align-items-center">
-                    {/* insert link icon here */}
-                    <img style={{filter: !this.state.active ? 'invert(1)' : 'none'}} width="100%" height="100%" src={this.icon}/>
-                </div>
-                <div className="btn-link-title-box">
-                    <h5 className="btn-link-title m-0">
-                        { this.title }
-                    </h5>
-                </div>
-            </Link>
-        );
-    }
+    return(
+        <Link id={props.id} to={props.url}  className={ activityClassName( active ) }>                  
+            <div className="btn-link-icon-box d-flex align-items-center">
+                {/* insert link icon here */}
+                <img style={{filter: !active ? 'invert(1)' : 'none'}} width="100%" height="100%" src={props.icon}/>
+            </div>
+            <div className="btn-link-title-box">
+                <h5 className="btn-link-title m-0">
+                    { props.title }
+                </h5>
+            </div>
+        </Link>
+    );
 
 }
