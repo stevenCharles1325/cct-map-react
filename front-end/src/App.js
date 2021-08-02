@@ -9,9 +9,14 @@ import Signin from './views/sign-in';
 import Signup from './views/sign-up';
 import Dashboard from './views/dashboard';
 import Settings from './views/settings';
-import Map from './views/map';
+import MapView from './views/map';
 import PageNotFound from './views/pageNotFound';
 
+
+// Navigation panel icons
+import dashboardIcon from './images/dashboard.png';
+import mapIcon from './images/map.png';
+import settingsIcon from './images/equalizer.png';
 
 // Loading component
 import Loading from './components/load-bar/loading';
@@ -47,26 +52,119 @@ export default function App(){
 	const [view, setView] = useState(null);
 
 	const directories = [
-               {url: '/dashboard', icon: React.lazy( () => import('./images/dashboard.png') ), title:'Dashboard'},
-               {url: '/map', icon: React.lazy( () => import('./images/map.png') ), title:'Map'},
-               {url: '/settings', icon: React.lazy( () => import('./images/equalizer.png') ), title:'Settings'}
+               {url: '/dashboard', icon: dashboardIcon, title:'Dashboard'},
+               {url: '/map', icon: mapIcon, title:'Map'},
+               {url: '/settings', icon: settingsIcon, title:'Settings'}
             ]
 
 
-	const requestSetAdmin = ( data ) => { 
-		setAdmin( data );
-		requestServerSideSetAdmin( data ); 
-	}
-	
-	const requestServerSideSetAdmin = async ( data ) => { 
-		await axios.put('http://localhost:7000/admin/set-admin', data)
-		.then( res => {
-			console.log( res.data.message );
-		})
-		.catch( err => {
-	      	errorHandler( err );
-		});
-	}
+    // ----------------------------------------------------------
+    //
+    // 		Sets admin data from client-side to server-side
+	//
+	//						[UPDATION REQUESTS]
+	//
+	// ----------------------------------------------------------
+		const requestSetAdmin = ( data ) => { 
+			setAdmin( data );
+			requestServerSideSetAdmin( data ); 
+		}
+		
+		const requestServerSideSetAdmin = async ( data ) => { 
+			await axios.put('http://localhost:7000/admin/set-admin', data)
+			.then( res => {
+				console.log( res.data.message );
+			})
+			.catch( err => {
+		      	errorHandler( err );
+			});
+		}
+
+	// -----------------------------------------------------------
+
+
+	// ===========================================================
+
+
+	// -----------------------------------------------------------
+	//
+	// Sets admin activity status from client-side to server-side
+	// 
+	//						[SIGN-IN REQUESTS]
+	//
+	// -----------------------------------------------------------
+		const requestSetAdminSignIn = ( data ) => {
+			setAdmin( data );
+			requestServerSideSetAdminSignIn( data );
+		}
+
+		const requestServerSideSetAdminSignIn = async ( data ) => { 
+			await axios.put('http://localhost:7000/admin/sign-in', data)
+			.then( res => {
+				console.log( res.data.message );
+			})
+			.catch( err => {
+		      	errorHandler( err );
+			});
+		}
+	// -----------------------------------------------------------
+
+
+	// ===========================================================
+
+
+	// -----------------------------------------------------------
+	// 
+	// 					Set admin to signed out
+	//
+	//					   [SIGN-OUT REQUEST]
+	//
+	// -----------------------------------------------------------
+		const requestSignOut = ( data ) => {
+			setAdmin( data );
+			requestServerSignOut( data.status );
+		}
+
+		const requestServerSignOut = async ( data ) => {
+			await axios.put('http://localhost:7000/admin/log-status', data)
+			.then( res => {
+				console.log( res.data.message );
+			})
+			.catch( err => {
+		      	errorHandler( err );
+			});
+		}
+	// -----------------------------------------------------------
+
+
+	// ===========================================================
+
+
+	// -----------------------------------------------------------
+	// 
+	// 		Create admin data from client-side to server-side
+	// 
+	// 						[CREATION REQUEST]
+	// 
+	// -----------------------------------------------------------
+		const requestSignUp = ( data ) => {
+			setAdmin( data );
+			requestServerSignUp( data );
+		}
+
+		const requestServerSignUp = async ( data ) => {
+			await axios.post('http://localhost:7000/admin/sign-up', data)
+			.then( res => {
+				console.log( res.data.message );
+			})
+			.catch( err => {
+				errorHandler( err );
+			})
+		}
+	// -----------------------------------------------------------
+
+
+	// ===========================================================
 
 
 	// Fetches the data from the server and sets the admin.
@@ -110,7 +208,7 @@ export default function App(){
 		else{
 			setView( <PageNotFound /> );
 		}
-	}, []);
+	}, [admin]);
 
 
 
@@ -118,13 +216,13 @@ export default function App(){
 	useEffect( () => {
 		console.log('[Updating bundle]');
 		if( admin && graphData ){
-			console.log(admin);
-			console.log(graphData);
-
 			setBundle({ 
 				admin: admin, 
 				graphData: graphData, 
 				reqSetAdmin: requestSetAdmin, 
+				reqSetAdminSignIn: requestSetAdminSignIn,
+				reqSignOut: requestSignOut,
+				reqSignUp: requestSignUp,
 				dirs: directories
 			});
 		}		
@@ -168,7 +266,7 @@ function requestRouteHandler( bundle ){
 			</Route>
 
 			<Route exact path="/map">
-				<Map {...bundle}/>
+				<MapView {...bundle}/>
 			</Route>
 		</Switch>
 	);	
@@ -205,8 +303,8 @@ function adminStatusCheck( admin, url ){
 
 */
 function urlHandler( url ){
-	console.log(`Run: UrlHandler function\n\tThis redirects pathname to the desired view.`);
-	return url === ROOT ? <Redirect to="/dashboard" /> : <Redirect to={url} />;
+	console.log(`Run: UrlHandler function\n[URL]: ${url}\n\tThis redirects pathname to the desired view.`);
+	return url === ROOT || url === '/sign-in' || url === '/sign-up' ? <Redirect to="/dashboard" /> : <Redirect to={url} />;
 }
 
 
@@ -254,21 +352,25 @@ function truncateRoot( pathname ){
 ////////////////////// ERROR HANDLER ///////////////////////
 
 function errorHandler( err ){
+
+	if( !err || !err.response || !err.response.status ) return;
 	console.log( err );
 	
-	if( !err.response.status ) return;
-
 	switch( err.response.status ){
 		case 404:
-			console.error('Page Not found');
+			console.log(`[Error]: Page Not found \n\t${err.response.message}`);
 			break;
 
 		case 405:
-			console.error('Bad request');
+			console.log(`[Error]: Bad request \n\t${err.response.message}`);
 			break;
 
 		case 500:
-			console.log('Not Authorized');
+			console.log(`[Error]: Internal Server Error \n\t${err.response.message}`);
+			break;
+
+		case 503:
+			console.log(`[Error]: Service unavailable \n\t${err.response.message}`);
 			break;
 
 		default:

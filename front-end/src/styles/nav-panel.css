@@ -5,6 +5,8 @@
 
     width: 30vw;
     height: 100vh;
+
+    z-index: 2;
 }
 
 #menu-btn{

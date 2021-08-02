@@ -1,16 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
-
-import { Redirect } from 'react-router-dom';
-
-import Loading from '../components/load-bar/loading';
-import NavPanel from '../components/navigator/nav-panel'
+import { Line, Bar } from 'react-chartjs-2';
 
 import userFace from '../images/happy.png';
 
 import '../styles/dashboard.css';
-
 
 
 
@@ -78,7 +72,8 @@ export default function Dashboard( props ) {
                         backgroundColor="transparent"
                         title="Current Viewers Rate" 
                         options={ topGraphOption } 
-                    />
+                    />     
+                    
                     
                     {/* TOP-RIGHT-GRAPH: Annual Viewers Rate*/}
                     <Graph 

@@ -1,30 +1,17 @@
 import React from 'react';
 import '../../styles/form-card.css'
 
-export default class FormCard extends React.Component{
+export default function FormCard( props ){
 
-    constructor( props ){
-        super( props );
+    return(
+        <div className="form-card text-center" >
 
-        this.props = props;
+            {/* Form Title */}
+            <div className="form-title">
+                <h1 style={{color: props.title.color}}>{props.title.content.toUpperCase()}</h1>
+            </div>
 
-        this.title = this.props.title;
-        this.action = this.props.action;
-
-        this.method = 'POST';
-    }
-
-    render() {
-        return(
-            <form method={this.method} onSubmit={this.action} className="form-card text-center" >
-
-                {/* Form Title */}
-                <div className="form-title">
-                    <h1 style={{color: this.title.color}}>{this.title.content.toUpperCase()}</h1>
-                </div>
-
-                { this.props.children }
-             </form>
-        );
-    }
+            { props.children }
+         </div>
+    );
 }

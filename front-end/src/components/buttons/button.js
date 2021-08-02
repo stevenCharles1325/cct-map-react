@@ -1,19 +1,7 @@
 import React from 'react';
 import '../../styles/button.css';
 
-export default class Button extends React.Component{
+export default function Button( props ){
 
-    constructor( props ){
-        super( props );
-
-        this.disabled = props.disabled;
-        this.name = props.name;
-        this.type = props.type || '';
-        this.onClick = props.onClick;
-        this.id = props.id;
-    }
-
-    render() {
-        return <button id={this.id} disabled={this.disabled} className="btn" type={this.type} onClick={this.onClick || null}> { this.name } </button>
-    }
+    return <button id={props.id} disabled={props.disabled || false} className={ props.classname || "btn"} type={props.type} onClick={props.click || null}> { props.name } </button>
 }

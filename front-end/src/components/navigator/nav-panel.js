@@ -17,8 +17,12 @@ export default function NavPanel( props ){
 
 
     const requestSetAdminOffline = () => {
-        props.reqSetAdmin({
-            status: { loggedIn: false }
+        props.reqSignOut({
+            status: { exist: admin.status.exist, loggedIn: false },
+            username: admin.username,
+            password: admin.password,
+            email: admin.email,
+            number: admin.number
         });
     }
 

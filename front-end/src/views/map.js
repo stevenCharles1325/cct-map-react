@@ -11,27 +11,27 @@ import '../styles/map.css';
 // Create import handler
 
 
-
-function Map( props ){
+function MapView( props ){
     return (
-        <MapMenu />
+        <div className="map">
+            <MapMenu />
+            <MapCanvas />
+        </div>
     );
 }
 
 
 function MapCanvas( props ){
     return (
-        <div className="map">
-            <Canvas
-                camera={{position: [0, 2500, -2500], far: 10000}}
-            >
-                <Stars radius={2500} count={10000} fade />
-                <OrbitControls/>
-                <ambientLight intensity={0.4}/>
+        <Canvas
+            camera={{position: [0, 2500, -2500], far: 10000}}
+        >
+            <Stars radius={2500} count={10000} fade />
+            <OrbitControls/>
+            <ambientLight intensity={0.4}/>
 
-                <Land size={[5000, 5000]}/>
-            </Canvas>
-        </div>
+            <Land size={[5000, 5000]}/>
+        </Canvas>
     );
 }
 
@@ -49,4 +49,4 @@ function Land( props ){
     );
 }
 
-export default Map;
+export default MapView;

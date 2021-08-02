@@ -1,281 +1,98 @@
-import React from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
-import '../styles/sign-up.css';
 
-import Input from '../components/inputs/input';
+
+import { Input, displayMessage }from '../components/inputs/input';
 import Button from '../components/buttons/button';
 import FormCard from '../components/cards/form-card';
 
 
-export default class Signup extends React.Component{
-    constructor( props ){
-        super( props );
+import Validator from '../modules/validate-input';
 
-        this.url = 'http://localhost:7000/admin/sign-up';
 
-        this.state = {
-            username: null,
-            password: null,
-            email: null,
-            number: null
-        }
+import '../styles/sign-up.css';
 
-        this.isReady = false;
 
-        this.size = {
+export default function Signup( props ){
+    const validator = new Validator();
+    const requestSignUp = props.reqSignUp;
+
+    const [username, setUsername] = useState('');
+    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('');
+    const [number, setNumber] = useState('');
+    const [cPassword, setCPassword] = useState('');
+
+    const size = {
             width: '90%'
         }
 
-        this.statusKey = props.statusKey;
+    const usernameChangeHandler = ( e ) => { setUsername( e.target.value ); }
+    const passwordChangeHandler = ( e ) => { setPassword( e.target.value ); }
+    const emailChangeHandler = ( e ) => { setEmail( e.target.value ); }
+    const numberChangeHandler = ( e ) => { setNumber( e.target.value ); }
+    const cPasswordChangeHandler = ( e ) => { setCPassword( e.target.value ); }
 
-        this.submit = this.submit.bind( this );
+    const handleRequestSignUp = () => {
+        const nameCheck = validator.check('username', username);
+        const passCheck = validator.check('password', password);
+        const cPassCheck = validator.check('cPassword', cPassword);
+        const emailCheck = validator.check('email', email);
+        const numCheck = validator.check('number', number);
 
-    }
+        const finalResult = nameCheck.result && passCheck.result && cPassCheck.result && emailCheck.result && numCheck.result;
 
-    displayMessage( msg, id ){
-        const DECAY_TIME = 2000;
 
-        const cover = document.querySelector(`#${id.concat('-msg-box')}`);
-        const message = document.querySelector(`#${id.concat('-msg')}`);
-
-        cover.style.width = '100%';
-        message.innerHTML = msg;
-
-        setTimeout( () => {
-
-            cover.style.width = '0%';
-            message.innerHTML = '';
-
-        }, DECAY_TIME );
-
-    }
-
-    nameEval( name, isVerbose = false) {
-        console.log(isVerbose)
-        const isValidName = ( name ) => {
-            let valids = /\w/g
-            let filtered = name.replaceAll(valids, '');
-            
-            return filtered ? false : true;
+        if( !nameCheck.result ){
+            displayMessage( nameCheck.msg, 'su-username' );
         }
 
-        if( !name.length ){
-            return isVerbose ? {msg: `Hey! You left me empty!`, result: false} : false;   
-        }
-        else if( !isValidName( name ) ){
-            return isVerbose ? {msg: `Oops! Invalid username.`, result: false} : false;   
-        }
-        else if( name.length > 0 && name.length <= 2 ){
-            return isVerbose ? {msg:`It must be greater-than 2.`, result: false} : false;   
-        }
-        else{
-            return isVerbose ? {msg:`Username is ready!`, result: true} : true;   
-        }
-    }
-
-    passEval( pass, isVerbose = false) {
-
-        if( !pass.length ){
-            return isVerbose ? {msg: `Hey! You left me empty!`, result: false} : false;   
-        }
-        else if( pass.length > 1 && pass.length < 7 ){
-            return isVerbose ? {msg: `It must be greater-than 7.`, result: false} : false;   
-        }
-        else{
-            return isVerbose ? {msg: `Password is ready!`, result: true} : true;   
-        }
-    }
-
-    cPassEval( cpass, isVerbose = false ) {
-
-        if( !cpass.length ){
-            return isVerbose ? {msg: `Hey! You left me empty!`, result: false} : false;
-        }
-        else if( cpass.length > 1 && cpass.length < 7 ){
-            return isVerbose ? {msg: `It must be greater-than 7.`, result: false} : false;
-        }
-        else if( cpass !== this.state.password ){
-            return isVerbose ? {msg: `Didn't match!`, result: false} : false;
-        }
-        else{
-            return isVerbose ? {msg: `You nailed it!`, result: true} : true;   
-        }
-    }
-
-    emailEval( email, isVerbose = false ) {
-        if( !email.length ){
-            return isVerbose ? {msg: `Hey! You left me empty!`, result: false} : false;
-        }
-        else{
-            return isVerbose ? {msg: `Email is ready!`, result: true} : true;   
-        }
-    }
-
-    cNumberEval( cnum, isVerbose = false ) {
-
-        const isValidNumber = ( number ) => {
-            const isLengthAccepted = number.length === 11 ? true : false;
-            const isPhpNumber = number.search('09') === 0 ? true : false;
-
-            return isLengthAccepted && isPhpNumber;
+        if( !passCheck.result ){
+            displayMessage( passCheck.msg, 'su-password' );
         }
 
-        if( !cnum.length ){
-            return isVerbose ? {msg: `Hey! You left me empty!`, result: false} : false;   
+        if( !cPassCheck.result ){
+            displayMessage( cPassCheck.msg, 'su-cPassword' );
         }
-        else if( !isValidNumber( cnum ) ){
-            return isVerbose ? {msg: `Oops! Invalid number`, result: false} : false;   
+
+        if( !emailCheck.result ){
+            displayMessage( emailCheck.msg, 'su-email' );
         }
-        else{
-            return isVerbose ? {msg: `Number is ready!`, result: true} : true;   
+
+        if( !numCheck.result ){
+            displayMessage( numCheck.msg, 'su-cNumber' );
         }
-    }
 
-    evaluationWithMessage( id, value ){
-        let evaluation = null;
-        switch( id ){
-            case 'name':
-                evaluation = this.nameEval( value, true );
-                console.log(evaluation);
-                if( !evaluation.result ){
-                    this.displayMessage( evaluation.msg, id );
-                }
-                else{
-                    console.log( evaluation.msg );
-                }
-                break;
-            case 'password':
-                evaluation = this.passEval( value, true );
-                if( !evaluation.result ){
-                    this.displayMessage( evaluation.msg, id );
-                }
-                else{
-                    console.log( evaluation.msg );
-                }
-                break;
-            case 'conf-pass':
-                evaluation = this.cPassEval( value, true );
-                if( !evaluation.result ){
-                    this.displayMessage( evaluation.msg, id );
-                }
-                else{
-                    console.log( evaluation.msg );
-                }
-                break;
-            case 'email':
-                evaluation = this.emailEval( value, true );
-                if( !evaluation.result ){
-                    this.displayMessage( evaluation.msg, id );
-                }
-                else{
-                    console.log( evaluation.msg );
-                }
-                break;
-            case 'cnumber':
-                evaluation = this.cNumberEval( value, true );
-                if( !evaluation.result ){
-                    this.displayMessage( evaluation.msg, id );
-                }
-                else{
-                    console.log( evaluation.msg );
-                }
-                break;
-            default:
-                return;
-        }
-    }
 
-    evaluationContainer( name, pass, email, cnum ){
-        const result = (this.nameEval( name.value ) &&
-                         this.passEval( pass.value ) &&
-                          this.emailEval( email.value ) &&
-                           this.cNumberEval( cnum.value ));
-
-        this.isReady = result;
-        
-        this.setState({
-            username: name.value,
-            password: pass.value,
-            email: email.value,
-            number: cnum.value
-        });
-    }
-
-    submit(e) {
-        e.preventDefault();
-
-        if( this.isReady ){
-            const new_data = {
-                username: this.state.username,
-                password: this.state.password,
-                email: this.state.email,
-                number: this.state.number,
+        if( finalResult ){
+            const newData = {
+                status : {exist: true, loggedIn: true},
+                username: username,
+                password: password,
+                email: email,
+                number: number
             }
-                
-            axios.post(this.url, new_data)
-            .then( (res) => {
-                if( res.status === 201 ){
-                    this.statusKey( {
-                        status: {
-                            exist: true,
-                            loggedIn: true
-                        },
-                        username: new_data.username,
-                        password: new_data.password,
-                        email: new_data.email,
-                        number: new_data.number
-                    });
-                }
-            })
-            .catch( err => { 
-                console.log( err );
-            });
-        }
-        console.log('came here');
 
-        
+            requestSignUp( newData );    
+        }
+        else{
+            return
+        }
     }
 
-    componentDidMount(){
-        console.log('sign-up');
-
-        const name = document.querySelector('#name');
-        const pass = document.querySelector('#password');   
-        const cpass = document.querySelector('#conf-pass');
-        const email = document.querySelector('#email');   
-        const cnum = document.querySelector('#cnumber');  
-        
-        const checkReady = function(){
-            this.evaluationContainer(name, pass, email, cnum);
-        }.bind( this );
-
-        for( let field of [name, pass, cpass, email, cnum]){
-            if( field.id !== 'conf-pass' ){
-                field.addEventListener('input', checkReady);
-                field.addEventListener('paste', checkReady);
-                field.addEventListener('change', checkReady);
-            }
-            
-            field.addEventListener('focusout', () => { this.evaluationWithMessage( field.id, field.value ); });
-        }
-
-    }
-
-    render(){
-        
-        return(
+    return(
             <div className="sign-up-frame d-flex flex-row">
                 <div className="sign-up-inp-box p-5 text-center" style={{margin: '0% 0% 0% 5%'}}>
-                    <FormCard title={{content: 'Sign-up', color: '#ffffff'}} url={this.url} action={this.submit}>
+                    <FormCard title={{content: 'Sign-up', color: '#ffffff'}}>
                         <div className="my-5 d-flex flex-column justify-content-center align-items-center">
-                            <Input id="name" type="text" name="username" placeholder="Enter username" size={this.size}/>
-                            <Input id="password" type="password" name="password" placeholder="Enter password" size={this.size}/>
-                            <Input id="conf-pass" type="password" name="password" placeholder="Re-enter password" size={this.size}/>
-                            <Input id="email" type="email" name="email" placeholder="Enter email" size={this.size}/>
-                            <Input id="cnumber" type="text" name="cnumber" placeholder="Enter contact number" size={this.size}/>
+                            <Input id="su-username" type="text" name="username" handleChange={usernameChangeHandler} placeholder="Enter username" size={size}/>
+                            <Input id="su-password" type="password" name="password" handleChange={passwordChangeHandler} placeholder="Enter password" size={size}/>
+                            <Input id="su-cPassword" type="password" name="password" handleChange={cPasswordChangeHandler} placeholder="Re-enter password" size={size}/>
+                            <Input id="su-email" type="email" name="email" handleChange={emailChangeHandler} placeholder="Enter email" size={size}/>
+                            <Input id="su-cNumber" type="text" name="cnumber" handleChange={numberChangeHandler} placeholder="Enter contact number" size={size}/>
                         </div>
 
-                        <Button id="signup-submit" name="Sign Up" type="Submit" />
+                        <Button id="signup-submit" name="Sign Up" click={handleRequestSignUp} />
                     </FormCard>
                 </div>
                 <div className="sign-up-intro-box">
@@ -311,12 +128,8 @@ export default class Signup extends React.Component{
                         Then in 2010, a new College Administrator, Mr. Edgardo T. Castillo, was appointed by the then City Mayor and Chairman of the Board of Trustees, Hon. Abraham “Bambol” N. Tolentino.
 
                         CCT may have humble beginnings. However, its unwavering commitment to offer free quality education remains, as the current College President, Mr. Edgardo T. Castillo focuses on holistic development of the students that includes active involvement in the fields of academics, culture and arts, and sports.
-
-
                     </p>
                 </div>
             </div>
         );
-    }
 }
-

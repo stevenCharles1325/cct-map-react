@@ -106,7 +106,6 @@ router.post('/sign-up', async(req, res, next) => {
 
 // SET-ADMIN route.
 router.put('/set-admin', async(req, res, next) => {
-  console.log( req.body );
   const { username, password, email, number } = req.body;
   const admin_data = JSON.parse( fs.readFileSync(data_path) );
 
@@ -115,14 +114,12 @@ router.put('/set-admin', async(req, res, next) => {
   admin_data.email = email;
   admin_data.number = number;  
 
-  try{
-    fs.writeFileSync( data_path, JSON.stringify(admin_data, null, 4));
-  }
-  catch( err ){
-    console.log( err );
-  }
-  
-  return res.status(200).json({ message: "changes applied" });
+  fs.writeFileSync( data_path, JSON.stringify(admin_data, null, 4), (err) => {
+    if( err ){
+      return res.status(503).json({message: `Couldn't fulfill the request to change admin`});
+    }
+    return res.status(200).json({ message: "changes applied" });
+  });
 });
 
 
@@ -130,16 +127,14 @@ router.put('/set-admin', async(req, res, next) => {
 router.put('/log-status', async(req, res, next) => {
   const admin_data = JSON.parse( fs.readFileSync(data_path) );
 
-  admin_data.status.loggedIn = req.body.status; 
+  admin_data.status.loggedIn = req.body.loggedIn; 
 
-  try{
-    fs.writeFileSync( data_path, JSON.stringify(admin_data, null, 4));
-  }
-  catch( err ){
-    console.log( err );
-  }
-
-  return res.status(200).json({message: 'online'});
+  fs.writeFile( data_path, JSON.stringify(admin_data, null, 4), (err) => {
+    if( err ){
+      return res.status(503).json({message: `Couldn't fulfill the request to online`});
+    }
+    return res.status(200).json({message: 'online'});
+  });  
 })
 
 

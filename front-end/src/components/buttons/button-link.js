@@ -17,10 +17,14 @@ export default function ButtonLink( props ) {
     }
 
     useEffect( () => {
-        document.querySelector('.nav-panel').addEventListener('click', requestSetActive);
+        if(document.querySelector('.nav-panel')){
+            document.querySelector('.nav-panel').addEventListener('click', requestSetActive);
+        }
 
-        return () => { 
-            document.querySelector('.nav-panel').removeEventListener('click', requestSetActive);
+        return () => {
+            if(document.querySelector('.nav-panel')){
+                document.querySelector('.nav-panel').removeEventListener('click', requestSetActive);
+            } 
         }
     });
 
