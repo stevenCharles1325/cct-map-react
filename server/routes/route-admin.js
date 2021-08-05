@@ -36,7 +36,35 @@ router.get('/graph-data', async (req, res, next) => {
 
 
 
+///////////////////// UPLOAD 3D OBJECT ////////////////////////
 
+// UPLOAD-3D route.
+router.post('/obj-upload', (req, res, next) => {
+
+  if( !req.files ) return res.status( 400 ).json({ message: 'There was no file with that name' });
+
+  const path_to_modules = path.join(__dirname, `../../front-end/public/models`);
+
+  fs.readdir( path_to_modules, (err, files) => {
+    if( err ){
+      console.log( err );
+      return res.status( 503 ).json({ message: 'Something must be wrong, please try again.' });
+    }
+
+    const object = req.files.object;
+    const object_name = `object_${files.length}_${new Date().getTime()}.obj`;
+
+
+    object.mv( path_to_modules + `/${object_name}`, err => {
+
+      if( err ){
+        res.status( 500 ).send( err );
+      }
+
+      res.status( 200 ).json({ fileName: object_name, filePath: `/models/${object_name}`});
+    });
+  })
+});
 
 
 
@@ -144,27 +172,6 @@ router.put('/log-status', async(req, res, next) => {
 
 
 
-///////////////////// UPLOAD 3D OBJECT ////////////////////////
-
-// UPLOAD-3D route.
-router.post('/obj-upload', (req, res, next) => {
-
-  if( !req.files ) return res.status( 400 ).json({ message: 'There was no file with that name' });
-
-  const object = req.files.object;
-
-  const path_to_frontend_public = path.join(__dirname, `../../front-end/public/models/${file.name}`);
-
-  object.mv( path_to_frontend_public, err => {
-
-    if( err ){
-      res.status( 500 ).send( err );
-    }
-
-    res.status( 200 ).json({ fileName: file.name, filePath: `/models/${file.name}`});
-  });
-
-});
 
 
 

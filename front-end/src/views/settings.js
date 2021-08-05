@@ -162,24 +162,6 @@ export default function Settings( props ){
 
 
 
-
-// function createInputField({ id, type, title, value, inputHandler, btn }){
-//     return (
-//         <div key={id.concat("settings")} className="settings-inp-cont d-flex justify-content-center align-items-center">
-//             <div className="inp-label">
-//                 <h5>{ title }</h5>
-//             </div> 
-//             <input id={id} className="inp-bar" type={type} defaultValue={value} onChange={inputHandler}/>
-//             { btn ? btn : null }
-//             { type === 'password' ? createPeekButton(id) : null }
-//         </div>
-//     );
-// }
-
-
-
-
-
 function createPeekButton( id ){
     const handleClick = () => {
         document.querySelector(`#${id}`).type = 'text';
