@@ -21,11 +21,13 @@ function Input( props ){
                 
                 style={{width: props.peekBtn ? '90%' : '100%'}} 
                 
-                id={props.id} type={props.type} 
+                id={props.id} 
+
+                type={props.type} 
                 
-                name={props.name} 
+                name={props.name || null} 
                 
-                placeholder={props.placeholder} 
+                placeholder={props.placeholder || null} 
                 
                 onChange={props.handleChange} 
                 

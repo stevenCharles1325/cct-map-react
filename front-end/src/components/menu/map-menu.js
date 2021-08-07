@@ -28,7 +28,7 @@ function MapMenu( props ){
         const requestCloseMapMenu = () => {
             setIsOpen( false );
         }
-    // ------------------------------------------
+    // -----------------------------------------
 
 
 
@@ -66,7 +66,7 @@ function MapMenu( props ){
         const previewHandler = () => {
             console.log('clicked Preview button');
         }
-
+    // -----------------------------------------
 
     useEffect(() => {
         if( menu && menu.current ){
