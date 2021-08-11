@@ -36,4 +36,10 @@ export default class MapDevTools{
 
 		return;
 	}
+
+	sleep( time, callback ){
+		return setTimeout(() => {
+			if(callback) callback();
+		}, time);
+	}
 }

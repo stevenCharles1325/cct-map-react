@@ -77,7 +77,7 @@ function MapView( props ){
         }
 
         const reqClosePropBox = () => {
-            setPropBox( null );
+            setPropBox( propBox.splice(0, propBox.indexOf) );
         }
 
     // -------------------------------------------
@@ -316,7 +316,9 @@ function MapView( props ){
 // ------------------------------------------------
 
 
+
 // ================================================
+
 
 
 // ------------------------------------------------

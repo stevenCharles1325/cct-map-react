@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import axios from 'axios';
+
+import CircStyleLoad from '../load-bar/circ-load';
 
 import saveImg from '../../images/download.png';
 import updateImg from '../../images/update-arrows.png';
@@ -101,8 +103,9 @@ function MapMenu( props ){
                     ]}
                 </div>
             </div>
-
-            { importBox }
+            <Suspense fallback={<CircStyleLoad/>}>
+                { importBox }
+            </Suspense>
         </>
     );
 }
