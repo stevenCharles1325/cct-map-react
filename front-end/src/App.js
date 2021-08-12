@@ -10,8 +10,7 @@ import Signup from './views/sign-up';
 import Dashboard from './views/dashboard';
 import Settings from './views/settings';
 
-// import MapView from './views/map';
-import MapView from './views/map2';
+import MapView from './views/map';
 
 import PageNotFound from './views/pageNotFound';
 
