@@ -1,9 +1,6 @@
 // =========== [TO DO]: ==============
 // 
-// 1. Write code for free positioning button.
-// 2. Write code for copy button.
-// 3. Write code for delete button.
-// 4. Create path finding algo.
+// 1. Create path finding algo.
 
 
 import React, { useState, useReducer, useEffect, useRef, Suspense } from 'react';
@@ -14,7 +11,7 @@ import {
 	SpotLight
 } from '@react-three/drei';
 
-import { Canvas, useFrame, useLoader } from '@react-three/fiber';
+import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 
 import * as THREE from 'three';
@@ -49,21 +46,24 @@ const CAMERA = {
 	position: [0, 2500, -2500],
 	far: 10000
 }
+const MOUSE = new THREE.Vector2();
 
 
 
 const MapView = (props) => {
 	const land = useRef();
-	const canvas = useRef();
 
 	const [upload, setUpload] = useState( null );
-	const [objList, setObjectList] = useState( [] );
+	const [objList, setObjList] = useState( [] );
 
 	const [selected, setSelected] = useState( null );
 	const [pending, setPending] = useState( null );
+	
 	const [propBox, setPropBox] = useState( null );
 	const [swapped, setSwapped] = useState( false );
 
+	const [copyObj, setCopyObj] = useState( null );
+	const [deleteObj, setDeleteObj] = useState( null );
 
 	function reqSetPending( object ) {
 		setPending( object );
@@ -79,9 +79,20 @@ const MapView = (props) => {
 
 	useEffect(() => {
 		if( upload ){
-			setObjectList([...objList, <Import key={upload.fileName} file={upload} click={reqSetPending} />]);
+			setObjList([...objList, <MapImport key={upload.fileName} object={upload} click={reqSetPending} />]);
+			setUpload( null );
 		}
-	}, [upload]);
+		else if( copyObj ){
+			setObjList([...objList, <MapClone key={copyObj.uuid} object={copyObj} click={reqSetPending} />]);
+			setCopyObj( null );	
+		}
+		else if( deleteObj ){
+			objList.pop();
+			setObjList( objList );
+			setSelected( null );
+		}
+		
+	}, [upload, copyObj, deleteObj]);
 
 
 	useEffect(() => {
@@ -105,13 +116,13 @@ const MapView = (props) => {
 
 	useEffect(() => {
 		if( selected ){
-			setPropBox(<PropertyBox properties={selected} close={reqSetPropBox}/>);
+			setPropBox(<PropertyBox properties={selected} close={reqSetPropBox} copy={setCopyObj} delete={setDeleteObj}/>);
 		}
 		else{
 			setPropBox( null );
 		}
 
-	}, [selected, propBox]); // Added propBox as dependency
+	}, [selected]); // Added propBox as dependency
 
 
 	useEffect(() => {
@@ -124,12 +135,20 @@ const MapView = (props) => {
 	}, [pending]);
 
 
+	// Mouse movement event listener
+	// useEffect(() => {
+	// 	window.addEventListener('mousemove', mouseLocation);
+
+	// 	return () => window.removeEventListener('mousemove', mouseLocation)
+	// });
 
 	return(
 		<div className="map">
 		    <MapMenu reqSetUpload={setUpload} />
-		    <MapCanvas ref={canvas} landRef={land}>
-		    	{ objList }
+		    <MapCanvas landRef={land}>
+				<Scene deleteObj={deleteObj} reqSetDelete={setDeleteObj}>		    	
+			    	{ objList }
+		    	</Scene>
 		    </MapCanvas>
 		    <Suspense fallback={<CircStyleLoad />}>
 		    	{ propBox }
@@ -139,23 +158,71 @@ const MapView = (props) => {
 }
 
 
-const MapCanvas = React.forwardRef((props,ref) => (
-		<Canvas ref={ref} camera={{position: CAMERA.position, far: CAMERA.far}}>
+const Scene = ( props ) => {
+	const { scene } = useThree();
+	console.log( scene );
+
+	useEffect(() => {
+		if( props.deleteObj ){
+			scene.remove(props.deleteObj);
+			props.reqSetDelete( null );
+		}
+	}, [props.deleteObj]);
+
+	return (
+		<scene> 
+			{ props.children }
+		</scene>
+	);
+}
+
+
+// Canvas
+const MapCanvas = (props) => {
+
+	return(
+		<Canvas camera={{position: CAMERA.position, far: CAMERA.far}}>
 			<Atmosphere />
 			<Suspense fallback={<Loader />}>
 				{ props.children }
 			</Suspense>
 			<Land ref={props.landRef} size={LAND_SIZE}/>
 		</Canvas>
-	)
-);
+	);		
+}
 
 
-const Import = (props) => {
+const MapClone = (props) => {
+	const object = props.object;
 	const objRef = useRef();
 
-	const importedOBJ = useLoader( OBJLoader, props.file.filePath );
-	const object = importedOBJ.children[0]; // extracting the buffer geometry out of the group
+	const handleClick = () => props.click( objRef.current );
+
+	return(
+		<mesh 
+			ref={objRef}
+			onClick={handleClick}
+			receiveShadow
+			castShadow
+			scale={50}
+			geometry={object.geometry}
+		>
+			<meshStandardMaterial
+				color="white"
+				metalness={0.3}
+				roughness={0.5}
+			/>	
+		</mesh>
+	);	
+}
+
+// Creates 3D object
+const MapImport = (props) => {
+	
+	const importedOBJ = useLoader( OBJLoader, props.object.filePath );
+	const object = importedOBJ.children[0];
+	
+	const objRef = useRef();
 
 	const handleClick = () => props.click( objRef.current );
 
@@ -267,16 +334,18 @@ const PropertyBox = (props) => {
     }   
 
 
-    // Closes property box
-	const handleClose = () => {
-    	props.close();
+    const handleCopy = () => {
+    	props.copy( properties );
     }
 
+    const handleDelete = () => {
+    	props.delete( properties );
+    }
 
 	return(
         <div className="obj-prop-box d-flex flex-column justify-content-around align-items-center p-3">
             <div style={{height: '8%'}} className="container-fluid d-flex flex-row-reverse pr-2 mb-2">
-                <Button name="close" click={handleClose}/>
+                <Button name="close" click={props.close}/>
             </div>
             <div  style={{height: '10%'}} style={{height: '50px'}}  className="text-center">
                 <h2>Properties</h2>
@@ -302,8 +371,17 @@ const PropertyBox = (props) => {
             	<PropBoxInp id="rotZ" size={inputSize}  value={properties.rotation.z} handleChange={reqEditRotZ} name="Rotation Z"/> 
             	
             </div>   
-            <div style={{height: '10%'}} className="d-flex justify-content-between align-items-center">
-            	{['position', 'copy', 'delete'].map(name => <Button key={name} name={name}/>)}
+            <div style={{height: '10%', width: '100%'}} className="d-flex justify-content-between align-items-center">
+            	{[
+            		{
+            			name: 'copy',
+            			action: handleCopy
+            		},
+            		{
+            			name: 'delete',
+            			action: handleDelete
+            		}
+            	].map(ops => <Button key={ops.name} name={ops.name} click={ops.action}/>)}
             </div>  
         </div>
     );
@@ -350,152 +428,10 @@ const Loader = ( props ) => {
 }
 
 
+// // Mouse location
+// const mouseLocation = (e) => {
+// 	MOUSE.x = ( e.offsetX / window.innerWidth ) * 2 - 1;
+// 	MOUSE.y = - ( e.offsetY / window.innerHeight ) * 2 + 1; 
+// }
+
 export default MapView;
-
-
-// if( selected?.current && pending?.current ){
-
-		// 	glassify( selected.current.material, true ); // Unglassify previous selected object.
-		// 	setPropBox( null );
-		// 	setSelected( null );
-		// }
-		// else if( !selected?.current && pending?.current ) {
-
-		// 	setSelected( pending );
-		// 	setPending( null );
-		// }
-		
-		// if( selected?.current && !pending?.current ){
-
-		// 	glassify( selected.current.material );
-		// }
-		
-		// if( !propBox && selected?.current ){
-
-		// 	glassify( selected.current.material, true );
-		// 	setSelected( null );
-		// }
-
-
-// const MapView = (props) => {
-// 	const freeNumber = 7;
-	
-// 	// == refs ==
-// 	const land = useRef();
-// 	const scene = useRef();
-
-
-// 	// == stateful variables ==
-// 	const [upload, setUpload] = useState( null ); // Takes uploaded object.
-// 	const [selected, setSelected] = useState( null ); // Gets selected objects. 	
-// 	const [pendingSelect, setPendingSelect] = useState( null ); // Pending objects
-// 	const [objList, setObjList] = useState( [] ); // List of objects inside the scene.
-// 	const [propBox, setPropBox] = useState( null ); // Sets property box.
-
-
-
-// 	// == regular functions ==
-// 	const reqSetUpload = ( object ) => { // Handles upload
-// 		setUpload( object );
-// 	}
-
-// 	const reqOpenPropBox = ( properties ) => { // Opens prop box
-// 		setPropBox( <PropertyBox properties={properties} close={reqClosePropBox}/> );
-// 		glassify( properties.material );
-// 	}
-
-// 	const reqClosePropBox = ( object ) => { // Closes prop box
-// 		setPropBox( null );
-// 		glassify( object.material, true );
-// 		setSelected( null );
-// 	}
-
-
-// 	const reqSetSelected = ( object ) => {
-// 		setPendingSelect( object ); // Sets isSelected to true
-// 	}
-
-
-// 	useEffect(() => { 
-// 		if( upload ){
-// 			setObjList([...objList, <Imported file={upload} reqSetSelected={reqSetSelected}/>]);
-// 		}
-// 	}, [upload]);
-
-
-// 	useEffect(() => {
-// 		if( selected ){
-// 			reqClosePropBox( selected );
-// 		}
-// 		else{
-// 			setSelected( pendingSelect );
-// 		}
-// 	}, [pendingSelect, selected]);
-
-
-// 	// == side effects [REACT] ==
-
-
-// 	return(
-// 		<div className="map">
-// 			{/*Map view contents*/}
-//             <MapMenu reqSetUpload={reqSetUpload} />
-// 			<MapContent objList={objList} land={land} ref={scene}/>
-// 			<Suspense fallback={<CircStyleLoad/>}>
-// 				{ propBox }
-// 			</Suspense>
-// 		</div>
-// 	);
-// }
-
-
-
-// // == function compontents ==
-// const MapContent = React.forwardRef((props, ref) => ( // Map
-// 		<Canvas ref={ref} camera={{position: CAMERA.position, far: CAMERA.far}}>
-// 			<Atmosphere />
-// 			<Land 
-// 				ref={props.land} 
-// 				size={LAND_SIZE}
-// 			/>
-// 			<Suspense fallback={<Loader />}>
-// 				{ props.objList }
-// 			</Suspense>
-// 		</Canvas>
-// 	)
-// );
-
-
-
-// // Imported
-// const Imported = ( props ) => {
-// 	const importedOBJ = useLoader( OBJLoader, props.file.filePath );
-// 	const object = importedOBJ.children[0]; // extracting the buffer geometry out of the group
-
-// 	const objRef = useRef();
-
-// 	// let the main function do the job for handling multiple click req for obj
-// 	const handleChange = () => {
-// 		console.log( objRef );
-// 		props.reqSetSelected(objRef.current);
-// 	}
-
-	
-// 	return(
-// 		<mesh 
-// 			ref={objRef}
-// 			id={props.fileName}
-// 			onClick={handleChange}
-// 			receiveShadow
-// 			castShadow
-// 			scale={50}
-// 			geometry={object.geometry}
-// 		>
-// 			<meshStandardMaterial
-// 				color="white"
-// 				metalness={0.3}
-// 				roughness={0.5}
-// 			/>	
-// 		</mesh>
-// 	);
-// }
