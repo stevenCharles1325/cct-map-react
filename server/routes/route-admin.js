@@ -3,11 +3,11 @@ var router = express.Router();
 var fs = require('fs');
 var path = require('path');
 
+
+// Paths
 const data_path = path.join(__dirname, '../data/admin.json');
 const graph_path = path.join(__dirname, '../data/records.json');
-
-
-
+const scene_path = path.join(__dirname, '../data/scene.json');
 
 
 
@@ -33,13 +33,21 @@ router.get('/graph-data', async (req, res, next) => {
 });
 
 
+// MAP-DATA route.
+router.get('/map-data', async (req, res, next) => {
+
+  const map_data = JSON.parse(fs.readFileSync( scene_path ));
+
+  return res.status(200).json( map_data );  
+});
+
 
 
 
 ///////////////////// UPLOAD 3D OBJECT ////////////////////////
 
 // UPLOAD-3D route.
-router.post('/obj-upload', (req, res, next) => {
+router.post('/obj-upload', async (req, res, next) => {
 
   if( !req.files ) return res.status( 400 ).json({ message: 'There was no file with that name' });
 
@@ -65,6 +73,24 @@ router.post('/obj-upload', (req, res, next) => {
     });
   })
 });
+
+
+
+
+///////////////////// UPDATE MAP DATA  ////////////////////////
+router.post('/update-map', async (req, res, next) => {
+  const new_scene = req.body;
+
+  fs.writeFile(scene_path, JSON.stringify(new_scene, null, 4), (err) => {
+    if( err ){
+      return res.status(503).json({message: `Couldn't fulfill the request to save data`});
+    }
+
+    return res.status(200).json({message: 'Map\'s been saved'});
+  });
+});
+
+
 
 
 
@@ -163,20 +189,7 @@ router.put('/log-status', async(req, res, next) => {
     }
     return res.status(200).json({message: 'online'});
   });  
-})
-
-
-
-
-
-
-
-
-
-
-
-
-
+});
 
 
 

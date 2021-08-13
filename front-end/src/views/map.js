@@ -5,6 +5,7 @@
 
 import React, { useState, useReducer, useEffect, useRef, Suspense } from 'react';
 import {
+	OrbitControls,
 	Stars,
 	Html,
 	useProgress,
@@ -31,7 +32,7 @@ import MapDevTools from '../modules/map-other-dev-tools';
 
 
 // DIY wrapper function for three first-person-controls
-import FirstPersonContols from '../modules/FirstPersonControls';
+import FirstPersonControls from '../modules/FirstPersonControls';
 
 
 // Loading components
@@ -49,8 +50,8 @@ const CAMERA = {
 const MOUSE = new THREE.Vector2();
 
 
-
 const MapView = (props) => {
+	const scene = useRef();
 	const land = useRef();
 
 	const [upload, setUpload] = useState( null );
@@ -64,6 +65,8 @@ const MapView = (props) => {
 
 	const [copyObj, setCopyObj] = useState( null );
 	const [deleteObj, setDeleteObj] = useState( null );
+
+	const [Controls, setControls] = useState( {controls: OrbitControls, config: null} );
 
 	function reqSetPending( object ) {
 		setPending( object );
@@ -96,9 +99,6 @@ const MapView = (props) => {
 
 
 	useEffect(() => {
-		devTools.log({selected, pending}, {logCount: 20});
-
-
 		if( !selected && pending ){
 			setSelected( pending );
 			setPending( null );
@@ -135,32 +135,85 @@ const MapView = (props) => {
 	}, [pending]);
 
 
-	// Mouse movement event listener
-	// useEffect(() => {
-	// 	window.addEventListener('mousemove', mouseLocation);
+	useEffect(() => {
+		if( scene.current && props.mapData ){
+			console.log( props.mapData );
+		}
+	}, [scene, props.mapData]);
 
-	// 	return () => window.removeEventListener('mousemove', mouseLocation)
-	// });
+
+	useEffect(() => {
+		if( props.mapData ){
+			const primitives = _loadScene( props.mapData, reqSetPending );
+			setObjList([...objList, ...primitives]);
+		}
+	}, [props.mapData]);
+
+
+	const requestSaveMap = () => {
+		// [BUG]: If scene has other objects saving doesn't work. 
+		if( scene.current ){
+			const prevSceneState = saveScene( scene.current );
+			console.log( prevSceneState );
+			props.reqSaveMapData( prevSceneState );	
+		}
+	}
+
 
 	return(
 		<div className="map">
-		    <MapMenu reqSetUpload={setUpload} />
-		    <MapCanvas landRef={land}>
-				<Scene deleteObj={deleteObj} reqSetDelete={setDeleteObj}>		    	
-			    	{ objList }
-		    	</Scene>
-		    </MapCanvas>
+		    <MapMenu reqSetUpload={setUpload} reqSaveMap={requestSaveMap}/>
 		    <Suspense fallback={<CircStyleLoad />}>
-		    	{ propBox }
+			    <MapCanvas landRef={land} control={Controls}>
+					<Scene scene={props.mapData} ref={scene} deleteObj={deleteObj} reqSetDelete={setDeleteObj}>	
+				    	{ objList }
+			    	</Scene>
+			    </MapCanvas>
+			    	{ propBox }
 		    </Suspense>
+		    <BottomBar control={setControls}/>
 		</div>
 	);
 }
 
 
-const Scene = ( props ) => {
-	const { scene } = useThree();
-	console.log( scene );
+const BottomBar = (props) => {
+	const [switched, setSwitched] = useState( 'orbit' );
+
+
+	return(
+		<div className="map-btm-bar d-flex justify-content-around align-items-center">
+			<div className="col-7 map-view-switch d-flex justify-content-end align-items-center">
+				<Button classname={`${switched === 'free' ? "map-view-selected" : ''} map-vs-btn map-view-fpc`} name="Free" click={() => { 
+						props.control({
+								controls: FirstPersonControls,
+								config: {
+									lookSpeed: 0.3,
+									movementSpeed: 550
+								}
+							});
+						setSwitched( 'free' );
+				}}/>
+				<Button classname={`${switched === 'orbit' ? "map-view-selected" : ''} map-vs-btn map-view-oc`} name="Orbit" click={() => { 
+						props.control({ 
+								controls: OrbitControls,
+								config: null
+							});
+						setSwitched( 'orbit' );
+				}}/>
+			</div>
+
+			<div className="col-5 map-checkpoint d-flex justify-content-center align-items-center">
+				<Button className="map-checkpoint-btn" name="Place Checkpoint"/>
+			</div>
+		</div>
+	);
+}
+
+
+
+const Scene = React.forwardRef(( props, ref ) => {
+	let { scene } = useThree();
 
 	useEffect(() => {
 		if( props.deleteObj ){
@@ -170,19 +223,21 @@ const Scene = ( props ) => {
 	}, [props.deleteObj]);
 
 	return (
-		<scene> 
+		<scene ref={ref}> 
 			{ props.children }
 		</scene>
 	);
-}
+});
+
+
 
 
 // Canvas
 const MapCanvas = (props) => {
-
+	
 	return(
 		<Canvas camera={{position: CAMERA.position, far: CAMERA.far}}>
-			<Atmosphere />
+			<Atmosphere control={props.control} />
 			<Suspense fallback={<Loader />}>
 				{ props.children }
 			</Suspense>
@@ -192,6 +247,87 @@ const MapCanvas = (props) => {
 }
 
 
+
+const _loadScene = (data, click) => {
+	if( !data ) return;
+
+	const { geometry, object } = data ;
+	const prevChild = [];
+
+	for( let index in object.children ){
+		prevChild.push(
+			<Build 
+				geometry={geometry[index]}
+				data={object.children[index]}
+				click={click}
+			/>
+		);
+	}
+
+	return prevChild;
+}
+
+
+
+// Loading individual 3d object in previous scene
+const Build = (props) => {
+	const { geometry, data } = props;
+
+	const objRef = useRef();
+	const handleClick = () => props.click( objRef.current );
+
+
+	const normal = new THREE.Float32BufferAttribute(
+							geometry.data.attributes.normal.array,
+							geometry.data.attributes.normal.itemSize,
+							geometry.data.attributes.normal.normalized
+					);
+
+	const position = new THREE.Float32BufferAttribute(
+							geometry.data.attributes.position.array,
+							geometry.data.attributes.position.itemSize,
+							geometry.data.attributes.position.normalized
+					); 
+
+	const uv = new THREE.Float32BufferAttribute(
+							geometry.data.attributes.uv.array,
+							geometry.data.attributes.uv.itemSize,
+							geometry.data.attributes.uv.normalized
+					);
+
+	const boundingSphere = new THREE.Sphere( 
+							new THREE.Vector3( ...geometry.data.boundingSphere.center ),
+							geometry.data.boundingSphere.radius
+					);
+
+	const matrix = new THREE.Matrix4();
+	matrix.set(data.matrix);
+
+	return (
+		<mesh
+			ref={objRef}
+			onClick={handleClick}
+			receiveShadow
+			castShadow
+			layers={data.layers}
+			matrix={matrix}
+			geometry-attributes-normal={normal}
+			geometry-attributes-position={position}
+			geometry-attributes-uv={uv}
+			geometry-boundingSphere={boundingSphere}
+			geometry-groups={geometry.data.groups}
+		>
+			<meshStandardMaterial
+				color="white"
+				metalness={0.3}
+				roughness={0.5}
+			/>	
+		</mesh>
+	);
+}
+
+
+
 const MapClone = (props) => {
 	const object = props.object;
 	const objRef = useRef();
@@ -199,7 +335,7 @@ const MapClone = (props) => {
 	const handleClick = () => props.click( objRef.current );
 
 	return(
-		<mesh 
+		<mesh
 			ref={objRef}
 			onClick={handleClick}
 			receiveShadow
@@ -227,7 +363,7 @@ const MapImport = (props) => {
 	const handleClick = () => props.click( objRef.current );
 
 	return(
-		<mesh 
+		<mesh
 			ref={objRef}
 			onClick={handleClick}
 			receiveShadow
@@ -248,12 +384,10 @@ const MapImport = (props) => {
 
 // Atmosphere
 const Atmosphere = (props) => (
-	<group>
+
+	<group name="Sky">
 		<Stars radius={2500} count={50000} fade />
-		<FirstPersonContols
-			lookSpeed={props.lkSpeed || 0.3}
-			movementSpeed={props.mvSpeed || 550}
-		/>
+		<props.control.controls {...props?.control?.config}/>
 		<ambientLight intensity={props.ambInt || 0.3}/>
 		<spotLight 
 			castShadow 
@@ -268,7 +402,8 @@ const Atmosphere = (props) => (
 // Land
 const Land = React.forwardRef((props, ref) => (
 	<mesh 
-		ref={ref} 
+		ref={ref}
+		name="Land" 
 		visible
 		receiveShadow
 		rotation={[-Math.PI / 2, 0, 0]}
@@ -428,10 +563,11 @@ const Loader = ( props ) => {
 }
 
 
-// // Mouse location
-// const mouseLocation = (e) => {
-// 	MOUSE.x = ( e.offsetX / window.innerWidth ) * 2 - 1;
-// 	MOUSE.y = - ( e.offsetY / window.innerHeight ) * 2 + 1; 
-// }
+
+const saveScene = ( scene ) => {
+	return scene.toJSON();
+}
+
+
 
 export default MapView;

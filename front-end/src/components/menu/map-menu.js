@@ -4,7 +4,6 @@ import axios from 'axios';
 import CircStyleLoad from '../load-bar/circ-load';
 
 import saveImg from '../../images/download.png';
-import updateImg from '../../images/update-arrows.png';
 import importImg from '../../images/import.png';
 import prevImg from '../../images/preview.png';
 
@@ -47,12 +46,9 @@ function MapMenu( props ){
         // Main menu handlers 
         const saveHandler = () => {
             console.log('clicked Save button');
+            props.reqSaveMap();
         }
 
-        const updateHandler = () => {
-            console.log('clicked Update button');
-            
-        }
 
         const closeImportBox = () => {
             setImpotBox(null);
@@ -97,7 +93,6 @@ function MapMenu( props ){
                 <div className="mm-btns-box d-flex flex-column align-items-center">
                     {[
                         createButton('mm-save-btn', saveImg, saveHandler),
-                        createButton('mm-update-btn', updateImg, updateHandler),
                         createButton('mm-import-btn', importImg, openImportBox),
                         createButton('mm-preview-btn', prevImg, previewHandler)
                     ]}

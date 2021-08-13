@@ -47,7 +47,7 @@ export default function NavPanel( props ){
 
 
     return (
-        <div className={navSwitch ? "nav-panel p-0 d-flex flex-row" : "nav-panel p-0 "} style={{width: navSwitch ? '30vw' : '5vw', marginRight: navSwitch ? '0px' : '3%'}}>
+        <div className={navSwitch ? "nav-panel p-0 d-flex flex-row" : "nav-panel p-0 "} style={{width: navSwitch ? '400px' : '50px', marginRight: navSwitch ? '0px' : '3%'}}>
             <div className="np-menu-bar p-3 mt-3 d-flex justify-content-center">
                 <img style={{width: '41px', height: '43px', transform: navSwitch ? 'rotate(0deg)' : 'rotate(-90deg)'}} id="menu-btn" src={menuImg}/>
             </div>

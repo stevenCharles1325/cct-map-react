@@ -48,10 +48,13 @@ export default function App(){
 
 	const pathname = window.location.pathname;
 	const webUrl = truncateRoot(pathname)
+
 	const [admin, setAdmin] = useState(null);
 	const [graphData, setGraphData] = useState(null);
+	const [mapData, setMapData] = useState( null );
 	const [bundle, setBundle] = useState(null);
 	const [view, setView] = useState(null);
+
 
 	const directories = [
                {url: '/dashboard', icon: dashboardIcon, title:'Dashboard'},
@@ -192,12 +195,45 @@ export default function App(){
 	    });
 	}	
 
+
+	const requestMapData = async () => {
+		await axios.get('http://localhost:7000/admin/map-data')
+		.then( res => {
+			setMapData( res.data );
+		})
+		.catch( err => {
+			errorHandler( err );
+		});
+	}
+
+
+
+	const requestSaveMapData = async (data) => {	
+		if( !data ) return;
+
+		const newMapData = {data : data}
+
+		await axios.post('http://localhost:7000/admin/update-map', newMapData, {
+			headers: {
+                    'Content-Type': 'application/json'
+                }
+		})
+		.then( res => {
+			console.log( res.data.message );
+		})
+		.catch( err => {
+			errorHandler( err );
+		});
+	}
+
+
+
 	// Fetch data on component mount.
 	useEffect( () => {
 		console.log('[Fetching Data]');
 		requestAdminData(); // Fetch admin data.
 		requestGraphData(); // Fetch graph data.
-
+		requestMapData(); // Fetch map data.
 	}, []);
 
 
@@ -221,6 +257,8 @@ export default function App(){
 			setBundle({ 
 				admin: admin, 
 				graphData: graphData, 
+				mapData: mapData,
+				reqSaveMapData: requestSaveMapData,
 				reqSetAdmin: requestSetAdmin, 
 				reqSetAdminSignIn: requestSetAdminSignIn,
 				reqSignOut: requestSignOut,
