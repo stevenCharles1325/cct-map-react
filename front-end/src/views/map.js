@@ -1,6 +1,5 @@
 // =========== [TO DO]: ==============
 // 1. Create checkpoints.
-// 2. Create path finding algo.
 
 
 import React, { useState, useReducer, useEffect, useRef, Suspense } from 'react';
@@ -15,12 +14,15 @@ import {
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
 
+
 import * as THREE from 'three';
+
 
 // Components
 import MapMenu from '../components/menu/map-menu';
 import { Input } from '../components/inputs/input';
 import Button from '../components/buttons/button';
+import Checkpoints from '../modules/map-checkpoints';
 
 
 // Style(s)
@@ -44,14 +46,13 @@ const devTools = new MapDevTools();
 // == constants ==
 const LAND_SIZE = [5000, 5000];
 const CAMERA = {
-	position: [0, 2500, -2500],
+	position: [0, 2500, 4000],
 	far: 10000
 }
 const MOUSE = new THREE.Vector2();
 
 
 const MapView = (props) => {
-	const scene = useRef();
 	const land = useRef();
 
 	const [upload, setUpload] = useState( null );
@@ -67,6 +68,17 @@ const MapView = (props) => {
 	const [deleteObj, setDeleteObj] = useState( null );
 
 	const [Controls, setControls] = useState( {controls: OrbitControls, config: null} );
+	const [isCheckPoint, setIsCheckPoint] = useState( false );
+
+	const [persCam, setPersCam] = useState( null );
+	const [scene, setScene] = useState( null );
+
+	const [checkPoints, setCheckPoints] = useState( [] );
+	const [cpPropBox, setCpPropBox] = useState( null );
+
+	function reqSetCheckPoints ( position ) {
+		setCheckPoints([...checkPoints, position]);
+	}
 
 	function reqSetPending( object ) {
 		setPending( object );
@@ -80,6 +92,7 @@ const MapView = (props) => {
 		setSwapped( false );	
 	}
 
+
 	useEffect(() => {
 		if( upload ){
 			setObjList([...objList, <MapImport key={upload.fileName} object={upload} click={reqSetPending} />]);
@@ -89,13 +102,17 @@ const MapView = (props) => {
 			setObjList([...objList, <MapClone key={copyObj.uuid} object={copyObj} click={reqSetPending} />]);
 			setCopyObj( null );	
 		}
+		else if( isCheckPoint ){
+			setObjList([...objList, <Checkpoints key={objList.length} position={reqSetCheckPoints} openProp={setCpPropBox} camera={persCam} scene={scene} />]);
+			setIsCheckPoint( false );
+		}
 		else if( deleteObj ){
 			objList.pop();
 			setObjList( objList );
 			setSelected( null );
 		}
 		
-	}, [upload, copyObj, deleteObj]);
+	}, [upload, copyObj, deleteObj, isCheckPoint]);
 
 
 	useEffect(() => {
@@ -122,7 +139,7 @@ const MapView = (props) => {
 			setPropBox( null );
 		}
 
-	}, [selected]); // Added propBox as dependency
+	}, [selected]);
 
 
 	useEffect(() => {
@@ -136,7 +153,7 @@ const MapView = (props) => {
 
 
 	useEffect(() => {
-		if( scene.current && props.mapData ){
+		if( scene && props.mapData ){
 			console.log( props.mapData );
 		}
 	}, [scene, props.mapData]);
@@ -144,7 +161,7 @@ const MapView = (props) => {
 
 	useEffect(() => {
 		if( props.mapData ){
-			const primitives = _loadScene( props.mapData, reqSetPending );
+			const primitives = _loadScene( props.mapData, reqSetPending ); // [TO BE FIXED]
 			setObjList([...objList, ...primitives]);
 		}
 	}, [props.mapData]);
@@ -152,11 +169,11 @@ const MapView = (props) => {
 
 	const requestSaveMap = () => {
 		// [BUG]: If scene has other objects saving doesn't work. 
-		if( scene.current ){
-			const prevSceneState = saveScene( scene.current );
+		if( scene ){
+			const prevSceneState = saveScene( scene );
 			console.log( prevSceneState );
 			props.reqSaveMapData( prevSceneState );	
-		}
+		}	
 	}
 
 
@@ -164,14 +181,23 @@ const MapView = (props) => {
 		<div className="map">
 		    <MapMenu reqSetUpload={setUpload} reqSaveMap={requestSaveMap}/>
 		    <Suspense fallback={<CircStyleLoad />}>
-			    <MapCanvas landRef={land} control={Controls}>
-					<Scene scene={props.mapData} ref={scene} deleteObj={deleteObj} reqSetDelete={setDeleteObj}>	
+				<Canvas>
+
+				    <MapCanvas 
+				    	landRef={land} 
+				    	control={Controls}
+				    	setScene={setScene}
+				    	setCam={setPersCam}
+				    	deleteObj={deleteObj}
+				    	reqSetDelete={setDeleteObj}
+				    >
 				    	{ objList }
-			    	</Scene>
-			    </MapCanvas>
+				    </MapCanvas>
+				</Canvas>
 			    	{ propBox }
+			    	{ cpPropBox }
 		    </Suspense>
-		    <BottomBar control={setControls}/>
+		    <BottomBar control={setControls} setCheckpoint={setIsCheckPoint} />
 		</div>
 	);
 }
@@ -180,6 +206,9 @@ const MapView = (props) => {
 const BottomBar = (props) => {
 	const [switched, setSwitched] = useState( 'orbit' );
 
+	const handleCreateCheckPoint = () => {
+		props.setCheckpoint( true );
+	}
 
 	return(
 		<div className="map-btm-bar d-flex justify-content-around align-items-center">
@@ -204,16 +233,29 @@ const BottomBar = (props) => {
 			</div>
 
 			<div className="col-5 map-checkpoint d-flex justify-content-center align-items-center">
-				<Button className="map-checkpoint-btn" name="Place Checkpoint"/>
+				<Button className="map-checkpoint-btn" name="Place Checkpoint" click={handleCreateCheckPoint}/>
 			</div>
 		</div>
 	);
 }
 
 
+// Canvas
+const MapCanvas = (props) => {
+	const width = window.innerWidth;
+	const height = window.innerHeight;
 
-const Scene = React.forwardRef(( props, ref ) => {
-	let { scene } = useThree();
+	const { scene, camera } = useThree();
+	const set = useThree((state) => state.set);
+
+	useEffect(() => {
+		set({camera: new THREE.PerspectiveCamera(75, width / height, 100, 10000)});
+	}, []);
+
+	useEffect(() => {
+		camera.position.set( ...CAMERA.position );
+		camera.updateProjectionMatrix();
+	}, [camera]);
 
 	useEffect(() => {
 		if( props.deleteObj ){
@@ -222,29 +264,20 @@ const Scene = React.forwardRef(( props, ref ) => {
 		}
 	}, [props.deleteObj]);
 
-	return (
-		<scene ref={ref}> 
-			{ props.children }
-		</scene>
-	);
-});
-
-
-
-
-// Canvas
-const MapCanvas = (props) => {
+	props.setCam( camera );
+	props.setScene( scene );
 	
 	return(
-		<Canvas camera={{position: CAMERA.position, far: CAMERA.far}}>
+		<>
 			<Atmosphere control={props.control} />
 			<Suspense fallback={<Loader />}>
 				{ props.children }
 			</Suspense>
 			<Land ref={props.landRef} size={LAND_SIZE}/>
-		</Canvas>
+		</>
 	);		
 }
+
 
 
 
@@ -336,6 +369,7 @@ const MapClone = (props) => {
 
 	return(
 		<mesh
+			name="map_object"
 			ref={objRef}
 			onClick={handleClick}
 			receiveShadow
@@ -364,6 +398,7 @@ const MapImport = (props) => {
 
 	return(
 		<mesh
+			name="map_object"
 			ref={objRef}
 			onClick={handleClick}
 			receiveShadow
