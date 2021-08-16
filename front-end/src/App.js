@@ -354,11 +354,6 @@ function urlHandler( url ){
 
 /////////////////////// OTHER LOGICS //////////////////////
 
-// Compose Navigation panel contents.
-
-
-
-
 //	Checks if the url does exist.
 function urlExist( url ){
 	console.log('[Checking url existence]');

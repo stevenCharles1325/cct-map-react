@@ -58,11 +58,8 @@ const MapView = (props) => {
 	const [upload, setUpload] = useState( null );
 	const [objList, setObjList] = useState( [] );
 
-	const [selected, setSelected] = useState( null );
-	const [pending, setPending] = useState( null );
-	
+	const [cpPropBox, setCpPropBox] = useState( null );	
 	const [propBox, setPropBox] = useState( null );
-	const [swapped, setSwapped] = useState( false );
 
 	const [copyObj, setCopyObj] = useState( null );
 	const [deleteObj, setDeleteObj] = useState( null );
@@ -74,82 +71,96 @@ const MapView = (props) => {
 	const [scene, setScene] = useState( null );
 
 	const [checkPoints, setCheckPoints] = useState( [] );
-	const [cpPropBox, setCpPropBox] = useState( null );
 
-	function reqSetCheckPoints ( position ) {
-		setCheckPoints([...checkPoints, position]);
+
+	const selectHandler = ( state, action ) => {
+
+		if( action.reset ){
+			if( state.selected ){
+				glassify( state?.selected?.current?.material, true );
+			}
+			return { selected: null };
+		}
+
+		if( !state.selected && action.data ){
+			glassify( action?.data?.current?.material );
+		}
+		else if( state.selected && action.data ){
+			glassify( state?.selected?.current?.material, true );
+			glassify( action?.data?.current?.material );
+		}
+		return { selected: action.data };
 	}
 
-	function reqSetPending( object ) {
-		setPending( object );
-		setSwapped( false );	
+	const cpReducer = (state, action) => {
+		return selectHandler( state, action );
+	}
+
+	const impReducer = (state, action) => {
+		return selectHandler( state, action );
+	}
+
+
+	const [impState, impDispatch] = useReducer( impReducer, {selected: null} );
+	const [cpState, cpDispatch] = useReducer( cpReducer, {selected: null} );
+
+
+	// ==========================================================
+
+	function reqSetCheckPoints ( newCheckpoint ) {
+		setCheckPoints([...checkPoints, newCheckpoint]);
 	}
 
 	function reqSetPropBox() {
-		glassify( selected.material, true );
-		setSelected( null );
-		setPending( null );		
-		setSwapped( false );	
+		impDispatch({ reset: true });
 	}
 
 
 	useEffect(() => {
 		if( upload ){
-			setObjList([...objList, <MapImport key={upload.fileName} object={upload} click={reqSetPending} />]);
+			setObjList([...objList, <MapImport key={upload.fileName} object={upload} click={impDispatch} />]);
 			setUpload( null );
 		}
 		else if( copyObj ){
-			setObjList([...objList, <MapClone key={copyObj.uuid} object={copyObj} click={reqSetPending} />]);
+			setObjList([...objList, <MapClone key={copyObj.uuid} object={copyObj} click={impDispatch} />]);
 			setCopyObj( null );	
 		}
 		else if( isCheckPoint ){
-			setObjList([...objList, <Checkpoints key={objList.length} position={reqSetCheckPoints} openProp={setCpPropBox} camera={persCam} scene={scene} />]);
+			setObjList([...objList, 
+							<Checkpoints 
+								key={objList.length} 
+								position={reqSetCheckPoints} 
+								openProp={setCpPropBox} 
+								camera={persCam} 
+								scene={scene}
+								click={cpDispatch} 
+								showProp={setCpPropBox}
+							/>
+						]);
 			setIsCheckPoint( false );
 		}
 		else if( deleteObj ){
-			objList.pop();
-			setObjList( objList );
-			setSelected( null );
+			setObjList([ ...objList ]);
+			impDispatch({ reset: true });
 		}
 		
 	}, [upload, copyObj, deleteObj, isCheckPoint]);
 
 
 	useEffect(() => {
-		if( !selected && pending ){
-			setSelected( pending );
-			setPending( null );
-		}
-		else if( selected && pending && !swapped){ // switching two objects
-			const temp = selected;
-
-			setSelected( pending );
-			setPending( temp );
-			setSwapped( true );
-		}
-
-	}, [selected, pending, swapped]);
-
-
-	useEffect(() => {
-		if( selected ){
-			setPropBox(<PropertyBox properties={selected} close={reqSetPropBox} copy={setCopyObj} delete={setDeleteObj}/>);
+		if( impState.selected ){
+			setPropBox(<PropertyBox 
+							properties={impState.selected.current} 
+							close={reqSetPropBox} 
+							copy={setCopyObj} 
+							delete={setDeleteObj}
+						/>);
 		}
 		else{
 			setPropBox( null );
 		}
 
-	}, [selected]);
-
-
-	useEffect(() => {
-		if( selected ) glassify( selected.material ); 
-	}, [selected]);
-
-
-	useEffect(() => {
-		if( pending ) glassify( pending.material, true ); // Unglassify pending
-	}, [pending]);
+	}, [impState.selected]);
 
 
 	useEffect(() => {
@@ -161,7 +172,7 @@ const MapView = (props) => {
 
 	useEffect(() => {
 		if( props.mapData ){
-			const primitives = _loadScene( props.mapData, reqSetPending ); // [TO BE FIXED]
+			const primitives = _loadScene( props.mapData ); // [TO BE FIXED]
 			setObjList([...objList, ...primitives]);
 		}
 	}, [props.mapData]);
@@ -365,7 +376,7 @@ const MapClone = (props) => {
 	const object = props.object;
 	const objRef = useRef();
 
-	const handleClick = () => props.click( objRef.current );
+	const handleClick = () => props.click({ data: objRef });
 
 	return(
 		<mesh
@@ -394,7 +405,7 @@ const MapImport = (props) => {
 	
 	const objRef = useRef();
 
-	const handleClick = () => props.click( objRef.current );
+	const handleClick = () => props.click({ data: objRef });
 
 	return(
 		<mesh

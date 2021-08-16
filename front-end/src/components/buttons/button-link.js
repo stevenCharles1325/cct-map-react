@@ -21,11 +21,7 @@ export default function ButtonLink( props ) {
             document.querySelector('.nav-panel').addEventListener('click', requestSetActive);
         }
 
-        return () => {
-            if(document.querySelector('.nav-panel')){
-                document.querySelector('.nav-panel').removeEventListener('click', requestSetActive);
-            } 
-        }
+        return () => window.removeEventListener('click', requestSetActive);
     });
 
     return(
