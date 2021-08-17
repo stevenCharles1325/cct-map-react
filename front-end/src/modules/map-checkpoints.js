@@ -11,6 +11,7 @@ import { Input } from '../components/inputs/input';
 export default function Checkpoints ( props ){
 	const [isPlaced, setIsPlaced] = useState( false );
 	const [prop, setProp] = useState({ item: null, isReset: false });
+	const [isRemoved, setIsRemoved] = useState( false );
 	const checkpoint = useRef();
 
 
@@ -33,10 +34,10 @@ export default function Checkpoints ( props ){
 
 
 	useEffect(() => {
-		if( !isPlaced ) window.addEventListener('click', place);
+		!isPlaced ? window.addEventListener('click', place) : window.removeEventListener('click', place);
 
-		return () => window.removeEventListener('click', () => setIsPlaced( true ));
-	}, []);
+		return () => window.removeEventListener('click', place);
+	}, [isPlaced]);
 
 
 	useFrame(() => {
@@ -71,10 +72,6 @@ export default function Checkpoints ( props ){
 		e.stopPropagation();
 
 		setIsPlaced( true );
-
-		window.removeEventListener('mousemove', mouseLocation);
-		window.removeEventListener('click', () => setIsPlaced( true ));
-
 		handleClick(e);
 	}
 
@@ -83,8 +80,9 @@ export default function Checkpoints ( props ){
 		e.stopPropagation();
 
 		props.click({ data: checkpoint });
-		setProp({ item: <PropertyBox object={checkpoint.current} close={setProp}/>, isReset: prop.isReset });
+		setProp({ item: <PropertyBox object={checkpoint.current} close={setProp} handleDelete={setIsRemoved}/>, isReset: prop.isReset });
 	}
+
 
 	useEffect(() => {
 		if( prop.isReset ){
@@ -94,7 +92,13 @@ export default function Checkpoints ( props ){
 		else{
 			props.showProp(prop.item);
 		}
+
+		if( isRemoved ){
+			props.removeObj( checkpoint.current );
+			props.click({ reset: true });
+		}
 	});
+
 
 
 	return (
@@ -178,6 +182,11 @@ const PropertyBox = ( props ) => {
     	props.close({ item: null, isReset: true });
     }
 
+
+    const handleDelete = () => {
+    	props.handleDelete( true );
+    }
+
 	return (
 		<div style={_propStyle} className="d-flex flex-column align-items-center">
 			<div style={{height: '15%', width: '100%'}} className="d-flex justify-content-end"> 
@@ -186,12 +195,12 @@ const PropertyBox = ( props ) => {
 			<div style={{height: '10%'}} className="text-center"> 
 				<h3>Properties</h3> 
 			</div>
-			<div style={{height: '75%', overflowY: 'scroll'}} className="d-flex flex-column align-items-center">
+			<div style={{height: '60%', overflowY: 'scroll'}} className="d-flex flex-column align-items-center">
 				<PropertyInput 
 					id="cp-name" 
 					name="Room name" 
 					type="text" 
-					value={object.name ?? "No name"}
+					value={object.name === 'checkpoint' ? "No name" : object.name}
 					handleChange={reqEditName}
 				/>
 				
@@ -202,6 +211,9 @@ const PropertyBox = ( props ) => {
 				<PropertyInput id="cp-pos-x" name="Position X" value={object.position.x ?? "Empty"} handleChange={reqEditPosX}/>
 				<PropertyInput id="cp-pos-y" name="Position Y" value={object.position.y ?? "Empty"} handleChange={reqEditPosY}/>
 				<PropertyInput id="cp-pos-z" name="Position Z" value={object.position.z ?? "Empty"} handleChange={reqEditPosZ}/>
+			</div>
+			<div style={{height: '15%', width: '100%'}} className="d-flex justify-content-center align-items-center"> 
+				<Button name="Delete" click={handleDelete}/> 
 			</div>
 		</div>
 	);

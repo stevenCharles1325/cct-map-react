@@ -135,12 +135,16 @@ const MapView = (props) => {
 								scene={scene}
 								click={cpDispatch} 
 								showProp={setCpPropBox}
+								removeObj={setDeleteObj}
 							/>
 						]);
 			setIsCheckPoint( false );
 		}
 		else if( deleteObj ){
-			setObjList([ ...objList ]);
+			const newObjList = objList;
+			newObjList.splice( newObjList.indexOf( deleteObj), 1 );
+
+			setObjList( newObjList );
 			impDispatch({ reset: true });
 		}
 		
@@ -163,27 +167,30 @@ const MapView = (props) => {
 	}, [impState.selected]);
 
 
-	useEffect(() => {
-		if( scene && props.mapData ){
-			console.log( props.mapData );
-		}
-	}, [scene, props.mapData]);
+	// useEffect(() => {
+	// 	if( scene && props.mapData ){
+	// 		console.log( props.mapData );
+	// 	}
+	// }, [scene, props.mapData]);
 
 
 	useEffect(() => {
 		if( props.mapData ){
-			const primitives = _loadScene( props.mapData ); // [TO BE FIXED]
+			console.log('Has data'); 
+
+			const primitives = _loadScene( props.mapData );
+			// console.log(primitives); 
 			setObjList([...objList, ...primitives]);
 		}
 	}, [props.mapData]);
 
 
-	const requestSaveMap = () => {
-		// [BUG]: If scene has other objects saving doesn't work. 
+	console.log( props.mapData );
+
+	const requestSaveMap = async () => {
 		if( scene ){
-			const prevSceneState = saveScene( scene );
-			console.log( prevSceneState );
-			props.reqSaveMapData( prevSceneState );	
+			const prevSceneState = JSON.stringify( scene.toJSON() );
+			await props.reqSaveMapData( JSON.parse( prevSceneState ) );	
 		}	
 	}
 
@@ -193,7 +200,6 @@ const MapView = (props) => {
 		    <MapMenu reqSetUpload={setUpload} reqSaveMap={requestSaveMap}/>
 		    <Suspense fallback={<CircStyleLoad />}>
 				<Canvas>
-
 				    <MapCanvas 
 				    	landRef={land} 
 				    	control={Controls}
@@ -206,7 +212,7 @@ const MapView = (props) => {
 				    </MapCanvas>
 				</Canvas>
 			    	{ propBox }
-			    	{ cpPropBox }
+			    	{ cpState.selected ? cpPropBox : null }
 		    </Suspense>
 		    <BottomBar control={setControls} setCheckpoint={setIsCheckPoint} />
 		</div>
@@ -397,9 +403,10 @@ const MapClone = (props) => {
 	);	
 }
 
+
+
 // Creates 3D object
 const MapImport = (props) => {
-	
 	const importedOBJ = useLoader( OBJLoader, props.object.filePath );
 	const object = importedOBJ.children[0];
 	
@@ -462,6 +469,7 @@ const Land = React.forwardRef((props, ref) => (
 		/>
 	</mesh>
 ));
+
 
 
 // Property Box
@@ -606,12 +614,6 @@ const Loader = ( props ) => {
 	const { progress } = useProgress();
 
 	return <Html center> Loading: { progress }% </Html>
-}
-
-
-
-const saveScene = ( scene ) => {
-	return scene.toJSON();
 }
 
 

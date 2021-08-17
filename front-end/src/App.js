@@ -199,6 +199,7 @@ export default function App(){
 	const requestMapData = async () => {
 		await axios.get('http://localhost:7000/admin/map-data')
 		.then( res => {
+			console.log( res.data );
 			setMapData( res.data );
 		})
 		.catch( err => {
@@ -208,16 +209,10 @@ export default function App(){
 
 
 
-	const requestSaveMapData = async (data) => {	
-		if( !data ) return;
+	const requestSaveMapData = async (scene) => {	
+		if( !scene ) return;
 
-		const newMapData = {data : data}
-
-		await axios.post('http://localhost:7000/admin/update-map', newMapData, {
-			headers: {
-                    'Content-Type': 'application/json'
-                }
-		})
+		await axios.post('http://localhost:7000/admin/update-map', scene)
 		.then( res => {
 			console.log( res.data.message );
 		})
@@ -237,9 +232,7 @@ export default function App(){
 	}, []);
 
 
-	// Set the View whenever either the url or the admin state changes.
-	useEffect( () => {
-		console.log('[Inspecting url]');
+	// Set the View whenever either the url or the admin state changes.		console.log('[Inspecting url]');
 		if( urlExist( webUrl ) ){ // check if url exist
 			admin ? setView( adminStatusCheck( admin, webUrl ) ) : setView( <Loading /> ) 
 		}
@@ -268,7 +261,7 @@ export default function App(){
 		}		
 	}, [admin, graphData]);
 
-
+	console.log(bundle);
 
 	return (
 		<div className="admin">
