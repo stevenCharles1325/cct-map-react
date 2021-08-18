@@ -226,13 +226,19 @@ export default function App(){
 	// Fetch data on component mount.
 	useEffect( () => {
 		console.log('[Fetching Data]');
-		requestAdminData(); // Fetch admin data.
-		requestGraphData(); // Fetch graph data.
-		requestMapData(); // Fetch map data.
-	}, []);
+
+		if( !admin ) requestAdminData(); // Fetch admin data.
+		if( !graphData ) requestGraphData(); // Fetch graph data.
+		if( !mapData ) requestMapData(); // Fetch map data.
+	
+	}, [admin, graphData, mapData]);
 
 
-	// Set the View whenever either the url or the admin state changes.		console.log('[Inspecting url]');
+
+	// Set the View whenever either the url or the admin state changes.		
+	useEffect(() => {
+		console.log('[Inspecting url]');
+
 		if( urlExist( webUrl ) ){ // check if url exist
 			admin ? setView( adminStatusCheck( admin, webUrl ) ) : setView( <Loading /> ) 
 		}
@@ -259,7 +265,7 @@ export default function App(){
 				dirs: directories
 			});
 		}		
-	}, [admin, graphData]);
+	}, [admin, graphData, mapData]);
 
 	console.log(bundle);
 

@@ -8,10 +8,8 @@ import { Input } from '../components/inputs/input';
 
 
 
-export default function Checkpoints ( props ){
+function Checkpoints ( props ){
 	const [isPlaced, setIsPlaced] = useState( false );
-	const [prop, setProp] = useState({ item: null, isReset: false });
-	const [isRemoved, setIsRemoved] = useState( false );
 	const checkpoint = useRef();
 
 
@@ -80,25 +78,7 @@ export default function Checkpoints ( props ){
 		e.stopPropagation();
 
 		props.click({ data: checkpoint });
-		setProp({ item: <PropertyBox object={checkpoint.current} close={setProp} handleDelete={setIsRemoved}/>, isReset: prop.isReset });
 	}
-
-
-	useEffect(() => {
-		if( prop.isReset ){
-			props.click({ reset: true });
-			setProp({ item: null, isReset: false });
-		}
-		else{
-			props.showProp(prop.item);
-		}
-
-		if( isRemoved ){
-			props.removeObj( checkpoint.current );
-			props.click({ reset: true });
-		}
-	});
-
 
 
 	return (
@@ -109,113 +89,32 @@ export default function Checkpoints ( props ){
 	);
 }
 
-const PropertyInput = ( props ) => {
-	return (
-		<div className="d-flex flex-column mb-4">
-            <p className="p-0 m-0">
-            	{props.name}
-            </p>
-            <div className="d-flex justify-content-center">
-	            <Input 
-	            	id={props.id} 
-	            	size={props.size ?? {width: "80%"}} 
-	            	type={ props.type ?? "number"} 
-	            	value={ props.value } 
-	            	handleChange={props.handleChange}
-	            />    	
-            </div>
-            
-        </div>
+
+function CheckpointBuilder( props ){	
+	const { geometry, object } = props;
+	const matrix = new THREE.Matrix4();
+
+	const checkpoint = useRef();
+
+	matrix.set( ...object.matrix.map( elem => (
+		elem instanceof String ? parseInt( elem ) : elem)
+	));
+
+
+	const handleClick = (e) => {
+		e.stopPropagation();
+
+		props.click({ data: checkpoint });
+	}
+
+
+	return(
+		<mesh ref={checkpoint} name={object.name} matrix={matrix} onClick={handleClick}>
+			<sphereGeometry args={[geometry.radius, geometry.widthSegments, geometry.heightSegments]}/>
+			<meshStandardMaterial />
+		</mesh>
 	);
 }
 
 
-const PropertyBox = ( props ) => {
-	const { object } = props;
-
-	const _propStyle = {
-		position: "absolute",
-		top: "15%",
-		left: "10%",
-		width: "300px",
-		height: "70vh",
-		backgroundColor: "rgba(255, 255, 255, 0.75)",
-		borderRadius: "20px",
-		padding: '10px'
-	};
-
-
-	const reqEditName = (e) => {
-        object.name = e.target.value;
-    }
-
-
-	const reqEditScaleX = (e) => {
-        object.scale.x = e.target.value;
-    }
-
-    const reqEditScaleY = (e) => {
-        object.scale.y = e.target.value;
-    }
-
-    const reqEditScaleZ = (e) => {
-        object.scale.z = e.target.value;
-    }
-
-
-
-    // Edit position functions
-	const reqEditPosX = (e) => {
-        object.position.x = e.target.value;
-    }
-
-    const reqEditPosY = (e) => {
-        object.position.y = e.target.value;
-    }
-
-    const reqEditPosZ = (e) => {
-        object.position.z = e.target.value;
-    }
-
-
-    const handleClose = () => {
-    	props.close({ item: null, isReset: true });
-    }
-
-
-    const handleDelete = () => {
-    	props.handleDelete( true );
-    }
-
-	return (
-		<div style={_propStyle} className="d-flex flex-column align-items-center">
-			<div style={{height: '15%', width: '100%'}} className="d-flex justify-content-end"> 
-				<Button name="close" click={handleClose}/> 
-			</div>
-			<div style={{height: '10%'}} className="text-center"> 
-				<h3>Properties</h3> 
-			</div>
-			<div style={{height: '60%', overflowY: 'scroll'}} className="d-flex flex-column align-items-center">
-				<PropertyInput 
-					id="cp-name" 
-					name="Room name" 
-					type="text" 
-					value={object.name === 'checkpoint' ? "No name" : object.name}
-					handleChange={reqEditName}
-				/>
-				
-				<PropertyInput id="cp-scale-x" name="Scale X" value={object.scale.x ?? "Empty"} handleChange={reqEditScaleX}/>
-				<PropertyInput id="cp-scale-y" name="Scale Y" value={object.scale.y ?? "Empty"} handleChange={reqEditScaleY}/>
-				<PropertyInput id="cp-scale-z" name="Scale Z" value={object.scale.z ?? "Empty"} handleChange={reqEditScaleZ}/>
-
-				<PropertyInput id="cp-pos-x" name="Position X" value={object.position.x ?? "Empty"} handleChange={reqEditPosX}/>
-				<PropertyInput id="cp-pos-y" name="Position Y" value={object.position.y ?? "Empty"} handleChange={reqEditPosY}/>
-				<PropertyInput id="cp-pos-z" name="Position Z" value={object.position.z ?? "Empty"} handleChange={reqEditPosZ}/>
-			</div>
-			<div style={{height: '15%', width: '100%'}} className="d-flex justify-content-center align-items-center"> 
-				<Button name="Delete" click={handleDelete}/> 
-			</div>
-		</div>
-	);
-}
-
+export { Checkpoints, CheckpointBuilder };
