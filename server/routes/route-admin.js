@@ -8,6 +8,7 @@ var path = require('path');
 const data_path = path.join(__dirname, '../data/admin.json');
 const graph_path = path.join(__dirname, '../data/records.json');
 const scene_path = path.join(__dirname, '../data/scene.json');
+const cpPos_path = path.join(__dirname, '../data/cp-position.json');
 
 
 
@@ -37,6 +38,27 @@ router.get('/graph-data', async (req, res, next) => {
 router.get('/map-data', async (req, res, next) => {
 
   const map_data = JSON.parse(fs.readFileSync( scene_path ));
+
+  // clear all files in Models folder
+  fs.readdir(path.join(__dirname, `../../front-end/public/models`), (err, files) => {
+    if( err ){
+      console.log( err );
+    }
+    else {
+      console.log("\nCurrent directory filenames:");
+     
+      files.forEach(file => {
+        console.log(file);
+        fs.unlink(path.join(__dirname, `../../front-end/public/models`, file), (err) => {
+          if (err) {
+            console.error(err)
+            return
+          }
+        })
+      })
+    }
+  });
+
 
   return res.status(200).json( map_data );  
 });
@@ -79,14 +101,20 @@ router.post('/obj-upload', async (req, res, next) => {
 
 ///////////////////// UPDATE MAP DATA  ////////////////////////
 router.post('/update-map', async (req, res, next) => {
-  const new_scene = req.body;
+  const { scene, cpPosition } = req.body;
 
-  fs.writeFile(scene_path, JSON.stringify(new_scene, null, 4), (err) => {
+  fs.writeFile(scene_path, JSON.stringify(scene, null, 4), (err) => {
     if( err ){
       return res.status(503).json({message: `Couldn't fulfill the request to save data`});
     }
 
-    return res.status(200).json({message: 'Map\'s been saved'});
+    fs.writeFile(cpPos_path, JSON.stringify(cpPosition, null, 4), (err) => {
+      if( err ){
+        return res.status(503).json({message: `Couldn't fulfill the request to save data`});
+      }
+
+      return res.status(200).json({message: 'Map\'s been saved'});
+    });
   });
 });
 

@@ -12,7 +12,7 @@
     right: 10%;
 
     width: 350px;
-    height: 80vh;
+    height: 75vh;
 
     background-color: rgba(255, 255, 255, 0.75);
     border-radius: 20px;
@@ -66,3 +66,24 @@
     color: white;
     opacity: 0.6;
 }
+
+.map-message{
+    position: absolute;
+    top: 5%;
+    left: 10%;
+
+    z-index: 3;
+
+    width: fit-content;
+    height:  50px;
+
+    background-color: #f5f6fa;
+    color: black;
+
+    text-align: center;
+
+    border-radius: 10px;
+    transition: .2s ease-in-out;
+}
+
+

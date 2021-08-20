@@ -44,9 +44,12 @@ function MapMenu( props ){
     // ------------------------------------------
 
         // Main menu handlers 
-        const saveHandler = () => {
-            console.log('clicked Save button');
-            props.reqSaveMap();
+        const saveHandler = async () => {
+            if( props.saveAllowed ) props.messenger({message: 'A checkpoint with no name has been found'});
+            
+            setTimeout(() => {
+                props.reqSaveMap();            
+            }, 3000);
         }
 
 
@@ -64,6 +67,7 @@ function MapMenu( props ){
         const previewHandler = () => {
             console.log('clicked Preview button');
         }
+
     // -----------------------------------------
 
     useEffect(() => {
@@ -92,9 +96,15 @@ function MapMenu( props ){
 
                 <div className="mm-btns-box d-flex flex-column align-items-center">
                     {[
-                        createButton('mm-save-btn', saveImg, saveHandler),
-                        createButton('mm-import-btn', importImg, openImportBox),
-                        createButton('mm-preview-btn', prevImg, previewHandler)
+                        createButton('mm-save-btn', saveImg, props.switch ? saveHandler : () => { 
+                            props.messenger({message: 'Unselect an object first'});
+                        }),
+                        createButton('mm-import-btn', importImg, props.switch ? openImportBox : () => { 
+                            props.messenger({message: 'Unselect an object first'});
+                        }),
+                        createButton('mm-preview-btn', prevImg, props.switch ? previewHandler : () => { 
+                            props.messenger({message: 'Unselect an object first'});
+                        })
                     ]}
                 </div>
             </div>

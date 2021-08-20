@@ -2,7 +2,15 @@
 // 1. Create checkpoints.
 
 
-import React, { useState, useReducer, useEffect, useRef, Suspense } from 'react';
+import React, { 
+	useState, 
+	useReducer, 
+	useEffect, 
+	useRef, 
+	Suspense, 
+	useMemo 
+} from 'react';
+
 import {
 	OrbitControls,
 	Stars,
@@ -45,19 +53,23 @@ const devTools = new MapDevTools();
 
 // == constants ==
 const LAND_SIZE = [5000, 5000];
+
+const WIDTH = window.innerWidth;
+const HEIGHT = window.innerHeight;
+
 const CAMERA = {
-	position: [0, 2500, 4000],
+	config: [75, WIDTH / HEIGHT, 100, 10000],
+	position: [0, 2400, 2400],
 	far: 10000
 }
-const MOUSE = new THREE.Vector2();
 
+var EMPTY_NAME_CP_SPOTTED = false;
 
 const MapView = (props) => {
 	const land = useRef();
 
 	const [upload, setUpload] = useState( null );
 	const [objList, setObjList] = useState( [] );
-	const [isPreviousSceneLoaded, setPreviousSceneLoaded] = useState( false );
 
 	const [copyObj, setCopyObj] = useState( null );
 	const [deleteObj, setDeleteObj] = useState( null );
@@ -70,6 +82,9 @@ const MapView = (props) => {
 
 	const [checkPoints, setCheckPoints] = useState( [] );
 
+	const [mapMessage, setMapMessage] = useState( null );
+
+	const [enableMenu, setEnableMenu] = useState( true );
 
 	const selectHandler = ( state, action ) => {
 
@@ -77,12 +92,13 @@ const MapView = (props) => {
 			if( state.selected ){
 				glassify( state?.selected?.current?.material, true );
 			}
+			setEnableMenu( true );
 			return { selected: null };
 		}
 
 		if( !state.selected && action.data ){
 			glassify( action?.data?.current?.material );
-		}
+		} 
 		else if( state.selected && action.data ){
 			glassify( state?.selected?.current?.material, true );
 			glassify( action?.data?.current?.material );
@@ -94,12 +110,6 @@ const MapView = (props) => {
 		return selectHandler( state, action );
 	}
 
-	// const impReducer = (state, action) => {
-	// 	return selectHandler( state, action );
-	// }
-
-
-	// const [impState, impDispatch] = useReducer( impReducer, {selected: null} );
 	const [state, dispatch] = useReducer( reducer, {selected: null} );
 	const [propBox, setPropBox] = useState( null );
 
@@ -117,18 +127,32 @@ const MapView = (props) => {
 
 	useEffect(() => {
 		if( upload ){
-			setObjList([...objList, <MapImport key={upload.fileName} object={upload} click={dispatch} />]);
+			setObjList([...objList, <MapImport key={upload.fileName} index={objList.length} object={upload} click={dispatch} />]);
 			setUpload( null );
 		}
 		else if( copyObj ){
-			setObjList([...objList, <MapClone key={copyObj.uuid} object={copyObj} click={dispatch} />]);
+			if( copyObj.name.search('checkpoint') > -1 ){
+				setObjList([...objList, <Checkpoints 
+											index={objList.length}
+											key={objList.length} 
+											saveCheckpoint={reqSetCheckPoints} 
+											camera={persCam} 
+											scene={scene}
+											click={dispatch}
+										/>]);			
+			}
+			else if( copyObj.name.search('map_object') > -1 ){
+				setObjList([...objList, <MapClone key={copyObj.uuid}  index={objList.length} object={copyObj} click={dispatch} />]);			
+			}
 			setCopyObj( null );	
 		}
 		else if( isCheckPoint ){
+			console.log( objList );
 			setObjList([...objList, 
 							<Checkpoints 
+								index={objList.length}
 								key={objList.length} 
-								position={reqSetCheckPoints} 
+								saveCheckpoint={reqSetCheckPoints} 
 								camera={persCam} 
 								scene={scene}
 								click={dispatch}
@@ -138,7 +162,8 @@ const MapView = (props) => {
 		}
 		else if( deleteObj ){
 			const newObjList = objList;
-			newObjList.splice( newObjList.indexOf( deleteObj), 1 );
+			newObjList.splice( newObjList.indexOf(deleteObj), 1 );
+
 
 			setObjList( newObjList );
 			dispatch({ reset: true });
@@ -149,6 +174,7 @@ const MapView = (props) => {
 
 	useEffect(() => {
 		if( state.selected ){
+			setEnableMenu( false );
 			setPropBox(<PropertyBox 
 							properties={state.selected.current} 
 							close={reqSetPropBox} 
@@ -163,59 +189,91 @@ const MapView = (props) => {
 	}, [state.selected]);
 
 
-	useEffect(() => {
-		if( props.mapData && !isPreviousSceneLoaded ){
-			(async () => {
-				const primitives = await _loadScene( props.mapData, dispatch );
-				if( primitives ){
-					setObjList([...objList, ...primitives]);
-					setPreviousSceneLoaded( true );
-				}
-			})();
+	useEffect(async () => {
+		if( !objList?.length ){
+			console.log( props.mapData );
+			const primitives = await loadScene( props.mapData, dispatch );
+			if( primitives?.length ) setObjList([ ...objList, ...primitives ]);
 		}
-	}, [props.mapData, isPreviousSceneLoaded]);
+	}, [props.mapData]);
+
+
+	useEffect(() => setMapMessage({message: 'Loading previous scene'}), []);
 
 
 	const requestSaveMap = async () => {
 		if( scene ){
 			const prevSceneState = JSON.stringify( scene.toJSON() );
-			await props.reqSaveMapData( JSON.parse( prevSceneState ) );	
+			const mapBundle = {
+								scene: JSON.parse( prevSceneState ), 
+								cpPosition: checkPoints.map( cp => ({ name: cp.name, position: cp.position }))
+							}
+			const message = await props.reqSaveMapData( mapBundle );
+
+			setMapMessage( message );
 		}	
 	}
 
 
 	return(
 		<div className="map">
-		    <MapMenu reqSetUpload={setUpload} reqSaveMap={requestSaveMap}/>
 		    <Suspense fallback={<Loader />}>
-				<Canvas>
-				    <Suspense fallback={<Loader />}>
-					    <MapCanvas 
-					    	landRef={land} 
-					    	control={Controls}
-					    	setScene={setScene}
-					    	setCam={setPersCam}
-					    	deleteObj={deleteObj}
-					    	reqSetDelete={setDeleteObj}
-					    >
-					    	{ objList }
-					    	{ console.log( scene ) }				    	
-					    </MapCanvas>
-				    </Suspense>
-				</Canvas>
-			    	{ state.selected ? propBox : null }
+			    <MapMenu 
+			    	reqSetUpload={setUpload} 
+			    	reqSaveMap={requestSaveMap} 
+			    	switch={enableMenu} 
+			    	messenger={setMapMessage} 
+			    	saveAllowed={EMPTY_NAME_CP_SPOTTED}
+			    />
+			    	<Messenger message={mapMessage}/>
+					<Canvas>
+					    <Suspense fallback={<Loader />}>
+						    <MapCanvas 
+						    	landRef={land} 
+						    	control={Controls}
+						    	setScene={setScene}
+						    	setCam={setPersCam}
+						    	deleteObj={deleteObj}
+						    	reqSetDelete={setDeleteObj}
+						    >
+						    	{ objList }
+						    </MapCanvas>
+					    </Suspense>
+					</Canvas>
+				    	{ state.selected ? propBox : null }
+			    <BottomBar control={setControls} setCheckpoint={setIsCheckPoint} />
 		    </Suspense>
-		    <BottomBar control={setControls} setCheckpoint={setIsCheckPoint} />
+		</div>
+ 	);
+}
+
+
+const Messenger = (props) => {
+	const { message } = props;
+	const [display, setDisplay] = useState('d-none');
+	
+	const DECAY_TIME = 2000;
+
+	useEffect(() => {
+		if( message ){
+			setDisplay('d-flex');
+			setTimeout(() => setDisplay('d-none'), DECAY_TIME);
+		}
+	}, [message]);
+
+	return (
+		<div className={`map-message ${display} justify-content-center align-items-center p-3`}>
+			<p className="p-0 m-0 px-2">{ message?.message }</p>
 		</div>
 	);
 }
-
 
 const BottomBar = (props) => {
 	const [switched, setSwitched] = useState( 'orbit' );
 
 	const handleCreateCheckPoint = () => {
 		props.setCheckpoint( true );
+		EMPTY_NAME_CP_SPOTTED = true;
 	}
 
 	return(
@@ -248,16 +306,13 @@ const BottomBar = (props) => {
 }
 
 
-// Canvas
+// Canvas;
 const MapCanvas = (props) => {
-	const width = window.innerWidth;
-	const height = window.innerHeight;
-
 	const { scene, camera } = useThree();
 	const set = useThree((state) => state.set);
 
 	useEffect(() => {
-		set({camera: new THREE.PerspectiveCamera(75, width / height, 100, 10000)});
+		set({camera: new THREE.PerspectiveCamera(...CAMERA.config)});
 	}, []);
 
 	useEffect(() => {
@@ -267,14 +322,16 @@ const MapCanvas = (props) => {
 
 	useEffect(() => {
 		if( props.deleteObj ){
-			scene.remove(props.deleteObj);
+			delete props.deleteObj.__r3f.handlers.onClick;
+			scene.remove(scene.getObjectById(props.deleteObj.id));
+
 			props.reqSetDelete( null );
 		}
 	}, [props.deleteObj]);
 
 	props.setCam( camera );
 	props.setScene( scene );
-	
+
 	return(
 		<>
 			<Atmosphere control={props.control} />
@@ -289,28 +346,38 @@ const MapCanvas = (props) => {
 
 
 
-const _loadScene = async (data, click) => {
+const loadScene = async (data, click) => {
 	if( !data ) return;
 
-	const { geometries, object } = data ;
 	const prevChild = [];
+	const memo = [];
 
-	if( !object?.children ) return;
+	const { geometries, object } = data ;
 
-	for( let index in object.children ){
-		if ( /Land/.test(object.children[index].name) || 
-			/Sky/.test(object.children[index].name)
-			) continue;
+	const children = object?.children;
 
-		prevChild.push(
-			<Build 
-				key={`${new Date().getMilliseconds()}-${index}`}
-				geometry={geometries[index]}
-				data={object.children[index]}
-				click={click}
-			/>
-		);
+	if( children ){
+		for( let index in children ){
+
+			if ( /Land/.test(children[index].name) || 
+				/Sky/.test(children[index].name)
+				) continue;
+
+			console.log(children[index].name);
+			if( memo.indexOf(children[index].name) < 0 ){
+				memo.push( children[index].name )
+
+				prevChild.push(<Build 
+									index={index}
+									key={`${new Date().getMilliseconds()}-${index}`}
+									geometry={geometries[index]}
+									data={object.children[index]}
+									click={click}
+								/>)
+			}
+		}	
 	}
+	
 
 	return prevChild;
 }
@@ -324,15 +391,13 @@ const Build = (props) => {
 	const objRef = useRef();
 	const handleClick = () => props.click( objRef.current );
 
-	console.log('name: ', data.name );
-
 	switch( true ){
 		case /checkpoint/.test(data.name):
-			return <CheckpointBuilder geometry={geometry} object={data} click={props.click} />; // Create checkpoint builder
+			return <CheckpointBuilder index={props.index} geometry={geometry} object={data} click={props.click} />; // Create checkpoint builder
 
 		case /map_object/.test(data.name):
 			// setLoadMesh( ); // Create builder for imported objects
-			return <ObjectBuilder geometry={geometry} object={data} click={props.click} />;
+			return <ObjectBuilder index={props.index} geometry={geometry} object={data} click={props.click} />;
 
 		default:
 			console.warn(`The type ${geometry.type} is not supported at this moment.`);
@@ -346,32 +411,33 @@ const ObjectBuilder = (props) => {
 	const { geometry, object } = props;
 	const objRef = useRef();
 
-	// position, normal, uv - Float32BufferAttribute
-	// center(v3), radius 
+
 	const matrix = new THREE.Matrix4();
+	matrix.set(...object.matrix);
+
 	const loader = new THREE.BufferGeometryLoader();
 	const parsedGeom = loader.parse( geometry );
 
-	matrix.set(...object.matrix);
+	const position = new THREE.Vector3(matrix.elements[3], matrix.elements[7], matrix.elements[11]);
+	const scale = new THREE.Vector3(matrix.elements[0], matrix.elements[5], matrix.elements[10]);
 
 	const handleClick = (e) => {
 		e.stopPropagation();
 
 		props.click({ data: objRef });
 	}
-
-	console.log( parsedGeom );
+	
 
 	return(
 		<mesh
-			name="map_object"
+			name={`map_object_${props.index}`}
 			ref={objRef}
-			onClick={handleClick}
+			onDoubleClick={handleClick}
 			receiveShadow
 			castShadow
-			scale={50}
+			scale={[...Object.values(scale)]}
 			geometry={parsedGeom}
-			matrix={matrix}
+			position={[...Object.values(position)]}
 		>	
 			<meshStandardMaterial
 				color="white"
@@ -388,19 +454,17 @@ const MapClone = (props) => {
 	const object = props.object;
 	const objRef = useRef();
 
-
 	const handleClick = (e) => {
 		e.stopPropagation();
 		
-		props.click({ data: objRef })
+		props.click({ data: objRef });
 	};
-
 
 	return(
 		<mesh
-			name="map_object"
+			name={`map_object_${props.index}`}
 			ref={objRef}
-			onClick={handleClick}
+			onDoubleClick={handleClick}
 			receiveShadow
 			castShadow
 			scale={50}
@@ -426,14 +490,14 @@ const MapImport = (props) => {
 	const handleClick = (e) => {
 		e.stopPropagation();
 
-		props.click({ data: objRef })
+		props.click({ data: objRef });
 	};
 
 	return(
 		<mesh
-			name="map_object"
+			name={`map_object_${props.index}`}
 			ref={objRef}
-			onClick={handleClick}
+			onDoubleClick={handleClick}
 			receiveShadow
 			castShadow
 			scale={50}
@@ -493,10 +557,26 @@ const PropertyBox = (props) => {
 
     const inputSize = {width: '90%', height: '50px'};
 
+    const checkpointType = (properties?.name.search('checkpoint') > -1) ? true : false;
+
+    const getRootName = (name) => name?.replace?.(/checkpoint_([0-9]+)_/, ''); // Returns: room123
+    const getBaseName = (name) => name?.replace?.(getRootName(name), ''); // Returns: checkpoint_123_
+    const setMonitor = (name) => !getRootName( properties.name ) ? true : false;  
+
+	const [name, setName] = useState( getRootName(properties.name).toLowerCase() );
+
+    if( checkpointType ){
+    	EMPTY_NAME_CP_SPOTTED = setMonitor( properties.name );
+	    var baseName = getBaseName( properties.name );	  
+    }
+
 
     // Object name
     const reqEditName = (e) => {
-        properties.name = e.target.value;
+        setName( e.target.value.toLowerCase() );
+        properties.name = `${baseName}${e.target.value.toUpperCase()}`;
+	    
+	    EMPTY_NAME_CP_SPOTTED = setMonitor( properties.name );
     }
 
 
@@ -561,10 +641,9 @@ const PropertyBox = (props) => {
                 <h2>Properties</h2>
             </div>
             <div  style={{height: '72%'}} className="obj-props d-flex flex-column justify-content-between align-items-center">
-            	
             	{ 
-            		properties?.name === 'checkpoint' ? 
-            			<PropBoxInp id="scaleX" size={inputSize}  value={properties.name} handleChange={reqEditName} name="Room Name"/> 
+            		checkpointType  ? 
+            			<PropBoxInp id="name" size={inputSize} type="text" value={name} placeholder="No name" handleChange={reqEditName} name="Room Name"/> 
             			: null 
             	}
 
@@ -578,20 +657,7 @@ const PropertyBox = (props) => {
             	
             	<PropBoxInp id="posY" size={inputSize}  value={properties.position.y} handleChange={reqEditPosY} name="Position Y"/> 
             	
-            	<PropBoxInp id="posZ" size={inputSize}  value={properties.position.z} handleChange={reqEditPosZ} name="Position Z"/> 
-            	
-            	{ 
-            		properties?.name === 'checkpoint' ? () => (
-	            		<>
-			            	<PropBoxInp id="rotX" size={inputSize}  value={properties.rotation.x} handleChange={reqEditRotX} name="Rotation X"/> 
-			            	
-			            	<PropBoxInp id="rotY" size={inputSize}  value={properties.rotation.y} handleChange={reqEditRotY} name="Rotation Y"/> 
-			            	
-			            	<PropBoxInp id="rotZ" size={inputSize}  value={properties.rotation.z} handleChange={reqEditRotZ} name="Rotation Z"/> 
-	            		</>
-	            	) : null 
-            	}
-            	
+            	<PropBoxInp id="posZ" size={inputSize}  value={properties.position.z} handleChange={reqEditPosZ} name="Position Z"/>             	
             </div>   
             <div style={{height: '10%', width: '100%'}} className="d-flex justify-content-between align-items-center">
             	{[
@@ -621,6 +687,7 @@ const PropBoxInp = (props) => {
             </p>
             <Input 
             	id={props.id} 
+            	placeholder={props.placeholder}
             	size={props.size} 
             	type={ props.type || "number"} 
             	value={ props.value } 

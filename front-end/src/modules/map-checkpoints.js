@@ -23,6 +23,12 @@ function Checkpoints ( props ){
 	const _mousePos = new THREE.Vector2();
 	const _raycaster = new THREE.Raycaster();
 
+
+	useEffect(() => {
+		if(checkpoint.current) props.saveCheckpoint(checkpoint.current);
+
+	}, [checkpoint.current]);
+
 	// Mouse movement event listener
 	useEffect(() => {
 		if( !isPlaced ) window.addEventListener('mousemove', mouseLocation);
@@ -82,7 +88,7 @@ function Checkpoints ( props ){
 
 
 	return (
-		<mesh name="checkpoint" ref={checkpoint} onClick={handleClick}>
+		<mesh name={`checkpoint_${props.index}_`} ref={checkpoint} onDoubleClick={handleClick}>
 			<sphereGeometry args={_size} />
 			<meshStandardMaterial color="white"/>
 		</mesh>
@@ -96,10 +102,10 @@ function CheckpointBuilder( props ){
 
 	const checkpoint = useRef();
 
-	matrix.set( ...object.matrix.map( elem => (
-		elem instanceof String ? parseInt( elem ) : elem)
-	));
+	matrix.set( ...object.matrix );
 
+	const position = new THREE.Vector3(matrix.elements[3], matrix.elements[7], matrix.elements[11]);
+	const scale = new THREE.Vector3(matrix.elements[0], matrix.elements[5], matrix.elements[10]);
 
 	const handleClick = (e) => {
 		e.stopPropagation();
@@ -109,7 +115,7 @@ function CheckpointBuilder( props ){
 
 
 	return(
-		<mesh ref={checkpoint} name={object.name} matrix={matrix} onClick={handleClick}>
+		<mesh name={object.name} ref={checkpoint} scale={[...Object.values(scale)]} name={object.name} position={position} onDoubleClick={handleClick}>
 			<sphereGeometry args={[geometry.radius, geometry.widthSegments, geometry.heightSegments]}/>
 			<meshStandardMaterial />
 		</mesh>

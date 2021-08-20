@@ -199,7 +199,6 @@ export default function App(){
 	const requestMapData = async () => {
 		await axios.get('http://localhost:7000/admin/map-data')
 		.then( res => {
-			console.log( res.data );
 			setMapData( res.data );
 		})
 		.catch( err => {
@@ -209,7 +208,7 @@ export default function App(){
 
 
 
-	const requestSaveMapData = async (scene) => {	
+	const requestServerSaveMapData = async (scene) => {	
 		if( !scene ) return;
 
 		await axios.post('http://localhost:7000/admin/update-map', scene)
@@ -219,6 +218,19 @@ export default function App(){
 		.catch( err => {
 			errorHandler( err );
 		});
+	}
+
+
+	const requestSaveMapData = async ( map ) => {	
+		if( !map ){ 
+			return { message : 'Scene is empty' };
+		}
+		else{
+			setMapData( map.scene );
+			requestServerSaveMapData( map );
+
+			return { message : 'Map has been saved' };
+		} 
 	}
 
 
@@ -267,7 +279,6 @@ export default function App(){
 		}		
 	}, [admin, graphData, mapData]);
 
-	console.log(bundle);
 
 	return (
 		<div className="admin">
