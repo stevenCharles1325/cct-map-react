@@ -3,9 +3,8 @@ import { useFrame, useThree } from '@react-three/fiber';
 
 import * as THREE from 'three';
 
-import Button from '../components/buttons/button';
-import { Input } from '../components/inputs/input';
-
+import Button from '../components/admin/buttons/button';
+import { Input } from '../components/admin/inputs/input';
 
 
 function Checkpoints ( props ){

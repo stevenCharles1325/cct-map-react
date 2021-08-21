@@ -1,0 +1,48 @@
+.input-bar{
+    width: 90%;
+    height: 45px;
+
+    position: relative;
+    background-color: var(--components-color);
+
+    overflow: hidden;
+    border-radius: 20px;
+    margin: 10px;
+}
+
+.input-cover{
+    position: absolute;
+    top: 0%;
+    left: 0%;
+
+    width: 0%;
+    height: 100%;
+
+    border-radius: 20px;
+
+    background-color: rgb(221, 143, 143);
+
+    overflow: hidden;
+    transition: .5s ease-in-out;
+
+    font-weight: bold;
+
+}
+
+.input-field{
+    background-color: transparent;
+    border: none;
+    outline: none;
+
+    height: 100%;
+
+    text-align: center;
+    text-justify: center;
+}
+
+::placeholder{
+    font-weight: bold;
+    color: var(--components-text-color);
+    letter-spacing: 3px;
+    font-size: 95%;
+}

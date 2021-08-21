@@ -1,0 +1,28 @@
+.sign-up-frame{
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(205.95deg, rgba(210, 49, 49, 0.8) 12.53%, rgba(255, 229, 90, 0.5) 127.6%);
+}
+
+.sign-up-inp-box{
+    width: 45%;
+    height: 100%;
+
+    text-align: center;
+}
+
+.sign-up-intro-box{
+    margin: 5%;
+    width: 35%;
+    height: 80%;
+
+    overflow-y: auto;
+    border-radius: 5px;
+
+    padding: 2%;
+    background-color: var(--card-color);
+
+    text-align: justify;
+    text-rendering: optimizeSpeed;
+}
+

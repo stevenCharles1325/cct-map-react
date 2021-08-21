@@ -1,0 +1,50 @@
+.nav-panel{
+    position: absolute;
+    top: 0%;
+    right: 0%;
+
+    width: 400px;
+    height: 100vh;
+
+    z-index: 2;
+}
+
+#menu-btn{
+    transition: .2s ease-in-out;
+}
+
+.np-menu-bar{
+    background-color: transparent;
+}
+
+.np-content{
+    background-color: #AB4E4E;
+    overflow: hidden;
+}
+
+.np-img-container{
+    border-radius: 100%;
+
+    background-color: var(--components-color);
+
+    transition: .3s ease-in-out;
+}
+
+.np-name-container{
+    color: white;
+    padding-left: 20px;
+}
+
+.np-divider{
+    height: 4px !important;
+    background-color: rgba( 255, 255, 255, 0.7) !important;
+    opacity: 1;
+}
+
+.np-logout-btn{
+    background: none;
+    border: none;
+    outline: none;
+
+    color: var(--components-color);
+}

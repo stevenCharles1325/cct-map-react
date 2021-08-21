@@ -45,10 +45,7 @@ router.get('/map-data', async (req, res, next) => {
       console.log( err );
     }
     else {
-      console.log("\nCurrent directory filenames:");
-     
       files.forEach(file => {
-        console.log(file);
         fs.unlink(path.join(__dirname, `../../front-end/public/models`, file), (err) => {
           if (err) {
             console.error(err)
@@ -58,7 +55,6 @@ router.get('/map-data', async (req, res, next) => {
       })
     }
   });
-
 
   return res.status(200).json( map_data );  
 });

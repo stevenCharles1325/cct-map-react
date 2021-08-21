@@ -1,0 +1,71 @@
+.dashboard{
+    width: 100vw;
+    height: 100vh;
+
+    padding: 0px;
+    margin: 0px;
+
+    background: linear-gradient(358.39deg, rgba(210, 49, 49, 0.7) 1.31%, rgba(255, 229, 90, 0.6) 147.17%);
+}
+
+.dash-header{
+    width: 100%;
+    height: 16vh;
+
+    color: white;
+}
+
+.dash-profile-container{
+    width: 64px;
+    height: 64px;
+
+    border-radius: 100%;
+
+    background-color: white;
+}
+
+.dash-chart-box{
+    height: 84vh !important;
+}
+
+.top-chart-box{
+    height: 60%;
+    background-color: rgba(204, 204, 204, .85);
+}
+
+.bot-chart-box{
+    width: 100% !important;
+    height: 40% !important;
+    background-color: rgba(255, 255, 255, 0.7);
+
+    overflow-y: scroll;
+}
+
+.left-graph-box{
+    color: white;
+    width: 54.8% ;
+    height: 100%;
+    background-color: rgba(198, 115, 115, 0.5);
+}
+
+.left-graph{
+    width: 100% !important;
+    height: 89% !important;
+}
+
+.right-graph-box{
+    color: white;
+    width: 45% ;
+    height: 100% ;
+    background-color: rgba(198, 115, 115, 0.5);
+}
+
+.right-graph{
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.bot-graph{
+    width: 100% !important;
+    height: 15% !important;
+}
