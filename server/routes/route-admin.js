@@ -99,6 +99,8 @@ router.post('/obj-upload', async (req, res, next) => {
 router.post('/update-map', async (req, res, next) => {
   const { scene, cpPosition } = req.body;
 
+  
+
   fs.writeFile(scene_path, JSON.stringify(scene, null, 4), (err) => {
     if( err ){
       return res.status(503).json({message: `Couldn't fulfill the request to save data`});

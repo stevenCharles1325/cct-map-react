@@ -125,6 +125,9 @@ const MapView = (props) => {
 	}
 
 
+	useEffect(() => console.log(checkPoints), [checkPoints]);
+
+
 	useEffect(() => {
 		if( upload ){
 			setObjList([...objList, <MapImport key={upload.fileName} index={objList.length} object={upload} click={dispatch} />]);
@@ -192,11 +195,15 @@ const MapView = (props) => {
 
 
 	useEffect(async () => {
-		if( !objList?.length ){
-			console.log( props.mapData );
-			const primitives = await loadScene( props.mapData, dispatch );
-			if( primitives?.length ) setObjList([ ...objList, ...primitives ]);
+		const sceneLoader = async () => {
+			if( !objList?.length ){
+				console.log( props.mapData );
+				const primitives = await loadScene( props.mapData, dispatch, reqSetCheckPoints );
+				if( primitives?.length ) setObjList([ ...objList, ...primitives ]);
+			}
 		}
+		sceneLoader();
+
 	}, [props.mapData]);
 
 
@@ -206,9 +213,10 @@ const MapView = (props) => {
 	const requestSaveMap = async () => {
 		if( scene ){
 			const prevSceneState = JSON.stringify( scene.toJSON() );
+			console.log(checkPoints.map(elem => ({name: elem.name, position: elem.position})))
 			const mapBundle = {
 								scene: JSON.parse( prevSceneState ), 
-								cpPosition: checkPoints
+								cpPosition: checkPoints.map(elem => ({name: elem.name, position: elem.position}))
 							}
 			console.log( mapBundle );
 			const message = await props.reqSaveMapData( mapBundle );
@@ -349,7 +357,7 @@ const MapCanvas = (props) => {
 
 
 
-const loadScene = async (data, click) => {
+const loadScene = async (data, click, checkpointSaver) => {
 	if( !data ) return;
 
 	const prevChild = [];
@@ -376,6 +384,7 @@ const loadScene = async (data, click) => {
 									geometry={geometries[index]}
 									data={object.children[index]}
 									click={click}
+									saveCheckpoint={checkpointSaver}
 								/>)
 			}
 		}	
@@ -396,7 +405,13 @@ const Build = (props) => {
 
 	switch( true ){
 		case /checkpoint/.test(data.name):
-			return <CheckpointBuilder index={props.index} geometry={geometry} object={data} click={props.click} />; // Create checkpoint builder
+			return (<CheckpointBuilder 
+							index={props.index} 
+							geometry={geometry} 
+							object={data} 
+							click={props.click} 
+							saveCheckpoint={props.saveCheckpoint} 
+					/>); // Create checkpoint builder
 
 		case /map_object/.test(data.name):
 			return <ObjectBuilder index={props.index} geometry={geometry} object={data} click={props.click} />;

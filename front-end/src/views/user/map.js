@@ -38,14 +38,17 @@ const MapView = (props) => {
 
 
 	useEffect(async () => {
-		if( props.mapData ){
-			console.log( props.mapData );
-
-			const prevScene  = await loadScene(props.mapData.scene);
-
-			setScene( prevScene );
-			setCpPos( props.mapData.cpPos );
+		const sceneLoader = async () => {
+			if( props.mapData ){
+				console.log( props.mapData );
+	
+				const prevScene  = await loadScene(props.mapData.scene);
+	
+				setScene( prevScene );
+				setCpPos( props.mapData.cpPos );
+			}
 		}
+		sceneLoader();
 
 	}, [props.mapData]);
 

@@ -24,7 +24,9 @@ function Checkpoints ( props ){
 
 
 	useEffect(() => {
-		if(checkpoint.current) props.saveCheckpoint(checkpoint.current);
+		if(checkpoint.current){
+			props.saveCheckpoint(checkpoint.current);
+		}
 
 	}, [checkpoint.current]);
 
@@ -112,6 +114,9 @@ function CheckpointBuilder( props ){
 		props.click({ data: checkpoint });
 	}
 
+	useEffect(() => {
+		if( checkpoint.current ) props.saveCheckpoint( checkpoint.current );
+	}, [checkpoint.current])
 
 	return(
 		<mesh name={object.name} ref={checkpoint} scale={[...Object.values(scale)]} name={object.name} position={position} onDoubleClick={handleClick}>
