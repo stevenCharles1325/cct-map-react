@@ -1,11 +1,4 @@
 
-/*
-
-	[NOTE]:
-		Fix bug in Checkpoint saving.
-
-*/
-
 import React, { 
 	useState, 
 	useReducer, 
@@ -117,7 +110,14 @@ const MapView = (props) => {
 	// ==========================================================
 
 	function reqSetCheckPoints ( newCheckpoint ) {
-		setCheckPoints([...checkPoints, newCheckpoint]);
+		setCheckPoints((checkPoints) => {
+			if( checkPoints.map( cp => cp.name ).indexOf( newCheckpoint.name ) > - 1){
+				return [...checkPoints];
+			}
+			else{
+				return [...checkPoints, newCheckpoint];
+			}
+		});
 	}
 
 	function reqSetPropBox() {
@@ -150,7 +150,6 @@ const MapView = (props) => {
 			setCopyObj( null );	
 		}
 		else if( isCheckPoint ){
-			console.log( objList );
 			setObjList([...objList, 
 							<Checkpoints 
 								index={objList.length}
@@ -168,7 +167,7 @@ const MapView = (props) => {
 			newObjList.splice( newObjList.indexOf(deleteObj), 1 );
 
 
-			setObjList( newObjList );
+			setObjList(() => [newObjList]);
 			dispatch({ reset: true });
 		}
 		
@@ -194,10 +193,9 @@ const MapView = (props) => {
 	}, [state.selected]);
 
 
-	useEffect(async () => {
+	useEffect(() => {
 		const sceneLoader = async () => {
 			if( !objList?.length ){
-				console.log( props.mapData );
 				const primitives = await loadScene( props.mapData, dispatch, reqSetCheckPoints );
 				if( primitives?.length ) setObjList([ ...objList, ...primitives ]);
 			}
@@ -213,12 +211,11 @@ const MapView = (props) => {
 	const requestSaveMap = async () => {
 		if( scene ){
 			const prevSceneState = JSON.stringify( scene.toJSON() );
-			console.log(checkPoints.map(elem => ({name: elem.name, position: elem.position})))
+
 			const mapBundle = {
 								scene: JSON.parse( prevSceneState ), 
 								cpPosition: checkPoints.map(elem => ({name: elem.name, position: elem.position}))
 							}
-			console.log( mapBundle );
 			const message = await props.reqSaveMapData( mapBundle );
 
 			setMapMessage( message );
@@ -333,8 +330,11 @@ const MapCanvas = (props) => {
 
 	useEffect(() => {
 		if( props.deleteObj ){
+			console.log(scene.getObjectByName(props.deleteObj.name));
+
 			delete props.deleteObj.__r3f.handlers.onClick;
-			scene.remove(scene.getObjectById(props.deleteObj.id));
+
+			scene.remove(scene.getObjectByName(props.deleteObj.name));
 
 			props.reqSetDelete( null );
 		}
@@ -374,7 +374,6 @@ const loadScene = async (data, click, checkpointSaver) => {
 				/Sky/.test(children[index].name)
 				) continue;
 
-			console.log(children[index].name);
 			if( memo.indexOf(children[index].name) < 0 ){
 				memo.push( children[index].name )
 

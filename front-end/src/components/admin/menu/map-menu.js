@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
+import ReactTooltip from 'react-tooltip';
 import axios from 'axios';
 
 import CircStyleLoad from '../load-bar/circ-load';
@@ -95,14 +96,16 @@ function MapMenu( props ){
                 </div>
 
                 <div className="mm-btns-box d-flex flex-column align-items-center">
+                    <ReactTooltip />
+
                     {[
-                        createButton('mm-save-btn', saveImg, props.switch ? saveHandler : () => { 
+                        createButton('mm-save-btn', 'Save',saveImg, props.switch ? saveHandler : () => { 
                             props.messenger({message: 'Unselect an object first'});
                         }),
-                        createButton('mm-import-btn', importImg, props.switch ? openImportBox : () => { 
+                        createButton('mm-import-btn', 'Import object',importImg, props.switch ? openImportBox : () => { 
                             props.messenger({message: 'Unselect an object first'});
                         }),
-                        createButton('mm-preview-btn', prevImg, props.switch ? previewHandler : () => { 
+                        createButton('mm-preview-btn', 'Preview',prevImg, props.switch ? previewHandler : () => { 
                             props.messenger({message: 'Unselect an object first'});
                         })
                     ]}
@@ -117,13 +120,18 @@ function MapMenu( props ){
 
 
 
-function createButton( id, icon, callback ){
+function createButton( id, tipMsg, icon, callback ){
     return(
-        <div key={id} id={id} className="mm-btn-cont p-3 my-3 d-flex justify-content-center align-items-center">
+        <div 
+            key={id} 
+            id={id} 
+            data-tip={tipMsg}
+            data-type="light"
+            data-effect="solid" 
+            className="mm-btn-cont p-3 my-3 d-flex justify-content-center align-items-center"
+        >
             <div width="150px" height="50px" className="d-flex justify-content-center align-items-center">
-                <img className="mm-btn-icon" width="70%" height="70%" src={icon} onClick={() => {
-                    callback()
-                }}/>
+                <img className="mm-btn-icon" width="70%" height="70%" src={icon} onClick={() => callback()}/>
             </div>
         </div>
     );

@@ -29,7 +29,7 @@ const FloatingButton = (props) => {
 
 	useEffect(() => {
 		if( state.p2pFormState ){
-			setP2pForm( <P2pForm {...props}/> );
+			setP2pForm( <P2pForm dispatch={dispatch} {...props}/> );
 		}
 		else{
 			setP2pForm( null );
@@ -58,10 +58,10 @@ const P2pForm = (props) => {
 
 	const { cpPos } = props;
 
-    const getRootName = (name) => name?.replace?.(/checkpoint_([0-9]+)_/, ''); // Returns: room123
-    const options = cpPos?.map?.( item => (<option key={item.name} value={getRootName(item.name)}> {getRootName(item.name)} </option>) )
+    const getRootName = (name) => name?.replace?.(/checkpoint_([0-9]+)_/, ''); // Example: Checkpoint_room123 becomes -> room123
+    const options = cpPos?.map?.( item => (<option key={item.name} value={item.name}> {getRootName(item.name)} </option>) )
 
-    const [destination, setDestination] = useState({ start: null, end: null });
+    const [destination, setDestination] = useState({ start: cpPos?.[0]?.name, end: cpPos?.[0]?.name });
 
     const reqSetLocation = (e) => {
     	setDestination({ start: e.target.value, end: destination.end });
@@ -72,22 +72,13 @@ const P2pForm = (props) => {
     }
 
     const reqRunP2PAlgo = () => {
-    	if( !destination.start && !destination.end ){
-    		setDestination({ start: cpPos[0].position, end: cpPos[0].position });	
-	    	return props.setDestination( destination );
+    	const filterElem = ( elem ) => {
+    		if( elem.name === destination.start || elem.name === destination.end ) return true;
     	}
 
-    	cpPos.forEach( elem => {
-			if( elem.name === destination.start ){
-				setDestination({ start: elem.position, end: destination.end });
-			}
-
-			if( elem.name === destination.end ){
-				setDestination({ start: destination.start, end: elem.position });
-			}
-		});
-
-		props.setDestination( destination );
+    	const positions = cpPos.filter( filterElem ).map( elem => elem.position );
+		props.setDestination({start: positions?.[0], end: positions?.[1] ? positions[1] : positions[0] });
+		props.dispatch({type: 'p2p'}); // Closes p2p form
     }
     
 	return (
