@@ -3,6 +3,7 @@ import axios from 'axios';
 import Validator from '../../modules/validate-input';
 
 import { Input, displayMessage }from '../../components/admin/inputs/input';
+import ImageBall from '../../components/admin/image/image-ball';
 
 import '../../styles/admin/settings.css';
 import userFace from '../../images/admin/happy.png';
@@ -104,7 +105,8 @@ export default function Settings( props ){
             <div className="settings-bar"></div>
             <div className="settings-pic-bar d-flex flex-row">
                 <div className="settings-pic-cont d-flex justify-content-center align-items-center">
-                    <img width="80%" height="80%" src={userFace}/>
+                    {/*<img width="80%" height="80%" src={userFace}/>*/}
+                    <ImageBall active={true}/>
                 </div>
                 <div className="settings-title">Settings</div>
             </div>
@@ -173,9 +175,6 @@ function createPeekButton( id ){
 
     return <button key={id} onClick={handleClick} className="peek-btn"> peek </button>
 }
-
-
-
 
 
 

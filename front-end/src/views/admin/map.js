@@ -1,4 +1,3 @@
-
 import React, { 
 	useState, 
 	useReducer, 
@@ -75,9 +74,11 @@ const MapView = (props) => {
 
 	const [checkPoints, setCheckPoints] = useState( [] );
 
-	const [mapMessage, setMapMessage] = useState( null );
+	const [mapMessage, setMapMessage] = useState( [] );
 
 	const [enableMenu, setEnableMenu] = useState( true );
+
+	const [objectCount, setObjectCount] = useState( 0 );
 
 	const selectHandler = ( state, action ) => {
 
@@ -125,35 +126,58 @@ const MapView = (props) => {
 	}
 
 
-	useEffect(() => console.log(checkPoints), [checkPoints]);
+	useEffect(() => console.log(objList), []);
 
 
 	useEffect(() => {
+		if( upload || copyObj || isCheckPoint ) setObjectCount((objectCount) => objectCount + 1);
+
 		if( upload ){
-			setObjList([...objList, <MapImport key={upload.fileName} index={objList.length} object={upload} click={dispatch} />]);
+			setObjList((objList) => [
+										...objList, 
+										<MapImport
+											key={`map_object_${objectCount}`} 
+											index={objectCount} 
+											object={upload} 
+											click={dispatch} 
+										/>
+									]);
+			setMapMessage((mapMessage) => [...mapMessage, '3D object had been uploaded successfully']);			
 			setUpload( null );
 		}
 		else if( copyObj ){
 			if( copyObj.name.search('checkpoint') > -1 ){
-				setObjList([...objList, <Checkpoints 
-											index={objList.length}
-											key={objList.length} 
-											saveCheckpoint={reqSetCheckPoints} 
-											camera={persCam} 
-											scene={scene}
-											click={dispatch}
-										/>]);			
+				setObjList((objList) => [
+											...objList, 
+											<Checkpoints 
+												index={objectCount} 
+												key={`checkpoint_${objectCount}`}
+												saveCheckpoint={reqSetCheckPoints} 
+												camera={persCam} 
+												scene={scene}
+												click={dispatch}
+											/>
+										]);			
 			}
 			else if( copyObj.name.search('map_object') > -1 ){
-				setObjList([...objList, <MapClone key={copyObj.uuid}  index={objList.length} object={copyObj} click={dispatch} />]);			
+				setObjList((objList) => [
+											...objList, 
+											<MapClone 
+												key={`map_object_${objectCount}`} 
+												index={objectCount} 
+												object={copyObj} 
+												click={dispatch} 
+											/>
+										]);			
 			}
 			setCopyObj( null );	
+
 		}
 		else if( isCheckPoint ){
-			setObjList([...objList, 
+			setObjList((objList) => [...objList, 
 							<Checkpoints 
-								index={objList.length}
-								key={objList.length} 
+								index={objectCount}
+								key={`checkpoint_${objectCount}`} 
 								saveCheckpoint={reqSetCheckPoints} 
 								camera={persCam} 
 								scene={scene}
@@ -163,15 +187,16 @@ const MapView = (props) => {
 			setIsCheckPoint( false );
 		}
 		else if( deleteObj ){
-			const newObjList = objList;
-			newObjList.splice( newObjList.indexOf(deleteObj), 1 );
+			const newObjList = removeByKey( objList, deleteObj );
+			const newCpList = removeByName( checkPoints, deleteObj );
 
-
-			setObjList(() => [newObjList]);
+			setObjList(() => [...newObjList]);
+			setCheckPoints(() => [...newCpList]);
+			
 			dispatch({ reset: true });
 		}
 		
-	}, [upload, copyObj, deleteObj, isCheckPoint]);
+	}, [upload, copyObj, deleteObj, isCheckPoint, objList]);
 
 
 	useEffect(() => {
@@ -181,7 +206,9 @@ const MapView = (props) => {
 							properties={state.selected.current} 
 							close={reqSetPropBox} 
 							copy={setCopyObj} 
-							delete={setDeleteObj}
+							remove={setDeleteObj}
+							setCheckPoints={setCheckPoints}
+							scene={scene}
 						/>);
 			PROP_BOX_DETECTED = !PROP_BOX_DETECTED;
 		}
@@ -197,16 +224,23 @@ const MapView = (props) => {
 		const sceneLoader = async () => {
 			if( !objList?.length ){
 				const primitives = await loadScene( props.mapData, dispatch, reqSetCheckPoints );
-				if( primitives?.length ) setObjList([ ...objList, ...primitives ]);
+				if( primitives?.length ){
+					setObjList((objList) => [ ...primitives ]);
+
+					setObjectCount( getLastStringToNumber(primitives[primitives.length - 1].key) ); // 
+					setMapMessage((mapMessage) => [...mapMessage, 'Previous scene has been loaded successfully']);
+				};
 			}
 		}
-		sceneLoader();
+
+		if( !props.mapData ){
+			setMapMessage((mapMessage) => [...mapMessage, 'Fetching previous scene']);			
+		}
+		else{
+			sceneLoader();
+		}
 
 	}, [props.mapData]);
-
-
-	useEffect(() => setMapMessage({message: 'Loading previous scene'}), []);
-
 
 	const requestSaveMap = async () => {
 		if( scene ){
@@ -218,7 +252,7 @@ const MapView = (props) => {
 							}
 			const message = await props.reqSaveMapData( mapBundle );
 
-			setMapMessage( message );
+			setMapMessage( (mapMessage) => [...mapMessage, message.message] );
 		}	
 	}
 
@@ -233,7 +267,7 @@ const MapView = (props) => {
 			    	messenger={setMapMessage} 
 			    	saveAllowed={EMPTY_NAME_CP_SPOTTED}
 			    />
-			    	<Messenger message={mapMessage}/>
+			    	<Messenger message={mapMessage} messenger={setMapMessage}/>
 					<Canvas>
 					    <Suspense fallback={<Loader />}>
 						    <MapCanvas 
@@ -257,21 +291,23 @@ const MapView = (props) => {
 
 
 const Messenger = (props) => {
-	const { message } = props;
-	const [display, setDisplay] = useState('d-none');
+	let { message, messenger } = props;
+	const [msg, setMsg] = useState('');
 	
 	const DECAY_TIME = 2000;
 
 	useEffect(() => {
-		if( message ){
-			setDisplay('d-flex');
-			setTimeout(() => setDisplay('d-none'), DECAY_TIME);
+		const displayMessage = async ( newMessage ) => {
+			setMsg(() => newMessage);
+			setTimeout(() => setMsg(() => ''), DECAY_TIME);
 		}
+
+		message.forEach( pendingMsg => setTimeout(() => displayMessage(pendingMsg), DECAY_TIME) );
 	}, [message]);
 
 	return (
-		<div className={`map-message ${display} justify-content-center align-items-center p-3`}>
-			<p className="p-0 m-0 px-2">{ message?.message }</p>
+		<div className={`map-message ${msg ? 'd-flex' : 'd-none'} justify-content-center align-items-center p-3`}>
+			<p className="p-0 m-0 px-2">{ msg }</p>
 		</div>
 	);
 }
@@ -326,22 +362,19 @@ const MapCanvas = (props) => {
 	useEffect(() => {
 		camera.position.set( ...CAMERA.position );
 		camera.updateProjectionMatrix();
+		props.setCam( camera );
+
 	}, [camera]);
 
 	useEffect(() => {
 		if( props.deleteObj ){
-			console.log(scene.getObjectByName(props.deleteObj.name));
-
 			delete props.deleteObj.__r3f.handlers.onClick;
+			props.reqSetDelete(() => null);
 
-			scene.remove(scene.getObjectByName(props.deleteObj.name));
-
-			props.reqSetDelete( null );
 		}
 	}, [props.deleteObj]);
 
-	props.setCam( camera );
-	props.setScene( scene );
+	props.setScene( () => scene );
 
 	return(
 		<>
@@ -360,6 +393,8 @@ const MapCanvas = (props) => {
 const loadScene = async (data, click, checkpointSaver) => {
 	if( !data ) return;
 
+	let key;
+
 	const prevChild = [];
 	const memo = [];
 
@@ -376,15 +411,24 @@ const loadScene = async (data, click, checkpointSaver) => {
 
 			if( memo.indexOf(children[index].name) < 0 ){
 				memo.push( children[index].name )
+				console.log( memo );
+
+
+				if( isCheckpointObject(children[index].name) ){
+					key = `checkpoint_${index}`;
+				}
+				else{
+					key = `map_object_${index}`;
+				}
 
 				prevChild.push(<Build 
 									index={index}
-									key={`${new Date().getMilliseconds()}-${index}`}
+									key={key}
 									geometry={geometries[index]}
 									data={object.children[index]}
 									click={click}
 									saveCheckpoint={checkpointSaver}
-								/>)
+								/>);
 			}
 		}	
 	}
@@ -403,17 +447,21 @@ const Build = (props) => {
 	const handleClick = () => props.click( objRef.current );
 
 	switch( true ){
+
 		case /checkpoint/.test(data.name):
 			return (<CheckpointBuilder 
-							index={props.index} 
-							geometry={geometry} 
-							object={data} 
-							click={props.click} 
-							saveCheckpoint={props.saveCheckpoint} 
-					/>); // Create checkpoint builder
+						geometry={geometry} 
+						object={data} 
+						click={props.click} 
+						saveCheckpoint={props.saveCheckpoint} 
+					/>); 
 
 		case /map_object/.test(data.name):
-			return <ObjectBuilder index={props.index} geometry={geometry} object={data} click={props.click} />;
+			return <ObjectBuilder 
+						geometry={geometry} 
+						object={data} 
+						click={props.click} 
+					/>;
 
 		default:
 			console.warn(`The type ${geometry.type} is not supported at this moment.`);
@@ -446,7 +494,7 @@ const ObjectBuilder = (props) => {
 
 	return(
 		<mesh
-			name={`map_object_${props.index}`}
+			name={object.name}
 			ref={objRef}
 			onDoubleClick={handleClick}
 			receiveShadow
@@ -569,14 +617,14 @@ const Land = React.forwardRef((props, ref) => (
 
 // Property Box
 const PropertyBox = (props) => {
+	const { scene } = props;
+
 	const properties = props.properties;
 
     const inputSize = {width: '90%', height: '50px'};
 
     const checkpointType = (properties?.name.search('checkpoint') > -1) ? true : false;
 
-    const getRootName = (name) => name?.replace?.(/checkpoint_([0-9]+)_/, ''); // Returns: room123
-    const getBaseName = (name) => name?.replace?.(getRootName(name), ''); // Returns: checkpoint_123_
     const setMonitor = (name) => !getRootName( properties.name ) ? true : false;  
 
 	const [name, setName] = useState( getRootName(properties.name).toLowerCase() );
@@ -589,9 +637,11 @@ const PropertyBox = (props) => {
 
     // Object name
     const reqEditName = (e) => {
+    	const meshData = scene.getObjectById( properties.id );
         setName( e.target.value.toLowerCase() );
         properties.name = `${baseName}${e.target.value.toUpperCase()}`;
-	    
+    	meshData.name = properties.name;	    
+
 	    EMPTY_NAME_CP_SPOTTED = setMonitor( properties.name );
     }
 
@@ -644,8 +694,14 @@ const PropertyBox = (props) => {
     	props.copy( properties );
     }
 
+
+    const filterRemovedObj = (elem) => {
+    	return elem.name === properties.name;
+    }
+
     const handleDelete = () => {
-    	props.delete( properties );
+    	props.remove( () => properties );
+    	props.setCheckPoints( (checkPoints) => checkPoints.filter(filterRemovedObj) );
     }
 
 	return(
@@ -731,6 +787,71 @@ const Loader = ( props ) => {
 
 	return <Html center> Loading: { progress }% </Html>
 }
+
+// Remover
+const removeByKey = (list, objToDelete) => {
+	const removeDeletedObject = (elem) => {
+		let name = objToDelete.name;
+
+		if( isCheckpointObject(name) ){
+			name = removeEndString(name);
+
+			return elem?.key !== name;
+		}
+		else{
+			return elem?.key !== name;
+		}
+		 
+	}
+	return list.filter( removeDeletedObject );
+}
+
+const removeByName = (list, objToDelete) => {
+	const removeDeletedObject = (elem) => {
+		let name = objToDelete.name;
+
+		if( isCheckpointObject(name) ){
+
+			return elem?.name !== name;
+		}
+		else{
+			return elem?.name !== name;
+		}
+		 
+	}
+	return list.filter( removeDeletedObject );
+}
+
+
+const removeEndString = (string) => {
+	string = getBaseName(string).split('');
+	string.pop();
+	string = string.join('');
+
+	return string;
+}
+
+const getLastStringToNumber = (string) => {
+	if( isCheckpointObject( string ) ){
+		string = removeEndString( string );
+	}
+
+	string = string.split('_');
+	string = string[string.length - 1];
+
+	try{
+		return Number( string );
+	}
+	catch (err) {
+		throw new Error( err );
+	}
+}
+
+const isCheckpointObject = (name) => name?.search('checkpoint') > -1 ? true : false;
+
+const getRootName = (name) => name?.replace?.(/checkpoint_([0-9]+)_/, ''); // Returns: room123
+	
+const getBaseName = (name) => name?.replace?.(getRootName(name), ''); // Returns: checkpoint_123_
 
 
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+import ImageBall from '../image/image-ball';
 import ButtonLink from '../buttons/button-link';
 
 import '../../../styles/admin/nav-panel.css';
@@ -11,7 +12,6 @@ export default function NavPanel( props ){
 
     const [admin, setAdmin] = useState( props.admin );
     const [navSwitch, setNavSwitch] = useState( false );
-
 
     const requestSetAdminOffline = () => {
         props.reqSignOut({
@@ -42,6 +42,14 @@ export default function NavPanel( props ){
         setAdmin( props.admin );
     }, [props.admin]);
 
+    useEffect( () => {
+        window.addEventListener('keydown', (e) => {
+            if( e.key === 'Escape' ) setNavSwitch( false );
+        });
+
+        return window.removeEventListener('keydown', () => setNavSwitch( false ))
+    }, [])
+
 
     return (
         <div className={navSwitch ? "nav-panel p-0 d-flex flex-row" : "nav-panel p-0 "} style={{width: navSwitch ? '400px' : '50px', marginRight: navSwitch ? '0px' : '3%'}}>
@@ -53,7 +61,7 @@ export default function NavPanel( props ){
                 <div className="np-profile-box d-flex mx-5 flex-row justify-content-start align-items-center">
                     <div style={{width: '64px', height: '64px'}} className="col-3 d-flex justify-content-end align-items-start">
                         <div className="col-3 np-img-container" style={{width: navSwitch ? '64px' : '15px', height: navSwitch ? '64px' : '15px'}}>
-                            {/* insert img tag here later */}
+                            <ImageBall />
                         </div>
                     </div>
                     <div className="col-10 np-name-container" >

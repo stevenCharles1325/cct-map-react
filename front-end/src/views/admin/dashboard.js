@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Line, Bar } from 'react-chartjs-2';
 
+import ImageBall from '../../components/admin/image/image-ball';
+
 import userFace from '../../images/admin/happy.png';
 
 import '../../styles/admin/dashboard.css';
@@ -55,6 +57,7 @@ export default function Dashboard( props ) {
                 legend: legend
             }
         }
+
 
     return(
         <div className="dashboard">
@@ -122,7 +125,7 @@ function DashboardHeader( props ){
 
            <div className="col-8 d-flex justify-content-end align-items-center">
              <div className="dash-profile-container d-flex justify-content-center align-items-center">
-                 <img width="85%" height="85%" src={userFace} alt="userface"/>
+                <ImageBall />
              </div>    
            </div>
        </div>

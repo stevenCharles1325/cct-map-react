@@ -1,0 +1,50 @@
+.image-ball{
+	position: relative;
+	width: 100%;
+	height: 100%; 
+
+	border-radius: 100%;
+	overflow: hidden;
+}
+
+.image-ball-img{
+	image-rendering: optimizeSpeed;
+	background-repeat: no-repeat;
+	background-size: contain;
+
+	border-radius: 100%;
+}
+
+
+.admin-img-l1, .admin-img-l2{
+	width: 100%;
+	height: 100%;
+}
+
+.admin-img-l1{
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+.admin-img-l2{
+	position: relative;
+	color: rgba(255, 255, 255, 0.7);
+}
+
+
+.admin-img-inp{
+	width:  100%;
+	height: 100%;
+
+	opacity: 0;
+	border: none;
+	outline: none;
+
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+

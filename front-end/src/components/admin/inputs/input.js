@@ -19,6 +19,8 @@ function Input( props ){
             <input 
                 className="input-field" 
                 
+                autoFocus={props.autoFocus} 
+
                 style={{width: props.peekBtn ? '90%' : '100%'}} 
                 
                 id={props.id} 

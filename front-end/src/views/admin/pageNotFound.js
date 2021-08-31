@@ -22,7 +22,7 @@ export default function PageNotFound(){
 				<br/>
 				<br/>
 				<h5>
-					Wanna go to the <Link to="/dashboard">Dashboard</Link>, <Link to="/Settings">Settings</Link>, or <Link to="/Map">Map</Link> instead?					
+					Wanna go to the <Link to="/admin/dashboard">Dashboard</Link>, <Link to="/admin/Settings">Settings</Link>, or <Link to="/admin/Map">Map</Link> instead?					
 				</h5>
 			</div>
 		</>

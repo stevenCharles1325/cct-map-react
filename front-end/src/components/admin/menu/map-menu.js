@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef, Suspense } from 'react';
 import ReactTooltip from 'react-tooltip';
 import axios from 'axios';
 
+import ImageBall from '../image/image-ball';
+
 import CircStyleLoad from '../load-bar/circ-load';
 
 import saveImg from '../../../images/admin/download.png';
@@ -46,7 +48,12 @@ function MapMenu( props ){
 
         // Main menu handlers 
         const saveHandler = async () => {
-            if( props.saveAllowed ) props.messenger({message: 'A checkpoint with no name has been found'});
+            if( props.saveAllowed ){ 
+                props.messenger((mapMessage) => [...mapMessage, 'A checkpoint with no name has been found']);
+            }
+            else{
+                props.messenger((mapMessage) => [...mapMessage, 'Saving Map...']);                
+            }
             
             setTimeout(() => {
                 props.reqSaveMap();            
@@ -90,8 +97,8 @@ function MapMenu( props ){
         <>
             <div ref={menu} style={{opacity: isOpen ? '1' : '0.1'}} className="map-menu d-flex flex-column align-items-center justify-content-center">
                 <div className="mm-icon-box mb-3 d-flex justify-content-center">
-                    <div className="mm-icon-cont pb-2">
-                        <img src={props.icon || null}/>
+                    <div className="mm-icon-cont mb-2">
+                        <ImageBall />
                     </div>
                 </div>
 
@@ -100,13 +107,13 @@ function MapMenu( props ){
 
                     {[
                         createButton('mm-save-btn', 'Save',saveImg, props.switch ? saveHandler : () => { 
-                            props.messenger({message: 'Unselect an object first'});
+                            props.messenger((mapMessage) => [...mapMessage, 'Unselect an object first']);
                         }),
                         createButton('mm-import-btn', 'Import object',importImg, props.switch ? openImportBox : () => { 
-                            props.messenger({message: 'Unselect an object first'});
+                            props.messenger((mapMessage) => [...mapMessage, 'Unselect an object first']);
                         }),
                         createButton('mm-preview-btn', 'Preview',prevImg, props.switch ? previewHandler : () => { 
-                            props.messenger({message: 'Unselect an object first'});
+                            props.messenger((mapMessage) => [...mapMessage, 'Unselect an object first']);
                         })
                     ]}
                 </div>
@@ -125,13 +132,19 @@ function createButton( id, tipMsg, icon, callback ){
         <div 
             key={id} 
             id={id} 
-            data-tip={tipMsg}
-            data-type="light"
-            data-effect="solid" 
             className="mm-btn-cont p-3 my-3 d-flex justify-content-center align-items-center"
         >
             <div width="150px" height="50px" className="d-flex justify-content-center align-items-center">
-                <img className="mm-btn-icon" width="70%" height="70%" src={icon} onClick={() => callback()}/>
+                <img 
+                    className="mm-btn-icon" 
+                    data-tip={tipMsg}
+                    data-type="light"
+                    data-effect="solid" 
+                    width="70%" 
+                    height="70%" 
+                    src={icon} 
+                    onClick={() => callback()}
+                />
             </div>
         </div>
     );

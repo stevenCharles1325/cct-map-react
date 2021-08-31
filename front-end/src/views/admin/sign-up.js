@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 
@@ -23,17 +23,20 @@ export default function Signup( props ){
     const [number, setNumber] = useState('');
     const [cPassword, setCPassword] = useState('');
 
+    const [signUp, setSignUp] = useState( false );
+
     const size = {
             width: '90%'
         }
 
-    const usernameChangeHandler = ( e ) => { setUsername( e.target.value ); }
-    const passwordChangeHandler = ( e ) => { setPassword( e.target.value ); }
-    const emailChangeHandler = ( e ) => { setEmail( e.target.value ); }
-    const numberChangeHandler = ( e ) => { setNumber( e.target.value ); }
-    const cPasswordChangeHandler = ( e ) => { setCPassword( e.target.value ); }
+    const usernameChangeHandler = ( e ) => setUsername( () => e.target.value )
+    const passwordChangeHandler = ( e ) => setPassword( () => e.target.value )
+    const emailChangeHandler = ( e ) => setEmail( () => e.target.value )
+    const numberChangeHandler = ( e ) => setNumber( () => e.target.value )
+    const cPasswordChangeHandler = ( e ) => setCPassword( () => e.target.value )
 
     const handleRequestSignUp = () => {
+
         const nameCheck = validator.check('username', username);
         const passCheck = validator.check('password', password);
         const cPassCheck = validator.check('cPassword', cPassword);
@@ -76,9 +79,15 @@ export default function Signup( props ){
             requestSignUp( newData );    
         }
         else{
+            setSignUp( false );
             return
         }
     }
+
+    useEffect(() => {
+        if( signUp ) handleRequestSignUp();
+
+    }, [username, password, email, number, cPassword, signUp]);
 
     return(
             <div className="sign-up-frame d-flex flex-row">
@@ -92,7 +101,7 @@ export default function Signup( props ){
                             <Input id="su-cNumber" type="text" name="cnumber" handleChange={numberChangeHandler} placeholder="Enter contact number" size={size}/>
                         </div>
 
-                        <Button id="signup-submit" name="Sign Up" click={handleRequestSignUp} />
+                        <Button listenTo="Enter" id="signup-submit" name="Sign Up" click={() => setSignUp(true) } />
                     </FormCard>
                 </div>
                 <div className="sign-up-intro-box">
