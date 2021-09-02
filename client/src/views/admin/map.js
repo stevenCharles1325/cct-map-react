@@ -126,11 +126,12 @@ const MapView = (props) => {
 	}
 
 
-	useEffect(() => console.log(objList), []);
+	useEffect(() => console.log( checkPoints ), [checkPoints]);
 
 
 	useEffect(() => {
 		if( upload || copyObj || isCheckPoint ) setObjectCount((objectCount) => objectCount + 1);
+
 
 		if( upload ){
 			setObjList((objList) => [
@@ -187,16 +188,20 @@ const MapView = (props) => {
 			setIsCheckPoint( false );
 		}
 		else if( deleteObj ){
-			const newObjList = removeByKey( objList, deleteObj );
-			const newCpList = removeByName( checkPoints, deleteObj );
+			// work-1
+			console.log( checkPoints );
 
-			setObjList(() => [...newObjList]);
+			let newCpList = removeByName( checkPoints, deleteObj );			
+			let newObjList = removeByKey( objList, deleteObj );
+
 			setCheckPoints(() => [...newCpList]);
-			
+			setObjList(() => [...newObjList]);	
+
+
 			dispatch({ reset: true });
 		}
 		
-	}, [upload, copyObj, deleteObj, isCheckPoint, objList]);
+	}, [upload, copyObj, deleteObj, isCheckPoint, checkPoints, objList]);
 
 
 	useEffect(() => {
@@ -227,7 +232,7 @@ const MapView = (props) => {
 				if( primitives?.length ){
 					setObjList((objList) => [ ...primitives ]);
 
-					setObjectCount( getLastStringToNumber(primitives[primitives.length - 1].key) ); // 
+					setObjectCount( () => getLastStringToNumber(primitives[primitives.length - 1].key) + 1  ); // 
 					setMapMessage((mapMessage) => [...mapMessage, 'Previous scene has been loaded successfully']);
 				};
 			}
@@ -246,6 +251,8 @@ const MapView = (props) => {
 		if( scene ){
 			const prevSceneState = JSON.stringify( scene.toJSON() );
 
+
+			console.log( checkPoints );
 			const mapBundle = {
 								scene: JSON.parse( prevSceneState ), 
 								cpPosition: checkPoints.map(elem => ({name: elem.name, position: elem.position}))
@@ -411,16 +418,13 @@ const loadScene = async (data, click, checkpointSaver) => {
 
 			if( memo.indexOf(children[index].name) < 0 ){
 				memo.push( children[index].name )
-				console.log( memo );
 
-
-				if( isCheckpointObject(children[index].name) ){
-					key = `checkpoint_${index}`;
-				}
-				else{
-					key = `map_object_${index}`;
-				}
-
+			if( isCheckpointObject(children[index].name) ){
+				key = `checkpoint_${index}`;
+			}
+			else{
+				key = `map_object_${index}`;
+			}
 				prevChild.push(<Build 
 									index={index}
 									key={key}
@@ -450,6 +454,8 @@ const Build = (props) => {
 
 		case /checkpoint/.test(data.name):
 			return (<CheckpointBuilder 
+						name={getRootName(data.name)}
+						index={props.index}
 						geometry={geometry} 
 						object={data} 
 						click={props.click} 
@@ -457,7 +463,8 @@ const Build = (props) => {
 					/>); 
 
 		case /map_object/.test(data.name):
-			return <ObjectBuilder 
+			return <ObjectBuilder
+						index={props.index}
 						geometry={geometry} 
 						object={data} 
 						click={props.click} 
@@ -494,7 +501,7 @@ const ObjectBuilder = (props) => {
 
 	return(
 		<mesh
-			name={object.name}
+			name={`map_object_${props.index}`}
 			ref={objRef}
 			onDoubleClick={handleClick}
 			receiveShadow
@@ -642,6 +649,7 @@ const PropertyBox = (props) => {
         properties.name = `${baseName}${e.target.value.toUpperCase()}`;
     	meshData.name = properties.name;	    
 
+
 	    EMPTY_NAME_CP_SPOTTED = setMonitor( properties.name );
     }
 
@@ -695,13 +703,8 @@ const PropertyBox = (props) => {
     }
 
 
-    const filterRemovedObj = (elem) => {
-    	return elem.name === properties.name;
-    }
-
     const handleDelete = () => {
     	props.remove( () => properties );
-    	props.setCheckPoints( (checkPoints) => checkPoints.filter(filterRemovedObj) );
     }
 
 	return(
@@ -788,21 +791,19 @@ const Loader = ( props ) => {
 	return <Html center> Loading: { progress }% </Html>
 }
 
-// Remover
+// Remover work-2
 const removeByKey = (list, objToDelete) => {
 	const removeDeletedObject = (elem) => {
 		let name = objToDelete.name;
 
 		if( isCheckpointObject(name) ){
-			name = removeEndString(name);
+			return elem?.key !== removeEndString( getBaseName(name) );			 
+		}
 
-			return elem?.key !== name;
-		}
-		else{
-			return elem?.key !== name;
-		}
-		 
+		return elem?.key !== name;			 
 	}
+
+	console.log( list );
 	return list.filter( removeDeletedObject );
 }
 
@@ -810,15 +811,11 @@ const removeByName = (list, objToDelete) => {
 	const removeDeletedObject = (elem) => {
 		let name = objToDelete.name;
 
-		if( isCheckpointObject(name) ){
+		console.log( elem?.name, name );
 
-			return elem?.name !== name;
-		}
-		else{
-			return elem?.name !== name;
-		}
-		 
+		return elem?.name !== name;	 
 	}
+
 	return list.filter( removeDeletedObject );
 }
 
@@ -832,9 +829,6 @@ const removeEndString = (string) => {
 }
 
 const getLastStringToNumber = (string) => {
-	if( isCheckpointObject( string ) ){
-		string = removeEndString( string );
-	}
 
 	string = string.split('_');
 	string = string[string.length - 1];

@@ -52,7 +52,7 @@ function MapMenu( props ){
                 props.messenger((mapMessage) => [...mapMessage, 'A checkpoint with no name has been found']);
             }
             else{
-                props.messenger((mapMessage) => [...mapMessage, 'Saving Map...']);                
+                props.messenger((mapMessage) => [...mapMessage, 'Saving Map, please wait...']);                
             }
             
             setTimeout(() => {

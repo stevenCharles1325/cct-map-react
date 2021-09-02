@@ -43,7 +43,7 @@ const VIEWS = [
 
 // Main App function.
 export default function Admin(){
-	console.log('Run: App');
+	// console.log('Run: App');
 
 	const webUrl = window.location.pathname;
 
@@ -212,9 +212,11 @@ export default function Admin(){
 		await axios.post('/admin/update-map', scene)
 		.then( res => {
 			console.log( res.data.message );
+			return true;
 		})
 		.catch( err => {
 			errorHandler( err );
+			return false;
 		});
 	}
 
@@ -225,9 +227,9 @@ export default function Admin(){
 		}
 		else{
 			setMapData( map.scene );
-			requestServerSaveMapData( map );
+			const res = requestServerSaveMapData( map );
 
-			return { message : 'Map has been saved' };
+			return { message : res ? 'Map has been saved successfully' : 'Please try again!' };
 		} 
 	}
 
@@ -235,7 +237,7 @@ export default function Admin(){
 
 	// Fetch data on component mount.
 	useEffect( () => {
-		console.log('[Fetching Data]');
+		// console.log('[Fetching Data]');
 
 		if( !admin ) requestAdminData(); // Fetch admin data.
 		if( !graphData ) requestGraphData(); // Fetch graph data.
@@ -247,7 +249,7 @@ export default function Admin(){
 
 	// Set the View whenever either the url or the admin state changes.		
 	useEffect(() => {
-		console.log('[Inspecting url]');
+		// console.log('[Inspecting url]');
 
 		if( urlExist( webUrl ) ){ // check if url exist
 			admin ? setView( adminStatusCheck( admin, webUrl ) ) : setView( <Loading /> ) 
@@ -261,7 +263,7 @@ export default function Admin(){
 
 	// Update the bundle if admin or graph data changes
 	useEffect( () => {
-		console.log('[Updating bundle]');
+		// console.log('[Updating bundle]');
 		if( admin && graphData ){
 			setBundle({ 
 				admin: admin, 
@@ -287,20 +289,12 @@ export default function Admin(){
 	);
 }
 
-// const VIEWS = [
-// 		ROOT,
-// 		`${ROOT}/dashboard`,
-// 	 	`${ROOT}/settings`,
-// 	  	`${ROOT}/map`,
-// 	   	`${ROOT}/sign-in`,
-// 	    `${ROOT}/sign-up`
-// 	 ];
 
 /////////////////////// REQUEST HANDLERS //////////////////////
 
 // Returns routes in the app
 function requestRouteHandler( bundle ){
-	console.log('Run: RequestRouteHandler function. This checks which route should be rendered')
+	// console.log('Run: RequestRouteHandler function. This checks which route should be rendered');
 	return(
 		<Switch>
 			<Route exact path={VIEWS[1]}>
@@ -334,19 +328,19 @@ function requestRouteHandler( bundle ){
 
 */
 function adminStatusCheck( admin, url ){
-	console.log(`Run: AdminStatusCheck function\n\tThis checks which gate the admin should be going.`);
-	console.log('AdminStatusCheck Result: ');
+	// console.log(`Run: AdminStatusCheck function\n\tThis checks which gate the admin should be going.`);
+	// console.log('AdminStatusCheck Result: ');
 
 	if( !admin.status.exist ){
-		console.log('Gate 1: Sign-up');
+		// console.log('Gate 1: Sign-up');
 		return <Redirect to={VIEWS[5]} />
 	}
 	else if( admin.status.exist && !admin.status.loggedIn ){
-		console.log('Gate 2: Sign-in');
+		// console.log('Gate 2: Sign-in');
 		return <Redirect to={VIEWS[4]} />
 	}
 	else{
-		console.log('Gate 3: Final gate. Will now hand request to UrlHandler function');
+		// console.log('Gate 3: Final gate. Will now hand request to UrlHandler function');
 		return urlHandler( url );
 	}	
 }
@@ -357,7 +351,7 @@ function adminStatusCheck( admin, url ){
 
 */
 function urlHandler( url ){
-	console.log(`Run: UrlHandler function\n[URL]: ${url}\n\tThis redirects pathname to the desired view.`);
+	// console.log(`Run: UrlHandler function\n[URL]: ${url}\n\tThis redirects pathname to the desired view.`);
 	return url === ROOT || url === VIEWS[4] || url === VIEWS[5] ? <Redirect to={VIEWS[1]} /> : <Redirect to={url} />;
 }
 
@@ -370,7 +364,7 @@ function urlHandler( url ){
 
 //	Checks if the url does exist.
 function urlExist( url ){
-	console.log('[Checking url existence]');
+	// console.log('[Checking url existence]');
 	return VIEWS.indexOf( url ) >= 0 ? true : false;
 }
 
@@ -381,8 +375,8 @@ function urlExist( url ){
 
 function errorHandler( err ){
 
-	if( !err || !err.response || !err.response.status ) return;
-	console.log( err );
+	if( !err?.response?.status ) return;
+	// console.log( err );
 	
 	switch( err.response.status ){
 		case 404:

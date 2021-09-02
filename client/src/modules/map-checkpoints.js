@@ -8,6 +8,7 @@ import { Input } from '../components/admin/inputs/input';
 
 
 function Checkpoints ( props ){
+
 	const [isPlaced, setIsPlaced] = useState( false );
 	const checkpoint = useRef();
 
@@ -118,8 +119,15 @@ function CheckpointBuilder( props ){
 		if( checkpoint.current ) props.saveCheckpoint( checkpoint.current );
 	}, [checkpoint.current])
 
+	console.log(`checkpoint_${props.index}_${props.name}`)
 	return(
-		<mesh name={object.name} ref={checkpoint} scale={[...Object.values(scale)]} name={object.name} position={position} onDoubleClick={handleClick}>
+		<mesh 
+			name={`checkpoint_${props.index}_${props.name}`} 
+			ref={checkpoint} 
+			scale={[...Object.values(scale)]} 
+			position={position} 
+			onDoubleClick={handleClick}
+		>
 			<sphereGeometry args={[geometry.radius, geometry.widthSegments, geometry.heightSegments]}/>
 			<meshStandardMaterial />
 		</mesh>

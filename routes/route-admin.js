@@ -49,12 +49,15 @@ router.get('/map-data', async (req, res, next) => {
     }
     else {
       files.forEach(file => {
-        fs.unlink(path.join(models_path, file), (err) => {
-          if (err) {
-            console.error(err);
-            return res.status(503).json({ message: 'Something must have gone wrong'}); 
-          }
-        });
+        
+        if( file !== 'README.md' ){
+          fs.unlink(path.join(models_path, file), (err) => {
+            if (err) {
+              console.error(err);
+              return res.status(503).json({ message: 'Something must have gone wrong'}); 
+            }
+          });
+        }        
       });
     }
   });
@@ -72,25 +75,16 @@ router.post('/obj-upload', async (req, res, next) => {
 
   if( !req.files ) return res.status( 400 ).json({ message: 'There was no file with that name' });
 
-  fs.readdir( models_path, (err, files) => {
-    if( err ){
-      console.log( err );
-      return res.status( 503 ).json({ message: 'Something must be wrong, please try again.' });
-    }
-
-    const object = req.files.object;
-    const object_name = `object_${files.length}_${new Date().getTime()}.obj`;
+  const object = req.files.object;
+  const object_name = `object_${files.length}_${new Date().getTime()}.obj`;
 
 
-    object.mv( models_path + `/${object_name}`, err => {
+  object.mv( models_path + `/${object_name}`, err => {
 
-      if( err ){
-        res.status( 500 ).send( err );
-      }
+    if( err ) res.status( 500 ).send( err );
 
-      res.status( 200 ).json({ fileName: object_name, filePath: `/models/${object_name}`});
-    });
-  })
+    res.status( 200 ).json({ fileName: object_name, filePath: `/models/${object_name}`});
+  });
 });
 
 
