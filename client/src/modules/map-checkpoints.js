@@ -92,7 +92,7 @@ function Checkpoints ( props ){
 	return (
 		<mesh name={`checkpoint_${props.index}_`} ref={checkpoint} onDoubleClick={handleClick}>
 			<sphereGeometry args={_size} />
-			<meshStandardMaterial color="white"/>
+			<meshStandardMaterial color={0x6a89cc}/>
 		</mesh>
 	);
 }
@@ -129,7 +129,7 @@ function CheckpointBuilder( props ){
 			onDoubleClick={handleClick}
 		>
 			<sphereGeometry args={[geometry.radius, geometry.widthSegments, geometry.heightSegments]}/>
-			<meshStandardMaterial />
+			<meshStandardMaterial color={0x6a89cc}/>
 		</mesh>
 	);
 }

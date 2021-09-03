@@ -1,22 +1,31 @@
+// Libraries
 import React, { Suspense, useEffect, useState, useRef } from 'react';
 import {
 	OrbitControls,
 	Stars,
 	Html,
-	SpotLight
+	SpotLight,
+	Line,
+	softShadows
 } from '@react-three/drei';
 
 import { Canvas, useThree } from '@react-three/fiber';
-
 import * as THREE from 'three';
 
+
+// Components
 import FloatingButton from '../../components/user/button/floating-button';
+
+
+// Modules
+import pathFind from '../../modules/path-finding';
+
 
 
 // Style
 import '../../styles/user/map.css';
 
-const LAND_SIZE = [5000, 5000];
+const LAND_SIZE = [7000, 7000];
 
 
 
@@ -24,17 +33,20 @@ const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
 
 const CAMERA = {
-	config: [75, WIDTH / HEIGHT, 100, 10000],
-	position: [0, 4000, 4000],
-	far: 10000
+	config: [75, WIDTH / HEIGHT, 100, 50000],
+	position: [0, 5000, 5000],
+	far: 50000
 };
 
 
 const MapView = (props) => {
 	const [camera, setCamera] = useState( null );
 	const [scene, setScene] = useState( null );
+	const [objects, setObjects] = useState( null );	
 	const [cpPos, setCpPos] = useState( null );
 	const [destination, setDestination] = useState( null );
+	const [path, setPath] = useState( [] );
+	const [line, setLine] = useState( null );
 
 
 	useEffect(async () => {
@@ -43,8 +55,8 @@ const MapView = (props) => {
 				console.log( props.mapData );
 	
 				const prevScene  = await loadScene(props.mapData.scene);
-	
-				setScene( prevScene );
+
+				setObjects( prevScene );
 				setCpPos( props.mapData.cpPos );
 			}
 		}
@@ -53,16 +65,50 @@ const MapView = (props) => {
 	}, [props.mapData]);
 
 
+
 	useEffect(() => {
-		console.log( destination );
-	}, [destination]);
+		const runPathFind = async () => {
+			const shortestPath = await pathFind( scene, destination );
+
+			setPath(() => [Object.values(destination.start), ...shortestPath]);
+
+			setDestination(() => null);
+		}
+
+		if( destination && scene ) runPathFind();
+
+	}, [destination, scene]);
+
+
+
+	useEffect(() => {
+		if(destination && path.length ) {
+			const createLine = async () => {
+					console.log( path );
+					setLine( () => <Line 
+										points={[...path]} 
+										color={0x34495e} 
+										lineWidth={3}
+									/>);
+
+					// setPath( () => [] );
+			}	
+
+			createLine();
+		}
+		
+	}, [destination, path]);
 
 	return(
 		<div className="map p-0 m-0">
-			<Canvas>
+			<Canvas shadows={true}>
 				<Suspense fallback={<Loader />}>
-					<MapCanvas setCamera={setCamera}>
-						{ scene ?? <Loader /> }
+					<MapCanvas setCamera={setCamera} setScene={setScene}>
+						{ objects ?? <Loader /> }
+
+						<Suspense fallback={<Loader/>}>
+							{ line }
+						</Suspense>
 					</MapCanvas>
 				</Suspense>
 			</Canvas>
@@ -89,7 +135,6 @@ const loadScene = async (data) => {
 				/Sky/.test(children[index].name)
 				) continue;
 
-			console.log(children[index].name);
 			if( memo.indexOf(children[index].name) < 0 ){
 				memo.push( children[index].name )
 
@@ -98,7 +143,7 @@ const loadScene = async (data) => {
 									key={children[index].name}
 									geometry={geometries[index]}
 									data={object.children[index]}
-								/>)
+								/>);
 			}
 		}	
 	}
@@ -111,6 +156,8 @@ const loadScene = async (data) => {
 
 const MapCanvas = (props) => {
 	const { camera } = useThree();
+	const { scene } = useThree();
+
 	const set = useThree((state) => state.set);
 
 	useEffect(() => {
@@ -123,6 +170,7 @@ const MapCanvas = (props) => {
 	}, [camera]);
 
 	props.setCamera( camera );
+	props.setScene( scene );
 
 	return(
 		<>
@@ -157,7 +205,7 @@ const Build = (props) => {
 }
 
 
-
+// #F8EFBA
 // Object Builder (for loading previous scene)
 const ObjectBuilder = (props) => {
 	const { geometry, object } = props;
@@ -177,16 +225,16 @@ const ObjectBuilder = (props) => {
 		<mesh
 			name={`map_object_${props.index}`}
 			ref={objRef}
-			receiveShadow
 			castShadow
+			receiveShadow
 			scale={[...Object.values(scale)]}
 			geometry={parsedGeom}
 			position={[...Object.values(position)]}
 		>	
 			<meshStandardMaterial
-				color="white"
-				metalness={0.3}
-				roughness={0.5}
+				color={0xCAD3C8}				
+				metalness={1}
+				roughness={1}
 			/>	
 		</mesh>
 	);
@@ -213,9 +261,17 @@ function CheckpointBuilder( props ){
 
 
 	return(
-		<mesh name={object.name} ref={checkpoint} scale={[...Object.values(scale)]} name={object.name} position={position} >
+		<mesh 
+			name={object.name} 
+			ref={checkpoint} 
+			scale={[...Object.values(scale)]} 
+			name={object.name} 
+			position={position} 
+			castShadow
+			receiveShadow
+		>
 			<sphereGeometry args={[geometry.radius, geometry.widthSegments, geometry.heightSegments]}/>
-			<meshStandardMaterial />
+			<meshStandardMaterial color={0x6a89cc}/>
 		</mesh>
 	);
 }
@@ -230,14 +286,34 @@ function CheckpointBuilder( props ){
 // Atmosphere
 const Atmosphere = (props) => (
 
-	<group name="Sky">
-		<Stars radius={2500} count={50000} fade />
+	<group castShadow name="Sky">
+		<Stars radius={LAND_SIZE[0] * 0.6} count={LAND_SIZE[0] * 4} fade />
 		{/*<props.control.controls {...props?.control?.config}/>*/}
 		<OrbitControls />
-		<ambientLight intensity={props.ambInt || 0.3}/>
-		<spotLight 
-			castShadow 
-			position={[1000, 5000, 0]}
+		<ambientLight intensity={0.5}/>
+		<directionalLight
+			castShadow
+	        position={[1000, 5000, 0]}
+	        intensity={1.2}
+	        shadow-mapSize-width={5000}
+	        shadow-mapSize-height={5000}
+	        shadow-camera-far={1000}
+	        shadow-camera-left={-100}
+	        shadow-camera-right={100}
+	        shadow-camera-top={100}
+	        shadow-camera-bottom={-100}
+		/>
+		<directionalLight
+			castShadow
+	        position={[-1000, 5000, 0]}
+	        intensity={1.2}
+	        shadow-mapSize-width={5000}
+	        shadow-mapSize-height={5000}
+	        shadow-camera-far={1000}
+	        shadow-camera-left={-100}
+	        shadow-camera-right={100}
+	        shadow-camera-top={100}
+	        shadow-camera-bottom={-100}
 		/>
 	</group>
 );
@@ -245,22 +321,24 @@ const Atmosphere = (props) => (
 
 
 // Land
-const Land = React.forwardRef((props, ref) => (
-	<mesh 
-		ref={ref}
-		name="Land" 
-		visible
-		receiveShadow
-		rotation={[-Math.PI / 2, 0, 0]}
-	>
-		<planeBufferGeometry args={props.size || 1} />
-		<meshStandardMaterial 
-			color={props.color || "white"} 
-			roughness={0.9}
-			metalness={0.5}
-		/>
-	</mesh>
-));
+const Land = (props) => {
+
+	return (
+		<mesh 
+			name="Land" 
+			receiveShadow
+			rotation={[-Math.PI / 2, 0, 0]}
+		>
+			<planeBufferGeometry attach="geometry" args={props.size || 1} />
+			<meshStandardMaterial 
+				color={0x596275}  
+				roughness={0.9}
+				metalness={0.5}
+				attach="material"
+			/>
+		</mesh>
+	)
+};
 
 const Loader = (props) => {
 	return <Html center> Loading </Html>;

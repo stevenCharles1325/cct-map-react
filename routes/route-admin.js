@@ -42,6 +42,16 @@ router.get('/map-data', async (req, res, next) => {
 
   const map_data = JSON.parse(fs.readFileSync( scene_path ));
 
+  return res.status(200).json( map_data );  
+});
+
+
+
+
+///////////////////// UPLOAD 3D OBJECT ////////////////////////
+
+// UPLOAD-3D route.
+router.post('/obj-upload', async (req, res, next) => {
   // clear all files in Models folder
   fs.readdir(models_path, (err, files) => {
     if( err ){
@@ -62,22 +72,10 @@ router.get('/map-data', async (req, res, next) => {
     }
   });
 
-  return res.status(200).json( map_data );  
-});
-
-
-
-
-///////////////////// UPLOAD 3D OBJECT ////////////////////////
-
-// UPLOAD-3D route.
-router.post('/obj-upload', async (req, res, next) => {
-
   if( !req.files ) return res.status( 400 ).json({ message: 'There was no file with that name' });
 
   const object = req.files.object;
-  const object_name = `object_${files.length}_${new Date().getTime()}.obj`;
-
+  const object_name = `object_${new Date().getTime()}.obj`;
 
   object.mv( models_path + `/${object_name}`, err => {
 

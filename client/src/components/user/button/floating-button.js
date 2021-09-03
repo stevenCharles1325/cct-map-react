@@ -5,6 +5,9 @@ import { Link } from 'react-router-dom';
 // Style
 import '../../../styles/user/floating-btn.css';
 
+// Icon
+import CubeIcon from '../../../images/user/cube.png';
+
 const FloatingButton = (props) => {
 	const initState = {
 		menuState: false,
@@ -45,7 +48,12 @@ const FloatingButton = (props) => {
 						<button className="floating-btn-opt-btn">About</button>
 					</Link>
 				</div>
-				<div style={{width: state.menuState ? '70px' : '75px', height: state.menuState ? '70px' : '75px'}} className="floating-btn" onClick={() => dispatch({type: 'menu'})}>
+				<div 
+					style={{width: state.menuState ? '70px' : '75px', height: state.menuState ? '70px' : '75px'}} 
+					className="floating-btn p-3 d-flex justify-content-center align-items-center" 
+					onClick={() => dispatch({type: 'menu'})}
+				>
+					<img width="100%" height="100%" src={CubeIcon}/>
 				</div>
 			</div>
 			{ p2pForm }

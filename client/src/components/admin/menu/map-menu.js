@@ -170,7 +170,7 @@ function ImportBox( props ){
 
             formData.append('object', file);
 
-            await axios.post('http://localhost:7000/admin/obj-upload', formData, {
+            await axios.post('/admin/obj-upload', formData, {
                 headers: {
                     'Content-Type': 'text/plain'
                 }

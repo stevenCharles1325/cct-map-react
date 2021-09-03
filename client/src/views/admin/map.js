@@ -43,15 +43,15 @@ import InfiniteStyleLoad from '../../components/admin/load-bar/inf-load';
 
 
 // == constants ==
-const LAND_SIZE = [5000, 5000];
+const LAND_SIZE = [10000, 10000];
 
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
 
 const CAMERA = {
-	config: [75, WIDTH / HEIGHT, 100, 10000],
+	config: [75, WIDTH / HEIGHT, 100, 20000],
 	position: [0, 2400, 2400],
-	far: 10000
+	far: 50000
 }
 
 var EMPTY_NAME_CP_SPOTTED = false;
@@ -275,7 +275,7 @@ const MapView = (props) => {
 			    	saveAllowed={EMPTY_NAME_CP_SPOTTED}
 			    />
 			    	<Messenger message={mapMessage} messenger={setMapMessage}/>
-					<Canvas>
+					<Canvas shadows={true}>
 					    <Suspense fallback={<Loader />}>
 						    <MapCanvas 
 						    	landRef={land} 
@@ -511,8 +511,8 @@ const ObjectBuilder = (props) => {
 			position={[...Object.values(position)]}
 		>	
 			<meshStandardMaterial
-				color="white"
-				metalness={0.3}
+				color={0xCAD3C8}
+				metalness={0.1}
 				roughness={0.5}
 			/>	
 		</mesh>
@@ -542,8 +542,8 @@ const MapClone = (props) => {
 			geometry={object.geometry}
 		>
 			<meshStandardMaterial
-				color="white"
-				metalness={0.3}
+				color={0xCAD3C8}				
+				metalness={0.1}
 				roughness={0.5}
 			/>	
 		</mesh>
@@ -575,8 +575,8 @@ const MapImport = (props) => {
 			geometry={object.geometry}
 		>
 			<meshStandardMaterial
-				color="white"
-				metalness={0.3}
+				color={0xCAD3C8}
+				metalness={0.1}
 				roughness={0.5}
 			/>	
 		</mesh>
@@ -589,12 +589,32 @@ const MapImport = (props) => {
 const Atmosphere = (props) => (
 
 	<group name="Sky">
-		<Stars radius={2500} count={50000} fade />
+		<Stars radius={LAND_SIZE[0]} count={LAND_SIZE[0]} fade />
 		<props.control.controls enabled={PROP_BOX_DETECTED} {...props?.control?.config}/>
-		<ambientLight intensity={props.ambInt || 0.3}/>
-		<spotLight 
-			castShadow 
-			position={[1000, 5000, 0]}
+		<ambientLight intensity={0.5}/>
+		<directionalLight
+			castShadow
+	        position={[1000, 5000, 0]}
+	        intensity={1.2}
+	        shadow-mapSize-width={5000}
+	        shadow-mapSize-height={5000}
+	        shadow-camera-far={1000}
+	        shadow-camera-left={-100}
+	        shadow-camera-right={100}
+	        shadow-camera-top={100}
+	        shadow-camera-bottom={-100}
+		/>
+		<directionalLight
+			castShadow
+	        position={[-1000, 5000, 0]}
+	        intensity={1.2}
+	        shadow-mapSize-width={5000}
+	        shadow-mapSize-height={5000}
+	        shadow-camera-far={1000}
+	        shadow-camera-left={-100}
+	        shadow-camera-right={100}
+	        shadow-camera-top={100}
+	        shadow-camera-bottom={-100}
 		/>
 	</group>
 );
@@ -613,7 +633,7 @@ const Land = React.forwardRef((props, ref) => (
 	>
 		<planeBufferGeometry args={props.size || 1} />
 		<meshStandardMaterial 
-			color={props.color || "white"} 
+			color={0x596275} 
 			roughness={0.9}
 			metalness={0.5}
 		/>
@@ -776,8 +796,9 @@ const PropBoxInp = (props) => {
 // Glassification
 const glassify = (material, unGlassify = false) => {
 	if( !material ) return;
+	const prevColor = material.color;
 
-	material.color.set(unGlassify ? 'white' : 0x55efc4);
+	material.color.set(unGlassify ? prevColor : 0x55efc4);
 	material.opacity = unGlassify ? 1 : 0.5;
 	material.transparent = unGlassify ? false : true;	
 }
