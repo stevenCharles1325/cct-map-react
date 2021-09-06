@@ -331,9 +331,9 @@ const Land = (props) => {
 		>
 			<planeBufferGeometry attach="geometry" args={props.size || 1} />
 			<meshStandardMaterial 
-				color={0x596275}  
+				color="white" 
 				roughness={0.9}
-				metalness={0.5}
+				metalness={0.2}
 				attach="material"
 			/>
 		</mesh>

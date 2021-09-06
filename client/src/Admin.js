@@ -234,6 +234,8 @@ export default function Admin(){
 	}
 
 
+	useEffect( () => document.title = "CCT-MAP ADMIN", []);
+
 
 	// Fetch data on component mount.
 	useEffect( () => {

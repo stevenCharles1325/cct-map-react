@@ -1,7 +1,7 @@
 {
     "status": {
         "exist": true,
-        "loggedIn": true
+        "loggedIn": false
     },
     "username": "stevenCharles",
     "password": "steven123123",
