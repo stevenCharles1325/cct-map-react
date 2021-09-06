@@ -7,18 +7,26 @@ import Button from '../components/admin/buttons/button';
 import { Input } from '../components/admin/inputs/input';
 
 
+
+// Default material and geometry
+
+const materialOptions = {
+	color: 0x3f4444,
+	roughness: 0.4,
+	metalness: 0
+}
+
+const geometryOptions = [50, 50, 50];
+
+const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
+const defaultGeometry = new THREE.SphereGeometry( ...geometryOptions );
+
+
 function Checkpoints ( props ){
 
 	const [isPlaced, setIsPlaced] = useState( false );
 	const checkpoint = useRef();
 
-
-	const _color = '0x34495e';
-	const _size = [
-				50, // radius
-				50, // width segments
-				50  // height segments
-			];
 
 	const _mousePos = new THREE.Vector2();
 	const _raycaster = new THREE.Raycaster();
@@ -58,7 +66,7 @@ function Checkpoints ( props ){
 										
 				if( intersects.length ){
 					const { x, y, z } = intersects[0].point;
-					checkpoint.current.position.set( x, y + _size[0], z );
+					checkpoint.current.position.set( x, y + geometryOptions[0], z );
 				}
 			}
 		}
@@ -90,49 +98,18 @@ function Checkpoints ( props ){
 
 
 	return (
-		<mesh name={`checkpoint_${props.index}_`} ref={checkpoint} onDoubleClick={handleClick}>
-			<sphereGeometry args={_size} />
-			<meshStandardMaterial color={0x6a89cc}/>
-		</mesh>
-	);
-}
-
-
-function CheckpointBuilder( props ){	
-	const { geometry, object } = props;
-	const matrix = new THREE.Matrix4();
-
-	const checkpoint = useRef();
-
-	matrix.set( ...object.matrix );
-
-	const position = new THREE.Vector3(matrix.elements[3], matrix.elements[7], matrix.elements[11]);
-	const scale = new THREE.Vector3(matrix.elements[0], matrix.elements[5], matrix.elements[10]);
-
-	const handleClick = (e) => {
-		e.stopPropagation();
-
-		props.click({ data: checkpoint });
-	}
-
-	useEffect(() => {
-		if( checkpoint.current ) props.saveCheckpoint( checkpoint.current );
-	}, [checkpoint.current])
-
-	console.log(`checkpoint_${props.index}_${props.name}`)
-	return(
 		<mesh 
-			name={`checkpoint_${props.index}_${props.name}`} 
+			name={`checkpoint_${props.index}_`} 
 			ref={checkpoint} 
-			scale={[...Object.values(scale)]} 
-			position={position} 
 			onDoubleClick={handleClick}
+			geometry={defaultGeometry}
+			material={defaultMaterial}
 		>
-			<sphereGeometry args={[geometry.radius, geometry.widthSegments, geometry.heightSegments]}/>
-			<meshStandardMaterial color={0x6a89cc}/>
 		</mesh>
 	);
 }
 
 
-export { Checkpoints, CheckpointBuilder };
+
+
+export default Checkpoints;

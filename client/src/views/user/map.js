@@ -1,17 +1,10 @@
 // Libraries
-import React, { Suspense, useEffect, useState, useRef } from 'react';
-import {
-	OrbitControls,
-	Stars,
-	Html,
-	SpotLight,
-	Line,
-	softShadows
-} from '@react-three/drei';
+import React, { Suspense, useEffect, useState } from 'react';
 
-import { Canvas, useThree } from '@react-three/fiber';
+import { Canvas } from '@react-three/fiber';
+import { Line } from '@react-three/drei';
+
 import * as THREE from 'three';
-
 
 // Components
 import FloatingButton from '../../components/user/button/floating-button';
@@ -19,24 +12,12 @@ import FloatingButton from '../../components/user/button/floating-button';
 
 // Modules
 import pathFind from '../../modules/path-finding';
+import * as MAP from '../../modules/cct-map';
 
 
 
 // Style
 import '../../styles/user/map.css';
-
-const LAND_SIZE = [7000, 7000];
-
-
-
-const WIDTH = window.innerWidth;
-const HEIGHT = window.innerHeight;
-
-const CAMERA = {
-	config: [75, WIDTH / HEIGHT, 100, 50000],
-	position: [0, 5000, 5000],
-	far: 50000
-};
 
 
 const MapView = (props) => {
@@ -47,17 +28,28 @@ const MapView = (props) => {
 	const [destination, setDestination] = useState( null );
 	const [path, setPath] = useState( [] );
 	const [line, setLine] = useState( null );
+	const [mapMessage, setMapMessage] = useState( [] );
 
 
-	useEffect(async () => {
+	useEffect( () => {
 		const sceneLoader = async () => {
 			if( props.mapData ){
-				console.log( props.mapData );
-	
-				const prevScene  = await loadScene(props.mapData.scene);
+				setMapMessage((mapMessage) => [...mapMessage, 'Fetched successfully', 'Will now load the scene']);
+				
+				const params = {
+					userType	: 'user',
+					data 		: props.mapData.scene,
+				}
 
-				setObjects( prevScene );
+				const prevScene  = await MAP.loadScene( params );
+
+				setMapMessage((mapMessage) => [...mapMessage, 'Scene has been loaded']);
+
+				setObjects( () => prevScene );
 				setCpPos( props.mapData.cpPos );
+			}
+			else{
+				setMapMessage((mapMessage) => [...mapMessage, 'Please wait while fetching scene']);
 			}
 		}
 		sceneLoader();
@@ -84,7 +76,6 @@ const MapView = (props) => {
 	useEffect(() => {
 		if(destination && path.length ) {
 			const createLine = async () => {
-					console.log( path );
 					setLine( () => <Line 
 										points={[...path]} 
 										color={0x34495e} 
@@ -101,15 +92,16 @@ const MapView = (props) => {
 
 	return(
 		<div className="map p-0 m-0">
-			<Canvas shadows={true}>
-				<Suspense fallback={<Loader />}>
-					<MapCanvas setCamera={setCamera} setScene={setScene}>
-						{ objects ?? <Loader /> }
+	    	<MAP.Messenger message={mapMessage} messenger={setMapMessage} />		
+			<Canvas mode="concurrent" frameloop="demand" shadows={true}>
+				<Suspense fallback={<MAP.Loader />}>
+					<MAP.MapCanvas type="user" setCam={setCamera} setScene={setScene}>
+						{ objects ?? <MAP.Loader /> }
 
-						<Suspense fallback={<Loader/>}>
+						<Suspense fallback={<MAP.Loader/>}>
 							{ line }
 						</Suspense>
-					</MapCanvas>
+					</MAP.MapCanvas>
 				</Suspense>
 			</Canvas>
 			<FloatingButton cpPos={cpPos} setDestination={setDestination}/>
@@ -117,232 +109,6 @@ const MapView = (props) => {
 	);
 }
 
-
-const loadScene = async (data) => {
-	if( !data ) return;
-
-	const prevChild = [];
-	const memo = [];
-
-	const { geometries, object } = data ;
-
-	const children = object?.children;
-
-	if( children ){
-		for( let index in children ){
-
-			if ( /Land/.test(children[index].name) || 
-				/Sky/.test(children[index].name)
-				) continue;
-
-			if( memo.indexOf(children[index].name) < 0 ){
-				memo.push( children[index].name )
-
-				prevChild.push(<Build 
-									index={index}
-									key={children[index].name}
-									geometry={geometries[index]}
-									data={object.children[index]}
-								/>);
-			}
-		}	
-	}
-	
-
-	return prevChild;
-}
-
-
-
-const MapCanvas = (props) => {
-	const { camera } = useThree();
-	const { scene } = useThree();
-
-	const set = useThree((state) => state.set);
-
-	useEffect(() => {
-		set({camera: new THREE.PerspectiveCamera(...CAMERA.config) });
-	}, []);
-
-	useEffect(() => {
-		camera.position.set( ...CAMERA.position );
-		camera.updateProjectionMatrix();
-	}, [camera]);
-
-	props.setCamera( camera );
-	props.setScene( scene );
-
-	return(
-		<>
-			<Atmosphere />
-			<Suspense fallback={<Loader />}>
-				{ props.children }
-			</Suspense>
-			<Land size={LAND_SIZE} />
-		</>
-	);
-}
-
-
-// Loading individual 3d object in previous scene
-const Build = (props) => {
-	const { geometry, data } = props;
-
-	const objRef = useRef();
-	const handleClick = () => props.click( objRef.current );
-
-	switch( true ){
-		case /checkpoint/.test(data.name):
-			return <CheckpointBuilder index={props.index} geometry={geometry} object={data} />; // Create checkpoint builder
-
-		case /map_object/.test(data.name):
-			return <ObjectBuilder index={props.index} geometry={geometry} object={data} />;
-
-		default:
-			console.warn(`The type ${geometry.type} is not supported at this moment.`);
-			break;
-	}
-}
-
-
-// #F8EFBA
-// Object Builder (for loading previous scene)
-const ObjectBuilder = (props) => {
-	const { geometry, object } = props;
-	const objRef = useRef();
-
-
-	const matrix = new THREE.Matrix4();
-	matrix.set(...object.matrix);
-
-	const loader = new THREE.BufferGeometryLoader();
-	const parsedGeom = loader.parse( geometry );
-
-	const position = new THREE.Vector3(matrix.elements[3], matrix.elements[7], matrix.elements[11]);
-	const scale = new THREE.Vector3(matrix.elements[0], matrix.elements[5], matrix.elements[10]);	
-
-	return(
-		<mesh
-			name={`map_object_${props.index}`}
-			ref={objRef}
-			castShadow
-			receiveShadow
-			scale={[...Object.values(scale)]}
-			geometry={parsedGeom}
-			position={[...Object.values(position)]}
-		>	
-			<meshStandardMaterial
-				color={0xCAD3C8}				
-				metalness={1}
-				roughness={1}
-			/>	
-		</mesh>
-	);
-}
-
-
-
-function CheckpointBuilder( props ){	
-	const { geometry, object } = props;
-	const matrix = new THREE.Matrix4();
-
-	const checkpoint = useRef();
-
-	matrix.set( ...object.matrix );
-
-	const position = new THREE.Vector3(matrix.elements[3], matrix.elements[7], matrix.elements[11]);
-	const scale = new THREE.Vector3(matrix.elements[0], matrix.elements[5], matrix.elements[10]);
-
-	const handleClick = (e) => {
-		e.stopPropagation();
-
-		props.click({ data: checkpoint });
-	}
-
-
-	return(
-		<mesh 
-			name={object.name} 
-			ref={checkpoint} 
-			scale={[...Object.values(scale)]} 
-			name={object.name} 
-			position={position} 
-			castShadow
-			receiveShadow
-		>
-			<sphereGeometry args={[geometry.radius, geometry.widthSegments, geometry.heightSegments]}/>
-			<meshStandardMaterial color={0x6a89cc}/>
-		</mesh>
-	);
-}
-
-
-// ===========================================
-// 
-// 				  MAP ESSENTIALS
-// 
-// ===========================================
-
-// Atmosphere
-const Atmosphere = (props) => (
-
-	<group castShadow name="Sky">
-		<Stars radius={LAND_SIZE[0] * 0.6} count={LAND_SIZE[0] * 4} fade />
-		{/*<props.control.controls {...props?.control?.config}/>*/}
-		<OrbitControls />
-		<ambientLight intensity={0.5}/>
-		<directionalLight
-			castShadow
-	        position={[1000, 5000, 0]}
-	        intensity={1.2}
-	        shadow-mapSize-width={5000}
-	        shadow-mapSize-height={5000}
-	        shadow-camera-far={1000}
-	        shadow-camera-left={-100}
-	        shadow-camera-right={100}
-	        shadow-camera-top={100}
-	        shadow-camera-bottom={-100}
-		/>
-		<directionalLight
-			castShadow
-	        position={[-1000, 5000, 0]}
-	        intensity={1.2}
-	        shadow-mapSize-width={5000}
-	        shadow-mapSize-height={5000}
-	        shadow-camera-far={1000}
-	        shadow-camera-left={-100}
-	        shadow-camera-right={100}
-	        shadow-camera-top={100}
-	        shadow-camera-bottom={-100}
-		/>
-	</group>
-);
-
-
-
-// Land
-const Land = (props) => {
-
-	return (
-		<mesh 
-			name="Land" 
-			receiveShadow
-			rotation={[-Math.PI / 2, 0, 0]}
-		>
-			<planeBufferGeometry attach="geometry" args={props.size || 1} />
-			<meshStandardMaterial 
-				color="white" 
-				roughness={0.9}
-				metalness={0.2}
-				attach="material"
-			/>
-		</mesh>
-	)
-};
-
-const Loader = (props) => {
-	return <Html center> Loading </Html>;
-}
 
 
 export default MapView;

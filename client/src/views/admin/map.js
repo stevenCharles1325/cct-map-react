@@ -25,16 +25,16 @@ import * as THREE from 'three';
 import MapMenu from '../../components/admin/menu/map-menu';
 import { Input } from '../../components/admin/inputs/input';
 import Button from '../../components/admin/buttons/button';
-import { Checkpoints, CheckpointBuilder } from '../../modules/map-checkpoints';
+import Checkpoints from '../../modules/map-checkpoints';
 
 
 // Style(s)
 import '../../styles/admin/map.css';
 
 
-
-// DIY wrapper function for three first-person-controls
-import FirstPersonControls from '../../modules/FirstPersonControls';
+// Module
+import FirstPersonControls from '../../modules/FirstPersonControls'; // DIY wrapper function for three first-person-controls
+import * as MAP from '../../modules/cct-map';
 
 
 // Loading components
@@ -42,20 +42,14 @@ import CircStyleLoad from '../../components/admin/load-bar/circ-load';
 import InfiniteStyleLoad from '../../components/admin/load-bar/inf-load';
 
 
-// == constants ==
-const LAND_SIZE = [10000, 10000];
-
-const WIDTH = window.innerWidth;
-const HEIGHT = window.innerHeight;
-
-const CAMERA = {
-	config: [75, WIDTH / HEIGHT, 100, 20000],
-	position: [0, 2400, 2400],
-	far: 50000
+const materialOptions = {
+	color: 0x3f4444,
+	roughness: 0.4,
+	metalness: 0
 }
 
-var EMPTY_NAME_CP_SPOTTED = false;
-var PROP_BOX_DETECTED = false;	
+const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
+
 
 const MapView = (props) => {
 	const land = useRef();
@@ -126,9 +120,6 @@ const MapView = (props) => {
 	}
 
 
-	useEffect(() => console.log( checkPoints ), [checkPoints]);
-
-
 	useEffect(() => {
 		if( upload || copyObj || isCheckPoint ) setObjectCount((objectCount) => objectCount + 1);
 
@@ -188,9 +179,6 @@ const MapView = (props) => {
 			setIsCheckPoint( false );
 		}
 		else if( deleteObj ){
-			// work-1
-			console.log( checkPoints );
-
 			let newCpList = removeByName( checkPoints, deleteObj );			
 			let newObjList = removeByKey( objList, deleteObj );
 
@@ -215,11 +203,11 @@ const MapView = (props) => {
 							setCheckPoints={setCheckPoints}
 							scene={scene}
 						/>);
-			PROP_BOX_DETECTED = !PROP_BOX_DETECTED;
+			MAP.setPropBoxDetected( !MAP.PROP_BOX_DETECTED );
 		}
 		else{
 			setPropBox( null );
-			PROP_BOX_DETECTED = !PROP_BOX_DETECTED;
+			MAP.setPropBoxDetected( !MAP.PROP_BOX_DETECTED );
 		}
 
 	}, [state.selected]);
@@ -228,11 +216,21 @@ const MapView = (props) => {
 	useEffect(() => {
 		const sceneLoader = async () => {
 			if( !objList?.length ){
-				const primitives = await loadScene( props.mapData, dispatch, reqSetCheckPoints );
+				
+				const params = {
+					userType	: 'admin',
+					data 		: props.mapData,
+					click 		: dispatch, 
+					checkPointSaver: reqSetCheckPoints
+				}
+
+				const primitives = await MAP.loadScene( params );
+
 				if( primitives?.length ){
 					setObjList((objList) => [ ...primitives ]);
 
-					setObjectCount( () => getLastStringToNumber(primitives[primitives.length - 1].key) + 1  ); // 
+					setObjectCount( () => getLastStringToNumber(primitives[primitives.length - 1].key) + 1  );
+
 					setMapMessage((mapMessage) => [...mapMessage, 'Previous scene has been loaded successfully']);
 				};
 			}
@@ -251,8 +249,6 @@ const MapView = (props) => {
 		if( scene ){
 			const prevSceneState = JSON.stringify( scene.toJSON() );
 
-
-			console.log( checkPoints );
 			const mapBundle = {
 								scene: JSON.parse( prevSceneState ), 
 								cpPosition: checkPoints.map(elem => ({name: elem.name, position: elem.position}))
@@ -266,19 +262,19 @@ const MapView = (props) => {
 
 	return(
 		<div className="map">
-		    <Suspense fallback={<Loader />}>
+		    <Suspense fallback={<MAP.Loader />}>
 			    <MapMenu 
 			    	reqSetUpload={setUpload} 
 			    	reqSaveMap={requestSaveMap} 
 			    	switch={enableMenu} 
 			    	messenger={setMapMessage} 
-			    	saveAllowed={EMPTY_NAME_CP_SPOTTED}
+			    	saveAllowed={MAP.EMPTY_NAME_CP_SPOTTED}
 			    />
-			    	<Messenger message={mapMessage} messenger={setMapMessage}/>
-					<Canvas shadows={true}>
-					    <Suspense fallback={<Loader />}>
-						    <MapCanvas 
-						    	landRef={land} 
+			    	<MAP.Messenger message={mapMessage} messenger={setMapMessage}/>
+					<Canvas mode="concurrent" shadows={true}>
+					    <Suspense fallback={<MAP.Loader />}>
+						    <MAP.MapCanvas 
+						    	type="admin"
 						    	control={Controls}
 						    	setScene={setScene}
 						    	setCam={setPersCam}
@@ -286,7 +282,7 @@ const MapView = (props) => {
 						    	reqSetDelete={setDeleteObj}
 						    >
 						    	{ objList }
-						    </MapCanvas>
+						    </MAP.MapCanvas>
 					    </Suspense>
 					</Canvas>
 				    	{ state.selected ? propBox : null }
@@ -297,54 +293,32 @@ const MapView = (props) => {
 }
 
 
-const Messenger = (props) => {
-	let { message, messenger } = props;
-	const [msg, setMsg] = useState('');
-	
-	const DECAY_TIME = 2000;
-
-	useEffect(() => {
-		const displayMessage = async ( newMessage ) => {
-			setMsg(() => newMessage);
-			setTimeout(() => setMsg(() => ''), DECAY_TIME);
-		}
-
-		message.forEach( pendingMsg => setTimeout(() => displayMessage(pendingMsg), DECAY_TIME) );
-	}, [message]);
-
-	return (
-		<div className={`map-message ${msg ? 'd-flex' : 'd-none'} justify-content-center align-items-center p-3`}>
-			<p className="p-0 m-0 px-2">{ msg }</p>
-		</div>
-	);
-}
-
 const BottomBar = (props) => {
 	const [switched, setSwitched] = useState( 'orbit' );
 
 	const handleCreateCheckPoint = () => {
 		props.setCheckpoint( true );
-		EMPTY_NAME_CP_SPOTTED = true;
+		MAP.setEmtyNameCpSpotted( true );
 	}
 
 	return(
 		<div className="map-btm-bar d-flex justify-content-around align-items-center">
 			<div className="col-7 map-view-switch d-flex justify-content-end align-items-center">
 				<Button classname={`${switched === 'free' ? "map-view-selected" : ''} map-vs-btn map-view-fpc`} name="Free" click={() => { 
-						props.control({
-								controls: FirstPersonControls,
-								config: {
-									lookSpeed: 0.3,
-									movementSpeed: 550
-								}
-							});
+						props.control(() => ({
+												controls: FirstPersonControls,
+												config: {
+													lookSpeed: 0.3,
+													movementSpeed: 550
+												}
+											}));
 						setSwitched( 'free' );
 				}}/>
 				<Button classname={`${switched === 'orbit' ? "map-view-selected" : ''} map-vs-btn map-view-oc`} name="Orbit" click={() => { 
-						props.control({ 
-								controls: OrbitControls,
-								config: null
-							});
+						props.control(() => ({ 
+												controls: OrbitControls,
+												config: null
+											}));
 						setSwitched( 'orbit' );
 				}}/>
 			</div>
@@ -356,168 +330,6 @@ const BottomBar = (props) => {
 	);
 }
 
-
-// Canvas;
-const MapCanvas = (props) => {
-	const { scene, camera } = useThree();
-	const set = useThree((state) => state.set);
-
-	useEffect(() => {
-		set({camera: new THREE.PerspectiveCamera(...CAMERA.config)});
-	}, []);
-
-	useEffect(() => {
-		camera.position.set( ...CAMERA.position );
-		camera.updateProjectionMatrix();
-		props.setCam( camera );
-
-	}, [camera]);
-
-	useEffect(() => {
-		if( props.deleteObj ){
-			delete props.deleteObj.__r3f.handlers.onClick;
-			props.reqSetDelete(() => null);
-
-		}
-	}, [props.deleteObj]);
-
-	props.setScene( () => scene );
-
-	return(
-		<>
-			<Atmosphere control={props.control} />
-			<Suspense fallback={<Loader />}>
-				{ props.children }
-			</Suspense>
-			<Land ref={props.landRef} size={LAND_SIZE}/>
-		</>
-	);		
-}
-
-
-
-
-const loadScene = async (data, click, checkpointSaver) => {
-	if( !data ) return;
-
-	let key;
-
-	const prevChild = [];
-	const memo = [];
-
-	const { geometries, object } = data ;
-
-	const children = object?.children;
-
-	if( children ){
-		for( let index in children ){
-
-			if ( /Land/.test(children[index].name) || 
-				/Sky/.test(children[index].name)
-				) continue;
-
-			if( memo.indexOf(children[index].name) < 0 ){
-				memo.push( children[index].name )
-
-			if( isCheckpointObject(children[index].name) ){
-				key = `checkpoint_${index}`;
-			}
-			else{
-				key = `map_object_${index}`;
-			}
-				prevChild.push(<Build 
-									index={index}
-									key={key}
-									geometry={geometries[index]}
-									data={object.children[index]}
-									click={click}
-									saveCheckpoint={checkpointSaver}
-								/>);
-			}
-		}	
-	}
-	
-
-	return prevChild;
-}
-
-
-
-// Loading individual 3d object in previous scene
-const Build = (props) => {
-	const { geometry, data } = props;
-
-	const objRef = useRef();
-	const handleClick = () => props.click( objRef.current );
-
-	switch( true ){
-
-		case /checkpoint/.test(data.name):
-			return (<CheckpointBuilder 
-						name={getRootName(data.name)}
-						index={props.index}
-						geometry={geometry} 
-						object={data} 
-						click={props.click} 
-						saveCheckpoint={props.saveCheckpoint} 
-					/>); 
-
-		case /map_object/.test(data.name):
-			return <ObjectBuilder
-						index={props.index}
-						geometry={geometry} 
-						object={data} 
-						click={props.click} 
-					/>;
-
-		default:
-			console.warn(`The type ${geometry.type} is not supported at this moment.`);
-			break;
-	}
-}
-
-
-// Object Builder (for loading previous scene)
-const ObjectBuilder = (props) => {
-	const { geometry, object } = props;
-	const objRef = useRef();
-
-
-	const matrix = new THREE.Matrix4();
-	matrix.set(...object.matrix);
-
-	const loader = new THREE.BufferGeometryLoader();
-	const parsedGeom = loader.parse( geometry );
-
-	const position = new THREE.Vector3(matrix.elements[3], matrix.elements[7], matrix.elements[11]);
-	const scale = new THREE.Vector3(matrix.elements[0], matrix.elements[5], matrix.elements[10]);
-
-	const handleClick = (e) => {
-		e.stopPropagation();
-
-		props.click({ data: objRef });
-	}
-	
-
-	return(
-		<mesh
-			name={`map_object_${props.index}`}
-			ref={objRef}
-			onDoubleClick={handleClick}
-			receiveShadow
-			castShadow
-			scale={[...Object.values(scale)]}
-			geometry={parsedGeom}
-			position={[...Object.values(position)]}
-		>	
-			<meshStandardMaterial
-				color={0xCAD3C8}
-				metalness={0.1}
-				roughness={0.5}
-			/>	
-		</mesh>
-	);
-}
 
 
 // Cloning an imported object
@@ -540,12 +352,8 @@ const MapClone = (props) => {
 			castShadow
 			scale={50}
 			geometry={object.geometry}
+			material={defaultMaterial}
 		>
-			<meshStandardMaterial
-				color={0xCAD3C8}				
-				metalness={0.1}
-				roughness={0.5}
-			/>	
 		</mesh>
 	);	
 }
@@ -573,72 +381,12 @@ const MapImport = (props) => {
 			castShadow
 			scale={50}
 			geometry={object.geometry}
+			material={defaultMaterial}
 		>
-			<meshStandardMaterial
-				color={0xCAD3C8}
-				metalness={0.1}
-				roughness={0.5}
-			/>	
 		</mesh>
 	);
 }
 
-
-
-// Atmosphere
-const Atmosphere = (props) => (
-
-	<group name="Sky">
-		<Stars radius={LAND_SIZE[0]} count={LAND_SIZE[0]} fade />
-		<props.control.controls enabled={PROP_BOX_DETECTED} {...props?.control?.config}/>
-		<ambientLight intensity={0.5}/>
-		<directionalLight
-			castShadow
-	        position={[1000, 5000, 0]}
-	        intensity={1.2}
-	        shadow-mapSize-width={5000}
-	        shadow-mapSize-height={5000}
-	        shadow-camera-far={1000}
-	        shadow-camera-left={-100}
-	        shadow-camera-right={100}
-	        shadow-camera-top={100}
-	        shadow-camera-bottom={-100}
-		/>
-		<directionalLight
-			castShadow
-	        position={[-1000, 5000, 0]}
-	        intensity={1.2}
-	        shadow-mapSize-width={5000}
-	        shadow-mapSize-height={5000}
-	        shadow-camera-far={1000}
-	        shadow-camera-left={-100}
-	        shadow-camera-right={100}
-	        shadow-camera-top={100}
-	        shadow-camera-bottom={-100}
-		/>
-	</group>
-);
-
-
-
-
-// Land
-const Land = React.forwardRef((props, ref) => (
-	<mesh 
-		ref={ref}
-		name="Land" 
-		visible
-		receiveShadow
-		rotation={[-Math.PI / 2, 0, 0]}
-	>
-		<planeBufferGeometry args={props.size || 1} />
-		<meshStandardMaterial 
-			color={0x596275} 
-			roughness={0.9}
-			metalness={0.5}
-		/>
-	</mesh>
-));
 
 
 
@@ -652,13 +400,13 @@ const PropertyBox = (props) => {
 
     const checkpointType = (properties?.name.search('checkpoint') > -1) ? true : false;
 
-    const setMonitor = (name) => !getRootName( properties.name ) ? true : false;  
+    const setMonitor = (name) => !MAP.getRootName( properties.name ) ? true : false;  
 
-	const [name, setName] = useState( getRootName(properties.name).toLowerCase() );
+	const [name, setName] = useState( MAP.getRootName(properties.name).toLowerCase() );
 
     if( checkpointType ){
-    	EMPTY_NAME_CP_SPOTTED = setMonitor( properties.name );
-	    var baseName = getBaseName( properties.name );	  
+    	MAP.setEmtyNameCpSpotted( setMonitor( properties.name ) );
+	    var baseName = MAP.getBaseName( properties.name );	  
     }
 
 
@@ -669,8 +417,7 @@ const PropertyBox = (props) => {
         properties.name = `${baseName}${e.target.value.toUpperCase()}`;
     	meshData.name = properties.name;	    
 
-
-	    EMPTY_NAME_CP_SPOTTED = setMonitor( properties.name );
+    	MAP.setEmtyNameCpSpotted( setMonitor( properties.name ) );
     }
 
 
@@ -804,35 +551,24 @@ const glassify = (material, unGlassify = false) => {
 }
 
 
-
-// Loader
-const Loader = ( props ) => { 
-	const { progress } = useProgress();
-
-	return <Html center> Loading: { progress }% </Html>
-}
-
 // Remover work-2
 const removeByKey = (list, objToDelete) => {
 	const removeDeletedObject = (elem) => {
 		let name = objToDelete.name;
 
-		if( isCheckpointObject(name) ){
-			return elem?.key !== removeEndString( getBaseName(name) );			 
+		if( MAP.isCheckpointObject(name) ){
+			return elem?.key !== removeEndString( MAP.getBaseName(name) );			 
 		}
 
 		return elem?.key !== name;			 
 	}
 
-	console.log( list );
 	return list.filter( removeDeletedObject );
 }
 
 const removeByName = (list, objToDelete) => {
 	const removeDeletedObject = (elem) => {
 		let name = objToDelete.name;
-
-		console.log( elem?.name, name );
 
 		return elem?.name !== name;	 
 	}
@@ -842,7 +578,7 @@ const removeByName = (list, objToDelete) => {
 
 
 const removeEndString = (string) => {
-	string = getBaseName(string).split('');
+	string = MAP.getBaseName(string).split('');
 	string.pop();
 	string = string.join('');
 
@@ -861,13 +597,6 @@ const getLastStringToNumber = (string) => {
 		throw new Error( err );
 	}
 }
-
-const isCheckpointObject = (name) => name?.search('checkpoint') > -1 ? true : false;
-
-const getRootName = (name) => name?.replace?.(/checkpoint_([0-9]+)_/, ''); // Returns: room123
-	
-const getBaseName = (name) => name?.replace?.(getRootName(name), ''); // Returns: checkpoint_123_
-
 
 
 export default MapView;
