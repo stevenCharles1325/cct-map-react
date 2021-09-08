@@ -25,25 +25,32 @@ const ImageBall = ( props ) => {
 		})
 		.catch( err => {
 			console.log( err?.response?.data?.message );
+			setTimeout(() => handleChangePhoto(e), [2000]);
 		});
 	}
 
 	const getPhoto = async () => {
-		axios.get('/admin/picture')
+		await axios.get('/admin/picture')
 		.then( res => {
 			setNewImage( () => res.data.path );			
 			console.log( res.data.message );
 		})
 		.catch( err => {
 			console.log( err );
+			setTimeout(() => getPhoto(), [2000]);
 		});
 	}
 
 	useEffect(() => {
-		getPhoto();	
+		getPhoto();
+		props?.Event?.on?.('changePhoto', () => getPhoto());
+
+		return () => {
+			getPhoto();
+			props?.Event?.on?.('changePhoto', () => getPhoto());
+		}
 	}, []);
 
-	props?.Event?.on?.('changePhoto', () => getPhoto());
 
 	return(
 		<div 
@@ -51,7 +58,7 @@ const ImageBall = ( props ) => {
 			onMouseLeave={handleMouseLeave}
 			className="image-ball d-flex justify-content-center align-items-center"
 		>
-			<img className="image-ball-img loading" width="100%" height="100%" src={ newImage ?? defaultImg }/>
+			<img className="image-ball-img loading" width="100%" height="100%" src={ newImage }/>
 			{ 
 				props?.active ? (() => (
 									<div className="admin-img-l1 d-flex justify-content-center align-items-center">

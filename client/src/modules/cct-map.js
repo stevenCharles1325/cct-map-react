@@ -105,6 +105,7 @@ const loadScene = async ({ userType, data, click, checkPointSaver }) => {
 				}
 
 				prevChild.push(<Build 
+									userType={userType}
 									index={index}
 									key={key}
 									geometry={geometries[index]}
@@ -132,6 +133,7 @@ const Build = (props) => {
 
 		case /checkpoint/.test(data.name):
 			return (<CheckpointBuilder 
+						userType={props.userType}
 						name={getRootName(data.name)}
 						index={props.index}
 						geometry={geometry} 
@@ -142,6 +144,7 @@ const Build = (props) => {
 
 		case /map_object/.test(data.name):
 			return <ObjectBuilder
+						userType={props.userType}
 						index={props.index}
 						geometry={geometry} 
 						object={data} 
@@ -175,6 +178,9 @@ const ObjectBuilder = (props) => {
 		props?.click?.({ data: objRef });
 	}
 	
+	const produceMaterial = () => {
+		return props.userType === 'admin' ? new THREE.MeshPhysicalMaterial( materialOptions ) : defaultMaterial;
+	}
 
 	return(
 		<mesh
@@ -186,7 +192,7 @@ const ObjectBuilder = (props) => {
 			scale={[...Object.values(scale)]}
 			geometry={parsedGeom}
 			position={[...Object.values(position)]}
-			material={defaultMaterial}
+			material={produceMaterial()}
 		>	
 		</mesh>
 	);
@@ -211,6 +217,10 @@ function CheckpointBuilder( props ){
 		props?.click?.({ data: checkpoint });
 	}
 
+	const produceMaterial = () => {
+		return props.userType === 'admin' ? new THREE.MeshPhysicalMaterial( materialOptions ) : defaultMaterial;
+	}
+
 	useEffect(() => {
 		if( checkpoint.current ) props?.saveCheckpoint?.( checkpoint.current );
 	}, [checkpoint.current]);
@@ -222,7 +232,7 @@ function CheckpointBuilder( props ){
 			scale={[...Object.values(scale)]} 
 			position={position} 
 			onDoubleClick={handleClick}
-			material={defaultMaterial}
+			material={produceMaterial()}
 			receiveShadow={true}
 			castShadow={true}
 		>

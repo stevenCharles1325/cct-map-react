@@ -17,6 +17,8 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
+app.use(cors());
+
 app.use(fileUpload());
 app.use(logger('dev'));
 app.use(express.json({ limit: '500mb' }));
@@ -33,21 +35,21 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/admin', indexRouter);
 app.use('/', usersRouter);
 
-const whitelist = ['http://localhost:3000', 'http://localhost:443']
-const corsOptions = {
-  origin: function (origin, callback) {
-    console.log("** Origin of request " + origin)
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
-      console.log("Origin acceptable")
-      callback(null, true)
-    } else {
-      console.log("Origin rejected")
-      callback(new Error('Not allowed by CORS'))
-    }
-  }
-}
+// const whitelist = ['http://localhost:3000', 'http://localhost:443']
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     console.log("** Origin of request " + origin)
+//     if (whitelist.indexOf(origin) !== -1 || !origin) {
+//       console.log("Origin acceptable")
+//       callback(null, true)
+//     } else {
+//       console.log("Origin rejected")
+//       callback(new Error('Not allowed by CORS'))
+//     }
+//   }
+// }
 
-app.use(cors(corsOptions));
+// app.use(cors(corsOptions));
 
 if (process.env.NODE_ENV === 'production') {
   // Serve any static files

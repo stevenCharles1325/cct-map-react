@@ -75,6 +75,7 @@ const MapView = (props) => {
 	const [objectCount, setObjectCount] = useState( 0 );
 
 	const selectHandler = ( state, action ) => {
+		console.log( action?.data?.current )
 
 		if( action.reset ){
 			if( state.selected ){
