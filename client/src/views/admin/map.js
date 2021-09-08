@@ -107,6 +107,7 @@ const MapView = (props) => {
 	function reqSetCheckPoints ( newCheckpoint ) {
 		setCheckPoints((checkPoints) => {
 			if( checkPoints.map( cp => cp.name ).indexOf( newCheckpoint.name ) > - 1){
+
 				return [...checkPoints];
 			}
 			else{
@@ -543,9 +544,8 @@ const PropBoxInp = (props) => {
 // Glassification
 const glassify = (material, unGlassify = false) => {
 	if( !material ) return;
-	const prevColor = material.color;
 
-	material.color.set(unGlassify ? prevColor : 0x55efc4);
+	material.color.set(unGlassify ? materialOptions.color : 0x55efc4);
 	material.opacity = unGlassify ? 1 : 0.5;
 	material.transparent = unGlassify ? false : true;	
 }

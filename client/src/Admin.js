@@ -28,6 +28,10 @@ import NavPanel from './components/admin/navigator/nav-panel';
 import './styles/admin/admin.css';
 
 
+// Modules
+import EventEmitter from './modules/custom-event-emitter';
+
+
 // List of current views that the app has.
 const ROOT = '/admin';
 const VIEWS = [
@@ -38,6 +42,8 @@ const VIEWS = [
 	   	`${ROOT}/sign-in`,
 	    `${ROOT}/sign-up`
 	 ];
+
+const Event = new EventEmitter();
 
 
 
@@ -276,7 +282,8 @@ export default function Admin(){
 				reqSetAdminSignIn: requestSetAdminSignIn,
 				reqSignOut: requestSignOut,
 				reqSignUp: requestSignUp,
-				dirs: directories
+				dirs: directories,
+				Event: Event
 			});
 		}		
 	}, [admin, graphData, mapData]);

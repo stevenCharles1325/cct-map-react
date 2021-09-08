@@ -19,16 +19,16 @@ const ImageBall = ( props ) => {
 
 		await axios.put('/admin/upload-picture', formData)
 		.then( res => {
-			console.log( res.data.path );
 			setNewImage( () => res.data.path );
-			console.log( newImage );
+
+			props?.Event?.emit?.('changePhoto');
 		})
 		.catch( err => {
 			console.log( err?.response?.data?.message );
 		});
 	}
 
-	useEffect(() => {
+	const getPhoto = async () => {
 		axios.get('/admin/picture')
 		.then( res => {
 			setNewImage( () => res.data.path );			
@@ -37,7 +37,13 @@ const ImageBall = ( props ) => {
 		.catch( err => {
 			console.log( err );
 		});
+	}
+
+	useEffect(() => {
+		getPhoto();	
 	}, []);
+
+	props?.Event?.on?.('changePhoto', () => getPhoto());
 
 	return(
 		<div 
@@ -45,7 +51,7 @@ const ImageBall = ( props ) => {
 			onMouseLeave={handleMouseLeave}
 			className="image-ball d-flex justify-content-center align-items-center"
 		>
-			<img className="image-ball-img" width="100%" height="100%" src={ newImage ?? defaultImg }/>
+			<img className="image-ball-img loading" width="100%" height="100%" src={ newImage ?? defaultImg }/>
 			{ 
 				props?.active ? (() => (
 									<div className="admin-img-l1 d-flex justify-content-center align-items-center">

@@ -30,14 +30,28 @@ const FloatingButton = (props) => {
 	const [state, dispatch] = useReducer( opener, initState );
 	const [p2pForm, setP2pForm] = useState( null );
 
+	const escapeListener = (e) => {
+		if( e.key === 'Escape' ) return dispatch({type: 'menu'});
+	}
+
 	useEffect(() => {
 		if( state.p2pFormState ){
-			setP2pForm( <P2pForm dispatch={dispatch} {...props}/> );
+			setP2pForm( () => <P2pForm dispatch={dispatch} {...props}/> );
 		}
-		else{
-			setP2pForm( null );
+		else {
+			setP2pForm( () => null );
 		}
 	}, [state.p2pFormState]);
+
+	useEffect(() => {
+		if( !state.menuState && state.p2pFormState ) dispatch({type: 'p2p'});
+	}, [state.menuState, state.p2pFormState]);
+
+	useEffect(() => {
+		window.addEventListener('keydown', escapeListener);
+
+		return () => window.removeEventListener('keydown', escapeListener);
+	}, []);
 
 	return (
 		<>

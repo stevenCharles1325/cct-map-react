@@ -6,7 +6,6 @@ import { Input, displayMessage }from '../../components/admin/inputs/input';
 import ImageBall from '../../components/admin/image/image-ball';
 
 import '../../styles/admin/settings.css';
-import userFace from '../../images/admin/happy.png';
 
 export default function Settings( props ){
     const validator = new Validator();
@@ -105,8 +104,7 @@ export default function Settings( props ){
             <div className="settings-bar"></div>
             <div className="settings-pic-bar d-flex flex-row">
                 <div className="settings-pic-cont d-flex justify-content-center align-items-center">
-                    {/*<img width="80%" height="80%" src={userFace}/>*/}
-                    <ImageBall active={true}/>
+                    <ImageBall active={true} Event={props.Event}/>
                 </div>
                 <div className="settings-title">Settings</div>
             </div>
@@ -132,7 +130,7 @@ export default function Settings( props ){
                         handleChange={cPasswordChangeHandler} 
                         type="password" 
                         name="cPassword" 
-                        placeholder="Confirm new password" 
+                        placeholder="Re-enter password" 
                         peekBtn={createPeekButton("set-cPassword")}
                     />
                     <Input id="set-email" value={email} size={{height: '100%'}} handleChange={emailChangeHandler} type="text" name="email" placeholder="Enter new email"/>

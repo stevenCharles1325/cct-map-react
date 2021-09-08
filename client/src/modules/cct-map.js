@@ -59,7 +59,7 @@ const setPropBoxDetected = ( value ) => {
 
 
 // Scene loader
-const loadScene = async ({ userType, data, click, checkpointSaver }) => {
+const loadScene = async ({ userType, data, click, checkPointSaver }) => {
 	if( !data || !userType ) return;
 
 	let key;
@@ -77,7 +77,7 @@ const loadScene = async ({ userType, data, click, checkpointSaver }) => {
 				return userType === 'admin' ? click : null;
 
 			case 'saver':
-				return userType === 'admin' ? checkpointSaver : null;
+				return userType === 'admin' ? checkPointSaver : null;
 
 			default:
 				return;
@@ -89,7 +89,8 @@ const loadScene = async ({ userType, data, click, checkpointSaver }) => {
 	if( children ){
 		for( let index in children ){
 
-			if ( /Land/.test(children[index].name) || 
+			if ( !children[index]?.name ||
+				/Land/.test(children[index].name) || 
 				/Sky/.test(children[index].name)
 				) continue;
 
@@ -115,53 +116,9 @@ const loadScene = async ({ userType, data, click, checkpointSaver }) => {
 		}	
 	}
 	
-	
+
 	return prevChild;
 }
-
-
-// Canvas;
-const MapCanvas = (props) => {
-	const land = useRef();
-
-	const { scene, camera, gl } = useThree();
-	const set = useThree((state) => state.set);
-
-	useEffect(() => {
-		set({camera: new THREE.PerspectiveCamera(...CAMERA.config)});
-		gl.shadowMap.enabled = true;
-		gl.shadowMap.type = THREE.PCFSoftShadowMap;
-	}, []);
-
-	useEffect(() => {
-		camera.position.set( ...CAMERA.position );
-		camera.updateProjectionMatrix();
-		props.setCam( () => camera );
-	}, [camera]);
-
-	useEffect(() => {
-		if( props?.deleteObj ){
-			delete props.deleteObj.__r3f.handlers.onClick;
-			props.reqSetDelete(() => null);
-
-		}
-	}, [props?.deleteObj]);
-
-
-	// useEffect(() => props.setScene( () => scene ), [scene]);
-	props.setScene( () => scene );
-
-	return(
-		<>
-			<Atmosphere lightTarget={land} type={props.type} control={props.control} />
-			<Suspense fallback={<Loader />}>
-				{ props.children }
-			</Suspense>
-			<Land refer={land} size={LAND_SIZE}/>
-		</>
-	);		
-}
-
 
 
 // Loading individual 3d object in previous scene
@@ -277,12 +234,55 @@ function CheckpointBuilder( props ){
 
 
 
+// Canvas;
+const MapCanvas = (props) => {
+	const land = useRef();
+
+	const { scene, camera, gl } = useThree();
+	const set = useThree((state) => state.set);
+
+	useEffect(() => {
+		set({camera: new THREE.PerspectiveCamera(...CAMERA.config)});
+		gl.shadowMap.enabled = true;
+		gl.shadowMap.type = THREE.PCFSoftShadowMap;
+	}, []);
+
+	useEffect(() => {
+		camera.position.set( ...CAMERA.position );
+		camera.updateProjectionMatrix();
+		props.setCam( () => camera );
+	}, [camera]);
+
+	useEffect(() => {
+		if( props?.deleteObj ){
+			delete props.deleteObj.__r3f.handlers.onClick;
+			props.reqSetDelete(() => null);
+
+		}
+	}, [props?.deleteObj]);
+
+
+	// useEffect(() => props.setScene( () => scene ), [scene]);
+	props.setScene( () => scene );
+
+	return(
+		<>
+			<Atmosphere lightTarget={land} type={props.type} control={props.control} />
+			<Suspense fallback={<Loader />}>
+				{ props.children }
+			</Suspense>
+			<Land refer={land} size={LAND_SIZE}/>
+		</>
+	);		
+}
+
+
+
 // Atmosphere
 const Atmosphere = (props) => {
-	console.log( props.type );
 	return (
 		<group name="Sky">
-			<Stars radius={LAND_SIZE[0]} count={LAND_SIZE[0]} fade />
+			<Stars radius={LAND_SIZE[0]*0.5} count={LAND_SIZE[0]*2} fade />
 			{ 
 				props?.type === 'user' ? <OrbitControls /> : <props.control.controls enabled={PROP_BOX_DETECTED} {...props?.control?.config}/>
 			}
