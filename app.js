@@ -23,17 +23,36 @@ app.use(fileUpload());
 app.use(logger('dev'));
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+app.use(cookieParser('6c-65-6d-6f-6e'));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// app.use((req, res, next) => {
+
+function authenticate(req, res, next) {
+  if( req.signedCookies.loggedIn ){
+    if( req.signedCookies.loggedIn === '1' ){
+      next();
+    }
+    else{
+      req.cookie('loggedIn', '1', { signed : true });
+      next();
+    }
+  }
+  else{
+    return res.status( 401 ).json({ message: 'You are not authenticated!'});
+  }
+}
+
+app.use(authenticate);
+
+app.use('/admin', indexRouter);
+app.use('/', usersRouter);
+
+// app.use((req, res, next) => { // previously on line 44
 //   res.setHeader('Access-Control-Allow-Origin', '*');
 //   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
 //   next();
 // });
 
-app.use('/admin', indexRouter);
-app.use('/', usersRouter);
 
 // const whitelist = ['http://localhost:3000', 'http://localhost:443']
 // const corsOptions = {
