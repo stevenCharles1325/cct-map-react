@@ -1,6 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-
 
 export default function PageNotFound(){
 	return (
@@ -19,11 +17,6 @@ export default function PageNotFound(){
 				<div className="text-center">
 					<h2>Was not able to find the page you were looking for.</h2>
 				</div>
-				<br/>
-				<br/>
-				<h5>
-					Wanna go to the <Link to="/admin/dashboard">Dashboard</Link>, <Link to="/admin/Settings">Settings</Link>, or <Link to="/admin/Map">Map</Link> instead?					
-				</h5>
 			</div>
 		</>
 	);

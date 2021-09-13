@@ -6,6 +6,8 @@ import React, {
 	Suspense, 
 } from 'react';
 
+import axios from 'axios';
+
 import {
 	OrbitControls,
 	Stars,
@@ -15,7 +17,7 @@ import {
 } from '@react-three/drei';
 
 import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
 
 import * as THREE from 'three';
@@ -54,6 +56,8 @@ const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
 const MapView = (props) => {
 	const land = useRef();
 
+	const [mapData, setMapData] = useState( null );
+
 	const [upload, setUpload] = useState( null );
 	const [objList, setObjList] = useState( [] );
 
@@ -73,6 +77,7 @@ const MapView = (props) => {
 	const [enableMenu, setEnableMenu] = useState( true );
 
 	const [objectCount, setObjectCount] = useState( 0 );
+
 
 	const selectHandler = ( state, action ) => {
 
@@ -118,6 +123,33 @@ const MapView = (props) => {
 
 	function reqSetPropBox() {
 		dispatch({ reset: true });
+	}
+
+
+	// Fetches map data
+	const requestMapData = async () => {
+		await axios.get('/admin/map-data')
+		.then( res => {
+			setMapData( res.data );
+		})
+		.catch( err => {
+			// errorHandler( err );
+		});
+	}
+
+
+	// Requests to save map
+	const requestSaveMapData = async (scene) => {	
+		if( !scene ) return;
+
+		await axios.post('/admin/update-map', scene)
+		.then( res => {
+			return { message : res ? 'Map has been saved successfully' : 'Please try again!' };
+		})
+		.catch( err => {
+			// errorHandler( err );
+			return { message : err } ;
+		});
 	}
 
 
@@ -220,7 +252,7 @@ const MapView = (props) => {
 				
 				const params = {
 					userType	: 'admin',
-					data 		: props.mapData,
+					data 		: mapData,
 					click 		: dispatch, 
 					checkPointSaver: reqSetCheckPoints
 				}
@@ -254,7 +286,7 @@ const MapView = (props) => {
 								scene: JSON.parse( prevSceneState ), 
 								cpPosition: checkPoints.map(elem => ({name: elem.name, position: elem.position}))
 							}
-			const message = await props.reqSaveMapData( mapBundle );
+			const message = await requestSaveMapData( mapBundle );
 
 			setMapMessage( (mapMessage) => [...mapMessage, message.message] );
 		}	

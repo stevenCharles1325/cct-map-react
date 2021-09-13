@@ -1,11 +1,8 @@
 {
-    "status": {
-        "exist": true,
-        "loggedIn": true
-    },
-    "username": "lemon",
-    "password": "steven123123123",
+    "exist": true,
+    "username": "steven07",
+    "password": "steven123123",
     "email": "stevencharles1325@gmail.com",
     "number": "09454610579",
-    "image": "/images/admin/profile-pics/admin-pic-352.png"
+    "image": "/images/admin/profile-pics/admin-pic-875.png"
 }

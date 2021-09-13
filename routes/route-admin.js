@@ -14,35 +14,48 @@ const admin_profile_path = path.join(__dirname, '../client/public/images/admin/p
 
 
 
+function authenticate( req, res, next ) {
+  if( req.signedCookies.loggedIn && req.signedCookies.loggedIn === '1' ){
+    next();
+  }
+  else{
+    return res.sendStatus( 401 );
+  }
+}
+
+router.get('/check', async (req, res, next) => {
+  const adminExist = JSON.parse( fs.readFileSync( data_path ) ).exist;
+
+  return res.status( 200 ).json( adminExist );
+});
+
 
 ///////////////////// ADMIN-DATA  &  GRAPH-DATA ////////////////////////
 
 // ADMIN-DATA route. 
-router.get('/', async (req, res, next) => {
+router.get('/', authenticate, async (req, res, next) => {
 
   const admin_data = JSON.parse(fs.readFileSync( data_path ));
 
-  return res.status(200).json( admin_data );  
+  return res.status( 200 ).json( admin_data );  
 });
 
   
-
-
 // GRAPH-DATA route.
-router.get('/graph-data', async (req, res, next) => {
+router.get('/graph-data', authenticate, async (req, res, next) => {
 
   const graph_data = JSON.parse(fs.readFileSync( graph_path ));
 
-  return res.status(200).json( graph_data );  
+  return res.status( 200 ).json( graph_data );  
 });
 
 
 // MAP-DATA route.
-router.get('/map-data', async (req, res, next) => {
+router.get('/map-data', authenticate, async (req, res, next) => {
 
   const map_data = JSON.parse(fs.readFileSync( scene_path ));
 
-  return res.status(200).json( map_data );  
+  return res.status( 200 ).json( map_data );  
 });
 
 
@@ -51,7 +64,7 @@ router.get('/map-data', async (req, res, next) => {
 ///////////////////// UPLOAD 3D OBJECT ////////////////////////
 
 // UPLOAD-3D route.
-router.post('/obj-upload', async (req, res, next) => {
+router.post('/obj-upload', authenticate, async (req, res, next) => {
   // clear all files in Models folder
   fs.readdir(models_path, (err, files) => {
     if( err ){
@@ -64,7 +77,7 @@ router.post('/obj-upload', async (req, res, next) => {
           fs.unlink(path.join(models_path, file), (err) => {
             if (err) {
               console.error(err);
-              return res.status(503).json({ message: 'Something must have gone wrong'}); 
+              return res.status( 503 ).json({ message: 'Something must have gone wrong'}); 
             }
           });
         }        
@@ -90,7 +103,7 @@ router.post('/obj-upload', async (req, res, next) => {
 
 
 ///////////////////// GET ADMIN PICTURE  ////////////////////////
-router.get('/picture', async (req, res, next) => {
+router.get('/picture', authenticate, async (req, res, next) => {
   fs.readFile( data_path, (err, data) => {
     if( err ) return res.status( 503 ).json({message: `[READFILE]: Something went wrong, please try again`});
 
@@ -103,7 +116,7 @@ router.get('/picture', async (req, res, next) => {
 
 
 ///////////////////// UPDATE ADMIN PICTURE  ////////////////////////
-router.put('/upload-picture', async (req, res, next) => {
+router.put('/upload-picture', authenticate, async (req, res, next) => {
   if( !req.files ) return res.status( 400 ).json({ message: 'No file found'});
 
 
@@ -145,20 +158,16 @@ router.put('/upload-picture', async (req, res, next) => {
 
 
 ///////////////////// UPDATE MAP DATA  ////////////////////////
-router.post('/update-map', async (req, res, next) => {
+router.post('/update-map', authenticate, async (req, res, next) => {
   const { scene, cpPosition } = req.body;
 
   
 
   fs.writeFile(scene_path, JSON.stringify(scene, null, 4), (err) => {
-    if( err ){
-      return res.status(503).json({message: `Couldn't fulfill the request to save data`});
-    }
+    if( err ) return res.status(503).json({message: `Couldn't fulfill the request to save data`});
 
     fs.writeFile(cpPos_path, JSON.stringify(cpPosition, null, 4), (err) => {
-      if( err ){
-        return res.status(503).json({message: `Couldn't fulfill the request to save data`});
-      }
+      if( err ) return res.status(503).json({message: `Couldn't fulfill the request to save data`});
 
       return res.status(200).json({message: 'Map\'s been saved'});
     });
@@ -179,13 +188,7 @@ router.put('/sign-in', async (req, res, next) => {
   
   if(  username === admin_data.username ){
     if( password === admin_data.password ){
-      admin_data.status.loggedIn = true;
-      try{
-        fs.writeFileSync( data_path, JSON.stringify(admin_data, null, 4));
-      }
-      catch( err ){
-        console.log( err );
-      }
+      res.cookie('loggedIn', '1', { signed: true });
       return res.status( 200 ).json({ message: 'signed-in' });
     }
     else{
@@ -204,24 +207,20 @@ router.put('/sign-in', async (req, res, next) => {
 router.post('/sign-up', async(req, res, next) => {
   const { username, password, email, number } = req.body;
   const data = {
-    status : {
-      exist: true,
-      loggedIn: true
-    },
+    exist: true,
     username : username,
     password : password,
     email : email,
     number : number
   };
 
-  try{
-    fs.writeFileSync( data_path, JSON.stringify(data, null, 4));
-  }
-  catch( err ){
-    console.log( err );
-  }
-  
-  return res.status(201).json({ message: "signed-up" });
+  fs.writeFile( data_path, JSON.stringify(data, null, 4), err => {
+    if( err ) return res.status(503).json({message: `Couldn't fulfill the request to save data`});
+    
+    res.cookie('loggedIn', '1', { signed: true });  
+    return res.status(201).json({ message: "signed-up" });
+  });
+
 });
 
 
@@ -234,7 +233,7 @@ router.post('/sign-up', async(req, res, next) => {
 ///////////////////// CHANGE-ADMIN-DATA  &  SET-ADMIN-STATUS ( ONLINE and OFFLINE )  ////////////////////////
 
 // SET-ADMIN route.
-router.put('/set-admin', async(req, res, next) => {
+router.put('/set-admin', authenticate, async(req, res, next) => {
   const { username, password, email, number } = req.body;
   const admin_data = JSON.parse( fs.readFileSync(data_path) );
 
@@ -243,7 +242,7 @@ router.put('/set-admin', async(req, res, next) => {
   admin_data.email = email;
   admin_data.number = number;  
 
-  fs.writeFileSync( data_path, JSON.stringify(admin_data, null, 4), (err) => {
+  fs.writeFile( data_path, JSON.stringify(admin_data, null, 4), (err) => {
     if( err ){
       return res.status(503).json({message: `Couldn't fulfill the request to change admin`});
     }
@@ -253,17 +252,10 @@ router.put('/set-admin', async(req, res, next) => {
 
 
 // ADMIN-STATUS route.
-router.put('/log-status', async(req, res, next) => {
-  const admin_data = JSON.parse( fs.readFileSync(data_path) );
+router.put('/sign-out', authenticate, async(req, res, next) => {
+  res.clearCookie('loggedIn');
 
-  admin_data.status.loggedIn = req.body.loggedIn; 
-
-  fs.writeFile( data_path, JSON.stringify(admin_data, null, 4), (err) => {
-    if( err ){
-      return res.status(503).json({message: `Couldn't fulfill the request to online`});
-    }
-    return res.status(200).json({message: 'online'});
-  });  
+  return res.status( 200 );
 });
 
 

@@ -9,58 +9,54 @@ import '../../styles/admin/settings.css';
 
 export default function Settings( props ){
     const validator = new Validator();
-    const requestSetAdmin = props.reqSetAdmin;
+    
 
-    const [admin, setAdmin] = useState(props.admin);
+    const [admin, setAdmin] = useState( null );
 
-    const [username, setUsername] = useState(admin.username);
-    const [password, setPassword] = useState(admin.password);
-    const [email, setEmail] = useState(admin.email);
-    const [number, setNumber] = useState(admin.number);
-    const [cPassword, setCPassword] = useState('');
+    const [username, setUsername] = useState( null );
+    const [password, setPassword] = useState( null );
+    const [email, setEmail] = useState( null );
+    const [number, setNumber] = useState( null );
+    const [cPassword, setCPassword] = useState( null );
 
     
-    const usernameChangeHandler = ( e ) => { setUsername( e.target.value ); }
-    const passwordChangeHandler = ( e ) => { setPassword( e.target.value ); }
-    const emailChangeHandler = ( e ) => { setEmail( e.target.value ); }
-    const numberChangeHandler = ( e ) => { setNumber( e.target.value ); }
-    const cPasswordChangeHandler = ( e ) => { setCPassword( e.target.value ); }
+    const usernameChangeHandler = ( e ) => setUsername( e.target.value ); 
+    const passwordChangeHandler = ( e ) => setPassword( e.target.value ); 
+    const emailChangeHandler = ( e ) => setEmail( e.target.value ); 
+    const numberChangeHandler = ( e ) => setNumber( e.target.value ); 
+    const cPasswordChangeHandler = ( e ) => setCPassword( e.target.value ); 
 
+
+    const evaluateResult = ( result, msg, id ) => {
+        if( !result ) displayMessage( msg, id );
+    }
 
     const saveHandler = () => {
-        const nameCheck = validator.check('username', username);
-        const passCheck = validator.check('password', password);
-        const cPassCheck = validator.check('cPassword', cPassword);
-        const emailCheck = validator.check('email', email);
-        const numCheck = validator.check('number', number);
+        const nameCheck = validator.check('username', username ?? '');
+        const passCheck = validator.check('password', password ?? '');
+        const cPassCheck = validator.check('cPassword', cPassword ?? '');
+        const emailCheck = validator.check('email', email ?? '');
+        const numCheck = validator.check('number', number ?? '');
 
-        const finalResult = nameCheck.result && passCheck.result && cPassCheck.result && emailCheck.result && numCheck.result;
+        const finalResult = (
+                nameCheck.result && 
+                passCheck.result && 
+                cPassCheck.result && 
+                emailCheck.result && 
+                numCheck.result
+            );
 
-
-        if( !nameCheck.result ){
-            displayMessage( nameCheck.msg, 'set-username' );
-        }
-
-        if( !passCheck.result ){
-            displayMessage( passCheck.msg, 'set-password' );
-        }
-
-        if( !cPassCheck.result ){
-            displayMessage( cPassCheck.msg, 'set-cPassword' );
-        }
-
-        if( !emailCheck.result ){
-            displayMessage( emailCheck.msg, 'set-email' );
-        }
-
-        if( !numCheck.result ){
-            displayMessage( numCheck.msg, 'set-number' );
-        }
+        Array(
+            [numCheck.result, numCheck.msg, 'set-number'],
+            [emailCheck.result, emailCheck.msg, 'set-email'],
+            [nameCheck.result, nameCheck.msg, 'set-username'],
+            [passCheck.result, passCheck.msg, 'set-password'],
+            [cPassCheck.result, cPassCheck.msg, 'set-cPassword']
+        ).forEach( elem => evaluateResult( ...elem ) );
 
 
         if( finalResult ){
             const newData = {
-                status : admin.status,
                 username: username,
                 password: password,
                 email: email,
@@ -75,28 +71,43 @@ export default function Settings( props ){
         } 
     }
 
-
-    const resetHandler = () => {
-        setUsername( admin.username );
-        setPassword( admin.password );
-        setEmail( admin.email );
-        setNumber( admin.number );
-        setCPassword('');       
+    const requestSetAdmin = async ( data ) => { 
+        await axios.put('/admin/set-admin', data)
+        .then( res => console.log( res.data.message ))
+        .catch( err => {
+            console.log( err );
+            setTimeout( () => requestSetAdmin(), 2000 );
+        });
     }
 
+    const resetHandler = () => {
+        setEmail( admin?.email );
+        setNumber( admin?.number );
+        setUsername( admin?.username );
+        setPassword( admin?.password );
+        setCPassword( null );       
+    }
+
+    const fetchAdminData = async () => {
+        axios.get('/admin')
+        .then( res => setAdmin(() => res.data) )
+        .catch( err => {
+            console.log( err );
+            setTimeout( () => fetchAdminData(), 2000 );
+        });
+    }
+
+    useEffect( () => fetchAdminData(), []);
+
+    useEffect( () => resetHandler(), [admin]);
 
     useEffect( () => {
-        resetHandler();
-    }, [admin]);
-
-
-    useEffect( () => {
+        document.querySelector('#set-email').value = email;
+        document.querySelector('#set-number').value = number;
         document.querySelector('#set-username').value = username;
         document.querySelector('#set-password').value = password;
         document.querySelector('#set-cPassword').value = cPassword;
-        document.querySelector('#set-email').value = email;
-        document.querySelector('#set-number').value = number;
-    }, [username, password, cPassword, email, number])
+    }, [username, password, cPassword, email, number]);
 
 
     return(
@@ -143,12 +154,12 @@ export default function Settings( props ){
                                 {
                                     id: "settings-save", 
                                     title: "Save", 
-                                    clickHandler: saveHandler
+                                    clickHandler: () => saveHandler()
                                 }, 
                                 {
                                     id: "settings-reset", 
                                     title: "Reset",
-                                    clickHandler: resetHandler 
+                                    clickHandler: () => resetHandler()
                                 }
                             ]
                         )}

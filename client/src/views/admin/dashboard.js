@@ -12,7 +12,22 @@ import '../../styles/admin/dashboard.css';
 
 // Main function
 export default function Dashboard( props ) {
-    const graphData = props.graphData;
+    const [graphData, setGraphData] = useState( null );
+
+    // Fetches the data from the server and sets the admin.
+    const requestGraphData = async () => {
+        await axios.get('/admin/graph-data')
+        .then( res => {
+            setGraphData( res.data );
+        })
+        .catch( err => {
+            console.log( err );
+        });
+    }  
+
+
+    useEffect(() => requestGraphData(), []);
+
 
     const scales = {
             yAxes: [
@@ -65,30 +80,44 @@ export default function Dashboard( props ) {
             <div className="dash-chart-box d-flex flex-column">
                 <div className="top-chart-box d-flex justify-content-between">
 
-                    {/* TOP-LEFT-GRAPH: Current Viewers Rate*/}
-                    <Graph 
-                        id="top-left-graph"
-                        type="Line"
-                        classList={{outer: "left-graph-box d-flex flex-column align-items-center", inner: "left-graph"}}
-                        dataLabels={range(7, 11)}
-                        data={Object.values( graphData.currRate )}
-                        backgroundColor="transparent"
-                        title="Current Viewers Rate" 
-                        options={ topGraphOption } 
-                    />     
-                    
-                    
-                    {/* TOP-RIGHT-GRAPH: Annual Viewers Rate*/}
-                    <Graph 
-                        id="top-right-graph"
-                        type="Bar"
-                        classList={{outer: "right-graph-box d-flex flex-column align-items-center", inner: "right-graph"}}
-                        dataLabels={Object.keys( graphData.annRate )}
-                        data={Object.values( graphData.annRate )} 
-                        backgroundColor={ [ 'rgb(255, 255, 255)', 'rgb(196, 196, 196)', 'rgb(221, 221, 221)']}
-                        title="Annual Viewers Rate" 
-                        options={ topGraphOption } 
-                    />
+                    {
+                        graphData
+                            ? (() => (
+                                    <>
+                                        <Graph 
+                                            id="top-left-graph"
+                                            type="Line"
+                                            classList={{
+                                                outer: "left-graph-box d-flex flex-column align-items-center",
+                                                inner: "left-graph"
+                                            }}
+                                            dataLabels={ range(7, 11) }
+                                            data={ Object.values( graphData?.currRate ) }
+                                            backgroundColor="transparent"
+                                            title="Current Viewers Rate" 
+                                            options={ topGraphOption } 
+                                        />     
+                                        <Graph 
+                                            id="top-right-graph"
+                                            type="Bar"
+                                            classList={{
+                                                outer: "right-graph-box d-flex flex-column align-items-center", 
+                                                inner: "right-graph"
+                                            }}
+                                            dataLabels={ Object.keys( graphData?.annRate ) }
+                                            data={ Object.values( graphData?.annRate ) } 
+                                            backgroundColor={[ 
+                                                'rgb(255, 255, 255)', 
+                                                'rgb(196, 196, 196)', 
+                                                'rgb(221, 221, 221)'
+                                            ]}
+                                            title="Annual Viewers Rate" 
+                                            options={ topGraphOption } 
+                                        />
+                                    </>
+                                ))()
+                            : null
+                    }
 
                 </div>
                 
@@ -98,9 +127,12 @@ export default function Dashboard( props ) {
                         type="Bar"
                         width="100%"
                         height="14%"
-                        classList={{outer: "bot-graph-box d-flex flex-column align-items-center", inner: "bot-graph"}}
-                        dataLabels={["JS Objects (MB)"]}
-                        data={[convertBytesToMegaBytes(window.performance.memory.usedJSHeapSize)]}
+                        classList={{
+                            outer: "bot-graph-box d-flex flex-column align-items-center", 
+                            inner: "bot-graph"
+                        }}
+                        dataLabels={ ["JS Objects (MB)"] }
+                        data={ [convertBytesToMegaBytes(window.performance.memory.usedJSHeapSize)] }
                         backgroundColor={ ['rgb(255, 255, 255)', 'rgb(196, 196, 196)'] }
                         title="Memory Consumption" 
                         options={ bottomGraphOption }

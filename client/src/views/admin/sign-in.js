@@ -11,40 +11,48 @@ import signin_img from '../../images/admin/sign-in.png';
 
 
 export default function Signin( props ){
-    const admin = props.admin;
-
-    const [username, setUsername] = useState( admin.username );
-    const [password, setPassword] = useState('');
-    const [signIn, setSignIn] = useState(false);
+    const [username, setUsername] = useState( null );
+    const [password, setPassword] = useState( null );
+    const [signIn, setSignIn] = useState( false );
 
 
     const size = {
             width: '85%'
         };
 
-    const requestSignIn = () => {
-        if( username === admin.username ){
-            if( password === admin.password ){
-                
-                const data = {
-                    status: { exist: admin.status.exist, loggedIn: true},
-                    username: username,
-                    password: password,
-                    email: admin.email,
-                    number: admin.number
+
+    const reqSetAdminSignIn = async ( data ) => { 
+            await axios.put('/admin/sign-in', data)
+            .then( res => {
+                console.log( res.data.message );
+            })
+            .catch( err => {
+                if( err?.response?.data?.which ){
+                    switch( err.response.data.which ){
+                        case 'username':
+                            return displayMessage('Incorrect username', 'username');
+
+                        case 'password':
+                            return displayMessage('Incorrect password', 'password');
+
+                        default:
+                            throw new Error('Something is wrong please try again');
+                    }
                 }
-
-                return props.reqSetAdminSignIn( data );
-            }
-            else{
-                displayMessage('Incorrect password', 'password');
-            }
-        }
-        else{
-            displayMessage('Incorrect username', 'username');
+                else{
+                    console.log( err );
+                }
+            });
         }
 
-        return setSignIn( false );
+
+    const requestSignIn = async () => {
+        reqSetAdminSignIn({
+            username: username,
+            password: password
+        });
+
+        setSignIn( () => false );
     }
 
     const handleUsername = (e) => {
@@ -56,7 +64,7 @@ export default function Signin( props ){
     }
 
     useEffect(() => {
-        if(signIn) requestSignIn();
+        if( signIn ) requestSignIn();
 
     }, [username, password, signIn]);
 
@@ -77,7 +85,7 @@ export default function Signin( props ){
                     </div>
                     <br/>
                     <br/>
-                    <Button listenTo="Enter" name="Log in" click={() => setSignIn( true )} />
+                    <Button listenTo="Enter" name="Log in" click={() => setSignIn( () => true )} />
                     
 
                     <p style={{margin: '20% 0% 0% 0%'}}>"Yeah, It automatically checks if you have an account or not"</p>
