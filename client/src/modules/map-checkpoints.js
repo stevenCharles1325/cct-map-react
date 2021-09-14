@@ -28,8 +28,8 @@ function Checkpoints ( props ){
 	const checkpoint = useRef();
 
 
-	const _mousePos = new THREE.Vector2();
-	const _raycaster = new THREE.Raycaster();
+	const mousePos = new THREE.Vector2();
+	const raycaster = new THREE.Raycaster();
 
 
 	useEffect(() => {
@@ -56,8 +56,8 @@ function Checkpoints ( props ){
 
 	useFrame(() => {
 		if( !isPlaced ){
-			_raycaster.setFromCamera( _mousePos, props.camera );
-			const intersects = _raycaster.intersectObjects( props.scene.children );
+			raycaster.setFromCamera( mousePos, props.camera );
+			const intersects = raycaster.intersectObjects( props.scene.children );
 			
 			if( intersects.length ){
 				if( intersects[0].object.id === checkpoint.current.id ){
@@ -77,8 +77,8 @@ function Checkpoints ( props ){
 	const mouseLocation = (e) => {
 		e.stopPropagation();
 
-		_mousePos.x = ( e.offsetX / window.innerWidth ) * 2 - 1;
-	    _mousePos.y = - ( e.offsetY / window.innerHeight ) * 2 + 1;
+		mousePos.x = ( e.offsetX / window.innerWidth ) * 2 - 1;
+	    mousePos.y = - ( e.offsetY / window.innerHeight ) * 2 + 1;
 	}
 
 

@@ -45,18 +45,10 @@ const defaultMaterial = new THREE.MeshPhysicalMaterial( materialOptions );
 
 // Checker variable
 var EMPTY_NAME_CP_SPOTTED = false;
-var PROP_BOX_DETECTED = false;
-
 
 const setEmtyNameCpSpotted = ( value ) => {
 	EMPTY_NAME_CP_SPOTTED = value;	
 } 
-
-
-const setPropBoxDetected = ( value ) => {
-	PROP_BOX_DETECTED = value;	
-} 
-
 
 // Scene loader
 const loadScene = async ({ userType, data, click, checkPointSaver }) => {
@@ -284,7 +276,7 @@ const Atmosphere = (props) => {
 		<group name="Sky">
 			<Stars radius={LAND_SIZE[0]*0.5} count={LAND_SIZE[0]*2} fade />
 			{ 
-				props?.type === 'user' ? <OrbitControls /> : <props.control.controls enabled={PROP_BOX_DETECTED} {...props?.control?.config}/>
+				props?.type === 'user' ? <OrbitControls /> : <props.control.controls {...props?.control?.config}/>
 			}
 			<ambientLight intensity={0.5}/>
 			<spotLight
@@ -384,11 +376,9 @@ export {
 	Atmosphere,
 	ObjectBuilder,
 	CheckpointBuilder,
-	PROP_BOX_DETECTED,
 	EMPTY_NAME_CP_SPOTTED,
 	isCheckpointObject,
 	getBaseName,
 	getRootName,
 	setEmtyNameCpSpotted,
-	setPropBoxDetected
 };

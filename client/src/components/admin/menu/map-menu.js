@@ -78,6 +78,12 @@ function MapMenu( props ){
 
     // -----------------------------------------
 
+    const saveShortcut = (e) => {
+        e.preventDefault();
+
+        if( e.ctrlKey && e.key === "s" ) saveHandler();
+    }
+
     useEffect(() => {
         if( menu && menu.current ){
             menu.current.onmouseover = requestOpenMapMenu;
@@ -90,7 +96,13 @@ function MapMenu( props ){
                 menu.current.onmouseout = null;    
             }
         }
-    });
+    }, []);
+
+    useEffect(() => {
+        document.addEventListener('keydown', saveShortcut);
+        
+        return () => document.removeEventListener('keydown', saveShortcut);
+    }, []);
 
 
     return (

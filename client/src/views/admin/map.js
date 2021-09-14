@@ -16,18 +16,17 @@ import {
 	SpotLight
 } from '@react-three/drei';
 
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-
+import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
 
 import * as THREE from 'three';
 
-
 // Components
+import Checkpoints from '../../modules/map-checkpoints';
+import Button from '../../components/admin/buttons/button';
 import MapMenu from '../../components/admin/menu/map-menu';
 import { Input } from '../../components/admin/inputs/input';
-import Button from '../../components/admin/buttons/button';
-import Checkpoints from '../../modules/map-checkpoints';
+
 
 
 // Style(s)
@@ -35,8 +34,10 @@ import '../../styles/admin/map.css';
 
 
 // Module
-import FirstPersonControls from '../../modules/FirstPersonControls'; // DIY wrapper function for three first-person-controls
 import * as MAP from '../../modules/cct-map';
+import MapMeasureLine from '../../modules/measure-line';
+import FirstPersonControls from '../../modules/FirstPersonControls'; // DIY wrapper function for three first-person-controls
+
 
 
 // Loading components
@@ -64,19 +65,23 @@ const MapView = (props) => {
 	const [copyObj, setCopyObj] = useState( null );
 	const [deleteObj, setDeleteObj] = useState( null );
 
-	const [Controls, setControls] = useState( {controls: OrbitControls, config: null} );
-	const [isCheckPoint, setIsCheckPoint] = useState( false );
+	const [Controls, setControls] = useState( {controls: OrbitControls, config: {}} );
 
 	const [persCam, setPersCam] = useState( null );
 	const [scene, setScene] = useState( null );
 
+	const [isCheckPoint, setIsCheckPoint] = useState( false );
 	const [checkPoints, setCheckPoints] = useState( [] );
+
+	const [measureLine, setMeasureLine] = useState( null );
+	const [isMeasureLine, setIsMeasureLine] = useState( false );
 
 	const [mapMessage, setMapMessage] = useState( [] );
 
 	const [enableMenu, setEnableMenu] = useState( true );
 
 	const [objectCount, setObjectCount] = useState( 0 );
+
 
 
 	const selectHandler = ( state, action ) => {
@@ -143,7 +148,7 @@ const MapView = (props) => {
 	const requestSaveMapData = async (scene) => {	
 		if( !scene ) return;
 
-		await axios.post('/admin/update-map', scene)
+		return await axios.post('/admin/update-map', scene)
 		.then( res => {
 			return { message : res ? 'Map has been saved successfully' : 'Please try again!' };
 		})
@@ -239,14 +244,41 @@ const MapView = (props) => {
 							setCheckPoints={setCheckPoints}
 							scene={scene}
 						/>);
-			MAP.setPropBoxDetected( !MAP.PROP_BOX_DETECTED );
 		}
 		else{
 			setPropBox( null );
-			MAP.setPropBoxDetected( !MAP.PROP_BOX_DETECTED );
 		}
 
 	}, [state.selected]);
+
+
+	useEffect(() => {
+		console.log( isMeasureLine );
+		if( isMeasureLine ){
+			const configuration = Controls.config;
+			configuration.enabled = false;
+
+			setControls( Controls => ({
+							controls: Controls.controls,
+							config: configuration 						
+			}));
+			
+			setMeasureLine( () => <MapMeasureLine camera={persCam} scene={scene} /> );
+		}
+		else{
+			const configuration = Controls.config;
+			configuration.enabled = true;
+
+
+			setControls( Controls => ({
+							controls: Controls.controls,
+							config: configuration 						
+			}));
+			
+			setMeasureLine( () => null );
+		}
+
+	}, [isMeasureLine]);
 
 
 	useEffect(() => {
@@ -318,11 +350,17 @@ const MapView = (props) => {
 						    	reqSetDelete={setDeleteObj}
 						    >
 						    	{ objList }
+						    	{ measureLine }
 						    </MAP.MapCanvas>
 					    </Suspense>
 					</Canvas>
 				    	{ state.selected ? propBox : null }
-			    <BottomBar control={setControls} setCheckpoint={setIsCheckPoint} />
+			    <BottomBar 
+			    	control={ setControls} 
+			    	setCheckpoint={ setIsCheckPoint }
+		    		messenger={ setMapMessage }
+		    		setIsMeasureLine={ setIsMeasureLine }
+			    />
 		    </Suspense>
 		</div>
  	);
@@ -331,36 +369,78 @@ const MapView = (props) => {
 
 const BottomBar = (props) => {
 	const [switched, setSwitched] = useState( 'orbit' );
+	const [measuring, setMeasuring] = useState( false );
 
 	const handleCreateCheckPoint = () => {
+		props.messenger( (mapMessage) => [...mapMessage, 'Please wait...'] );
 		props.setCheckpoint( true );
 		MAP.setEmtyNameCpSpotted( true );
 	}
 
+	const handleMeasureLine = () => {
+		setMeasuring( measuring => !measuring );
+	}
+
+	useEffect(() => {
+		props.messenger( mapMessage => [...mapMessage, `Measure-line ${measuring ? 'on' : 'off'}`] );
+		props.setIsMeasureLine( () => measuring );
+	}, [measuring]);
+
 	return(
 		<div className="map-btm-bar d-flex justify-content-around align-items-center">
-			<div className="col-7 map-view-switch d-flex justify-content-end align-items-center">
-				<Button classname={`${switched === 'free' ? "map-view-selected" : ''} map-vs-btn map-view-fpc`} name="Free" click={() => { 
+			<div className="col-2 d-flex justify-content-center align-items-center">
+				<Button 
+					style={{
+						backgroundColor: measuring 
+											? 'rgba(0, 0, 0, 0.6)' 
+											: 'rgba(255, 255, 255, 0.6)',
+						color: measuring
+								? 'white'
+								: 'black' 
+					}} 
+					shortcutKey={ true }
+					name="Measure line"
+					click={ () => handleMeasureLine() }
+				/>
+			</div>
+
+			<div className="col-3 d-flex justify-content-center align-items-center">
+				<Button className="" name="Checkpoint generator" />
+			</div>
+
+			<div className="col-4 map-view-switch d-flex justify-content-center align-items-center">
+				<Button 
+					classname={`${switched === 'free' ? "map-view-selected" : ''} map-vs-btn map-view-fpc`}
+					name="Free" 
+					click={() => { 
 						props.control(() => ({
 												controls: FirstPersonControls,
 												config: {
 													lookSpeed: 0.3,
-													movementSpeed: 550
+													movementSpeed: 550,
+													enabled: true
 												}
 											}));
 						setSwitched( 'free' );
-				}}/>
-				<Button classname={`${switched === 'orbit' ? "map-view-selected" : ''} map-vs-btn map-view-oc`} name="Orbit" click={() => { 
+					}}
+				/>
+				<Button 
+					classname={`${switched === 'orbit' ? "map-view-selected" : ''} map-vs-btn map-view-oc`} 
+					name="Orbit" 
+					click={() => { 
 						props.control(() => ({ 
 												controls: OrbitControls,
-												config: null
+												config: {
+													enabled: true
+												}
 											}));
 						setSwitched( 'orbit' );
-				}}/>
+					}}
+				/>
 			</div>
 
-			<div className="col-5 map-checkpoint d-flex justify-content-center align-items-center">
-				<Button className="map-checkpoint-btn" name="Place Checkpoint" click={handleCreateCheckPoint}/>
+			<div className="col-3 d-flex justify-content-center align-items-center">
+				<Button shortcutKey={true} name="Place Checkpoint" click={handleCreateCheckPoint}/>
 			</div>
 		</div>
 	);

@@ -101,7 +101,10 @@ export default function Admin(){
 
 	const emitEvents = () => {
 		Event.on('enter', () => setView( () => <Redirect to={ path.home() }/> ));
-		Event.on('exit', () => setView( () => <Redirect to={ path.exit() }/> ));
+		Event.on('exit', () => setView( () => {
+			console.log('logging out');
+			return <Redirect to={ path.exit() }/>
+		}));
 	}
 
 	const load = async () => {

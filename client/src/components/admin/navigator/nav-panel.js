@@ -14,10 +14,8 @@ export default function NavPanel( props ){
 
 
     const requestSignOut = async ( data ) => {
-        await axios.put('/admin/sign-out', data)
-        .then( res => {
-            props.Event.emit('exit');
-        })
+        await axios.put('/admin/sign-out')
+        .then( () => props.Event.emit('exit'))
         .catch( err => {
             console.error( err );
             setTimeout( () => requestSignOut(), 5000 );    
