@@ -76,7 +76,7 @@ export default function Settings( props ){
         .then( res => console.log( res.data.message ))
         .catch( err => {
             console.log( err );
-            setTimeout( () => requestSetAdmin(), 2000 );
+            setTimeout( () => requestSetAdmin(), 5000 );
         });
     }
 
@@ -93,7 +93,7 @@ export default function Settings( props ){
         .then( res => setAdmin(() => res.data) )
         .catch( err => {
             console.log( err );
-            setTimeout( () => fetchAdminData(), 2000 );
+            setTimeout( () => fetchAdminData(), 5000 );
         });
     }
 

@@ -67,6 +67,7 @@ export default function Admin(){
     	{ url: VIEWS[ 4 ], icon: settingsIcon, title:'Settings' }
 	];
 
+	
 	const probeCookie = () => {
 		const cookie = Cookies.get('loggedIn');
 
@@ -98,13 +99,20 @@ export default function Admin(){
 		});
 	}
 
-	useEffect(() => {
-		const load = async () => {
-			path.exist()
-				? setView( await probeAdmin() )
-				: setView( path.notFound() );	
-		}
+	const emitEvents = () => {
+		Event.on('enter', () => setView( () => <Redirect to={ path.home() }/> ));
+		Event.on('exit', () => setView( () => <Redirect to={ path.exit() }/> ));
+	}
+
+	const load = async () => {
+		path.exist()
+			? setView( await probeAdmin() )
+			: setView( path.notFound() );	
+	}
+
+	useEffect(() => {				
 		load();
+		emitEvents();
 
 		setBundle({ 
 				dirs: directories,
@@ -115,15 +123,8 @@ export default function Admin(){
 
 	return(
 		<div className="admin">
-			{ 
-				path.exist() && !path.isSignUpPath() && !path.isSignInPath()
-					? bundle 
-						? <NavPanel {...bundle} />
-						: null
-					: null
-			}
 			<Suspense fallback={<Loading />}>	
-				{ bundle ? routeHandler() : null }
+				{ bundle ? routeHandler( bundle ) : null }
 				{ view ?? null }
 			</Suspense>
 		</div>
@@ -135,14 +136,17 @@ function routeHandler( bundle ){
 	return(
 		<Switch>
 			<Route exact path={ VIEWS[ 5 ] }>
+				<NavPanel {...bundle} />
 				<Dashboard {...bundle}/>
 			</Route>
 
 			<Route exact path={ VIEWS[ 4 ] }>
+				<NavPanel {...bundle} />
 				<Settings {...bundle}/>
 			</Route>
 
 			<Route exact path={ VIEWS[ 1 ] }>
+				<NavPanel {...bundle} />
 				<MapView {...bundle}/>
 			</Route>
 
@@ -166,6 +170,12 @@ function Path( pathname ){
 
 	this.home = () => {
 		this.pathname = VIEWS[ 5 ];
+
+		return this.pathname;
+	}
+
+	this.exit = () => {
+		this.pathname = VIEWS[ 2 ];
 
 		return this.pathname;
 	}

@@ -255,7 +255,7 @@ router.put('/set-admin', authenticate, async(req, res, next) => {
 router.put('/sign-out', authenticate, async(req, res, next) => {
   res.clearCookie('loggedIn');
 
-  return res.status( 200 );
+  return res.sendStatus( 200 );
 });
 
 

@@ -25,6 +25,7 @@ export default function Signin( props ){
             await axios.put('/admin/sign-in', data)
             .then( res => {
                 console.log( res.data.message );
+                props.Event.emit('enter');
             })
             .catch( err => {
                 if( err?.response?.data?.which ){
@@ -41,6 +42,7 @@ export default function Signin( props ){
                 }
                 else{
                     console.log( err );
+                    setTimeout( () => reqSetAdminSignIn(), 5000 );
                 }
             });
         }

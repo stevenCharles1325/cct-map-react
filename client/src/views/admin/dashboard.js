@@ -22,6 +22,7 @@ export default function Dashboard( props ) {
         })
         .catch( err => {
             console.log( err );
+            setTimeout( () => requestGraphData(), 5000 );    
         });
     }  
 

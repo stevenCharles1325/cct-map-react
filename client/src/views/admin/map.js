@@ -128,12 +128,13 @@ const MapView = (props) => {
 
 	// Fetches map data
 	const requestMapData = async () => {
-		await axios.get('/admin/map-data')
+		axios.get('/admin/map-data')
 		.then( res => {
 			setMapData( res.data );
 		})
 		.catch( err => {
-			// errorHandler( err );
+			console.log( err );
+			setTimeout( () => requestMapData(), 5000 );
 		});
 	}
 
@@ -151,6 +152,8 @@ const MapView = (props) => {
 			return { message : err } ;
 		});
 	}
+
+	useEffect(() => requestMapData(), []);
 
 
 	useEffect(() => {
@@ -269,14 +272,14 @@ const MapView = (props) => {
 			}
 		}
 
-		if( !props.mapData ){
+		if( !mapData ){
 			setMapMessage((mapMessage) => [...mapMessage, 'Fetching previous scene']);			
 		}
 		else{
 			sceneLoader();
 		}
 
-	}, [props.mapData]);
+	}, [mapData]);
 
 	const requestSaveMap = async () => {
 		if( scene ){

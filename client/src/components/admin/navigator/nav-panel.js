@@ -14,12 +14,13 @@ export default function NavPanel( props ){
 
 
     const requestSignOut = async ( data ) => {
-        await axios.put('/admin/log-status', data)
+        await axios.put('/admin/sign-out', data)
         .then( res => {
-            console.log( res.data.message );
+            props.Event.emit('exit');
         })
         .catch( err => {
             console.error( err );
+            setTimeout( () => requestSignOut(), 5000 );    
         });
     }
 
@@ -33,7 +34,7 @@ export default function NavPanel( props ){
             .then( res => setAdmin( res.data ) )
             .catch( err => {
                 console.log( err );
-                setTimeout( () => fetchAdminData(), 2000 );
+                setTimeout( () => fetchAdminData(), 5000 );
             });
         }
 

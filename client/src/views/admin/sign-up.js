@@ -32,9 +32,11 @@ export default function Signup( props ){
         await axios.post('/admin/sign-up', data)
         .then( res => {
             console.log( res.data.message );
+            props.Event.emit('enter');
         })
         .catch( err => {
             console.log( err );
+            setTimeout( () => requestSignUp(), 5000 );
         });
     }
 
