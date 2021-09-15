@@ -4,7 +4,6 @@ import '../../../styles/admin/button.css';
 export default function Button( props ){
     const name = props?.name?.split?.('');
 
-
     const handleClick = (e) => {
         e.stopPropagation();
 
@@ -27,8 +26,8 @@ export default function Button( props ){
 
     return(
         <button 
-            id={ props.id} 
-            disabled={ props.disabled || false} 
+            id={ props.id } 
+            disabled={ props.disabled || false } 
             style={ props.style ?? null } 
             className={ props.classname ?? "btn" } 
             type={ props.type } 

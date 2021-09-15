@@ -35,11 +35,6 @@ function MapMenu( props ){
     // -----------------------------------------
 
 
-
-    // ==========================================
-
-
-
     //-------------------------------------------
     // 
     //          Menu event handlers
@@ -79,9 +74,10 @@ function MapMenu( props ){
     // -----------------------------------------
 
     const saveShortcut = (e) => {
-        e.preventDefault();
-
-        if( e.ctrlKey && e.key === "s" ) saveHandler();
+        if( e.ctrlKey && e.key === "s" ){
+            e.stopPropagation(); 
+            saveHandler();
+        };
     }
 
     useEffect(() => {

@@ -44,6 +44,8 @@ import FirstPersonControls from '../../modules/FirstPersonControls'; // DIY wrap
 import CircStyleLoad from '../../components/admin/load-bar/circ-load';
 import InfiniteStyleLoad from '../../components/admin/load-bar/inf-load';
 
+const width = window.innerWidth;
+const height = window.innerHeight;
 
 const materialOptions = {
 	color: 0x3f4444,
@@ -56,6 +58,7 @@ const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
 
 const MapView = (props) => {
 	const land = useRef();
+	const line = useRef();
 
 	const [mapData, setMapData] = useState( null );
 
@@ -75,6 +78,9 @@ const MapView = (props) => {
 
 	const [measureLine, setMeasureLine] = useState( null );
 	const [isMeasureLine, setIsMeasureLine] = useState( false );
+	const [label, setLabel] = useState( null );
+	// const [distance, setDistance] = useState( 0 );
+	// const [lineCenter, setLineCenter] = useState( [] );
 
 	const [mapMessage, setMapMessage] = useState( [] );
 
@@ -263,7 +269,11 @@ const MapView = (props) => {
 							config: configuration 						
 			}));
 			
-			setMeasureLine( () => <MapMeasureLine camera={persCam} scene={scene} /> );
+			setMeasureLine( () => <MapMeasureLine 
+									camera={ persCam } 
+									scene={ scene }
+									label={ setLabel }
+						 		  />);
 		}
 		else{
 			const configuration = Controls.config;
@@ -327,7 +337,6 @@ const MapView = (props) => {
 		}	
 	}
 
-
 	return(
 		<div className="map">
 		    <Suspense fallback={<MAP.Loader />}>
@@ -339,6 +348,7 @@ const MapView = (props) => {
 			    	saveAllowed={MAP.EMPTY_NAME_CP_SPOTTED}
 			    />
 			    	<MAP.Messenger message={mapMessage} messenger={setMapMessage}/>
+
 					<Canvas mode="concurrent" shadows={true}>
 					    <Suspense fallback={<MAP.Loader />}>
 						    <MAP.MapCanvas 
@@ -349,6 +359,7 @@ const MapView = (props) => {
 						    	deleteObj={deleteObj}
 						    	reqSetDelete={setDeleteObj}
 						    >
+						    	{ label }		
 						    	{ objList }
 						    	{ measureLine }
 						    </MAP.MapCanvas>
