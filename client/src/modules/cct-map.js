@@ -242,7 +242,9 @@ const MapCanvas = (props) => {
 	useEffect(() => {
 		camera.position.set( ...CAMERA.position );
 		camera.updateProjectionMatrix();
+		camera.updateMatrixWorld();
 		props.setCam( () => camera );
+		
 	}, [camera]);
 
 	useEffect(() => {

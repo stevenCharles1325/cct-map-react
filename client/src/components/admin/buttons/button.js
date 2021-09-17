@@ -8,7 +8,6 @@ export default function Button( props ){
         e.stopPropagation();
 
         props?.click?.();
-        console.log('went here');
     }
 
     const handleKeyEnter = (e) => {
@@ -29,7 +28,7 @@ export default function Button( props ){
             id={ props.id } 
             disabled={ props.disabled || false } 
             style={ props.style ?? null } 
-            className={ props.classname ?? "btn" } 
+            className={ props.className ?? "btn" } 
             type={ props.type } 
             onClick={ handleClick }
         > 

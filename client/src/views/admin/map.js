@@ -3,8 +3,11 @@ import React, {
 	useReducer, 
 	useEffect, 
 	useRef, 
-	Suspense, 
+	Suspense,
+	useCallback
 } from 'react';
+
+import debounce from 'lodash.debounce';
 
 import axios from 'axios';
 
@@ -36,6 +39,7 @@ import '../../styles/admin/map.css';
 // Module
 import * as MAP from '../../modules/cct-map';
 import MapMeasureLine from '../../modules/measure-line';
+import PositionCursor from '../../modules/position-cursor';
 import FirstPersonControls from '../../modules/FirstPersonControls'; // DIY wrapper function for three first-person-controls
 
 
@@ -79,15 +83,32 @@ const MapView = (props) => {
 	const [measureLine, setMeasureLine] = useState( null );
 	const [isMeasureLine, setIsMeasureLine] = useState( false );
 	const [label, setLabel] = useState( null );
-	// const [distance, setDistance] = useState( 0 );
-	// const [lineCenter, setLineCenter] = useState( [] );
+
+	const LabelDisplay = ({ position, textDisplay }) => {
+		return (<Html 
+					position={ position } 
+					className="non-selectable container"
+				>
+					{ textDisplay }
+				</Html>);
+	}
+
+	const measuredDistanceDisplay = () => {
+		if( !label || label[1] === "0.00" ) return;
+		
+		return <LabelDisplay position={label[0]} textDisplay={label[1]}/>;
+	}
+
+	const memoizedLabel = useCallback( () => measuredDistanceDisplay(), [label] );
+
+	const [isPositionCursor, setIsPositionCursor] = useState( false );
+	const [positionCursor, setPositionCursor] = useState( null );
+
+	
 
 	const [mapMessage, setMapMessage] = useState( [] );
-
 	const [enableMenu, setEnableMenu] = useState( true );
-
 	const [objectCount, setObjectCount] = useState( 0 );
-
 
 
 	const selectHandler = ( state, action ) => {
@@ -259,7 +280,6 @@ const MapView = (props) => {
 
 
 	useEffect(() => {
-		console.log( isMeasureLine );
 		if( isMeasureLine ){
 			const configuration = Controls.config;
 			configuration.enabled = false;
@@ -289,6 +309,19 @@ const MapView = (props) => {
 		}
 
 	}, [isMeasureLine]);
+
+	useEffect(() => {
+		if( isPositionCursor ){
+			setPositionCursor( () => <PositionCursor 
+										camera={ persCam } 
+										scene={ scene }
+							 		  />);
+		}
+		else{
+			setPositionCursor( () => null );
+		}
+
+	}, [isPositionCursor]);
 
 
 	useEffect(() => {
@@ -348,7 +381,6 @@ const MapView = (props) => {
 			    	saveAllowed={MAP.EMPTY_NAME_CP_SPOTTED}
 			    />
 			    	<MAP.Messenger message={mapMessage} messenger={setMapMessage}/>
-
 					<Canvas mode="concurrent" shadows={true}>
 					    <Suspense fallback={<MAP.Loader />}>
 						    <MAP.MapCanvas 
@@ -361,7 +393,9 @@ const MapView = (props) => {
 						    >
 						    	{ label }		
 						    	{ objList }
+						    	{ memoizedLabel() }
 						    	{ measureLine }
+						    	{ positionCursor }
 						    </MAP.MapCanvas>
 					    </Suspense>
 					</Canvas>
@@ -371,6 +405,7 @@ const MapView = (props) => {
 			    	setCheckpoint={ setIsCheckPoint }
 		    		messenger={ setMapMessage }
 		    		setIsMeasureLine={ setIsMeasureLine }
+		    		setIsPositionCursor={ setIsPositionCursor }
 			    />
 		    </Suspense>
 		</div>
@@ -381,6 +416,8 @@ const MapView = (props) => {
 const BottomBar = (props) => {
 	const [switched, setSwitched] = useState( 'orbit' );
 	const [measuring, setMeasuring] = useState( false );
+	const [positionCursor, setPositionCursor] = useState( false );
+	const [openToolBox, setOpenToolBox] = useState( false );
 
 	const handleCreateCheckPoint = () => {
 		props.messenger( (mapMessage) => [...mapMessage, 'Please wait...'] );
@@ -392,36 +429,63 @@ const BottomBar = (props) => {
 		setMeasuring( measuring => !measuring );
 	}
 
+	const handlePositionCursor = () => {
+		setPositionCursor( positionCursor => !positionCursor );
+	}
+
 	useEffect(() => {
 		props.messenger( mapMessage => [...mapMessage, `Measure-line ${measuring ? 'on' : 'off'}`] );
 		props.setIsMeasureLine( () => measuring );
 	}, [measuring]);
 
+	useEffect(() => {
+		props.messenger( mapMessage => [...mapMessage, `Position-cursor ${positionCursor ? 'on' : 'off'}`] );
+		props.setIsPositionCursor( () => positionCursor );
+	}, [positionCursor]);
+
 	return(
 		<div className="map-btm-bar d-flex justify-content-around align-items-center">
-			<div className="col-2 d-flex justify-content-center align-items-center">
-				<Button 
-					style={{
-						backgroundColor: measuring 
-											? 'rgba(0, 0, 0, 0.6)' 
-											: 'rgba(255, 255, 255, 0.6)',
-						color: measuring
-								? 'white'
-								: 'black' 
-					}} 
+			<div 
+				style={{
+					height: openToolBox 
+								? 'fit-content' 
+								: '0px',
+					padding: openToolBox
+								? '5px 0px 5px 0px'
+								: '0px'
+
+						}} 
+				className="map-tool-box"
+			>
+				<Button
+					className="tool-button"
 					shortcutKey={ true }
 					name="Measure line"
 					click={ () => handleMeasureLine() }
 				/>
-			</div>
 
-			<div className="col-3 d-flex justify-content-center align-items-center">
-				<Button className="" name="Checkpoint generator" />
+				<Button 
+					className="tool-button"
+					name="Position cursor"
+					click={ () => handlePositionCursor() }
+				/>
+
+				<Button 
+					className="tool-button"
+					name="Checkpoint generator"
+				/>
 			</div>
+			<div className="col-3 d-flex justify-content-center align-items-center">
+	 			<Button 
+	 				shortcutKey={ true } 
+	 				name="Tools" 
+	 				click={() => setOpenToolBox( !openToolBox )}
+	 			/>
+	 		</div>					
 
 			<div className="col-4 map-view-switch d-flex justify-content-center align-items-center">
 				<Button 
-					classname={`${switched === 'free' ? "map-view-selected" : ''} map-vs-btn map-view-fpc`}
+					className={`${switched === 'free' ? "map-view-selected" : ''} map-vs-btn map-view-fpc`}
 					name="Free" 
 					click={() => { 
 						props.control(() => ({
@@ -429,14 +493,13 @@ const BottomBar = (props) => {
 												config: {
 													lookSpeed: 0.3,
 													movementSpeed: 550,
-													enabled: true
 												}
 											}));
 						setSwitched( 'free' );
 					}}
 				/>
 				<Button 
-					classname={`${switched === 'orbit' ? "map-view-selected" : ''} map-vs-btn map-view-oc`} 
+					className={`${switched === 'orbit' ? "map-view-selected" : ''} map-vs-btn map-view-oc`} 
 					name="Orbit" 
 					click={() => { 
 						props.control(() => ({ 
