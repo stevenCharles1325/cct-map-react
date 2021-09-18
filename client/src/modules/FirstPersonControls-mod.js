@@ -99,8 +99,8 @@ var FirstPersonControls = function ( object, domElement ) {
 
       }
 
-      event.preventDefault();
-      event.stopPropagation();
+      // event.preventDefault();
+      // event.stopPropagation();
 
       if ( this.activeLook ) {
 
@@ -119,8 +119,8 @@ var FirstPersonControls = function ( object, domElement ) {
 
     this.onMouseUp = function ( event ) {
 
-      event.preventDefault();
-      event.stopPropagation();
+      // event.preventDefault();
+      // event.stopPropagation();
 
       this.isMouseDown = false
       this.activeLook = false

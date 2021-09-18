@@ -41,7 +41,7 @@ import * as MAP from '../../modules/cct-map';
 import MapMeasureLine from '../../modules/measure-line';
 import PositionCursor from '../../modules/position-cursor';
 import FirstPersonControls from '../../modules/FirstPersonControls'; // DIY wrapper function for three first-person-controls
-
+import CheckpointGenerator from '../../modules/checkpoint-generator';
 
 
 // Loading components
@@ -72,7 +72,12 @@ const MapView = (props) => {
 	const [copyObj, setCopyObj] = useState( null );
 	const [deleteObj, setDeleteObj] = useState( null );
 
-	const [Controls, setControls] = useState( {controls: OrbitControls, config: {}} );
+	const [Controls, setControls] = useState({ 
+		controls: OrbitControls, 
+		config: {
+			enabled: true
+		}
+	});
 
 	const [persCam, setPersCam] = useState( null );
 	const [scene, setScene] = useState( null );
@@ -104,7 +109,8 @@ const MapView = (props) => {
 	const [isPositionCursor, setIsPositionCursor] = useState( false );
 	const [positionCursor, setPositionCursor] = useState( null );
 
-	
+	const [isCheckpointGen, setIsCheckpointGen] = useState( false );
+	const [checkpointGen, setCheckpointGen] = useState( null );
 
 	const [mapMessage, setMapMessage] = useState( [] );
 	const [enableMenu, setEnableMenu] = useState( true );
@@ -131,19 +137,16 @@ const MapView = (props) => {
 		return { selected: action.data };
 	}
 
-	const reducer = (state, action) => {
-		return selectHandler( state, action );
-	}
+	const reducer = ( state, action ) => selectHandler( state, action );
 
 	const [state, dispatch] = useReducer( reducer, {selected: null} );
 	const [propBox, setPropBox] = useState( null );
 
-
 	// ==========================================================
 
-	function reqSetCheckPoints ( newCheckpoint ) {
+	const reqSetCheckPoints = ( newCheckpoint ) => {
 		setCheckPoints((checkPoints) => {
-			if( checkPoints.map( cp => cp.name ).indexOf( newCheckpoint.name ) > - 1){
+			if( checkPoints.map( cp => cp.name ).indexOf( newCheckpoint.name ) > - 1 ){
 
 				return [...checkPoints];
 			}
@@ -153,10 +156,7 @@ const MapView = (props) => {
 		});
 	}
 
-	function reqSetPropBox() {
-		dispatch({ reset: true });
-	}
-
+	const reqSetPropBox = () => dispatch({ reset: true });
 
 	// Fetches map data
 	const requestMapData = async () => {
@@ -180,13 +180,11 @@ const MapView = (props) => {
 			return { message : res ? 'Map has been saved successfully' : 'Please try again!' };
 		})
 		.catch( err => {
-			// errorHandler( err );
 			return { message : err } ;
 		});
 	}
 
 	useEffect(() => requestMapData(), []);
-
 
 	useEffect(() => {
 		if( upload || copyObj || isCheckPoint ) setObjectCount((objectCount) => objectCount + 1);
@@ -194,56 +192,57 @@ const MapView = (props) => {
 
 		if( upload ){
 			setObjList((objList) => [
-										...objList, 
-										<MapImport
-											key={`map_object_${objectCount}`} 
-											index={objectCount} 
-											object={upload} 
-											click={dispatch} 
-										/>
-									]);
+				...objList, 
+				<MapImport
+					key={`map_object_${objectCount}`} 
+					index={objectCount} 
+					object={upload} 
+					click={dispatch} 
+				/>
+			]);
 			setMapMessage((mapMessage) => [...mapMessage, '3D object had been uploaded successfully']);			
 			setUpload( null );
 		}
 		else if( copyObj ){
 			if( copyObj.name.search('checkpoint') > -1 ){
 				setObjList((objList) => [
-											...objList, 
-											<Checkpoints 
-												index={objectCount} 
-												key={`checkpoint_${objectCount}`}
-												saveCheckpoint={reqSetCheckPoints} 
-												camera={persCam} 
-												scene={scene}
-												click={dispatch}
-											/>
-										]);			
+					...objList, 
+					<Checkpoints 
+						index={objectCount} 
+						key={`checkpoint_${objectCount}`}
+						saveCheckpoint={reqSetCheckPoints} 
+						camera={persCam} 
+						scene={scene}
+						click={dispatch}
+					/>
+				]);			
 			}
 			else if( copyObj.name.search('map_object') > -1 ){
 				setObjList((objList) => [
-											...objList, 
-											<MapClone 
-												key={`map_object_${objectCount}`} 
-												index={objectCount} 
-												object={copyObj} 
-												click={dispatch} 
-											/>
-										]);			
+					...objList, 
+					<MapClone 
+						key={`map_object_${objectCount}`} 
+						index={objectCount} 
+						object={copyObj} 
+						click={dispatch} 
+					/>
+				]);			
 			}
-			setCopyObj( null );	
 
+			setCopyObj( null );	
 		}
 		else if( isCheckPoint ){
 			setObjList((objList) => [...objList, 
-							<Checkpoints 
-								index={objectCount}
-								key={`checkpoint_${objectCount}`} 
-								saveCheckpoint={reqSetCheckPoints} 
-								camera={persCam} 
-								scene={scene}
-								click={dispatch}
-							/>
-						]);
+				<Checkpoints 
+					index={objectCount}
+					key={`checkpoint_${objectCount}`} 
+					saveCheckpoint={reqSetCheckPoints} 
+					camera={persCam} 
+					scene={scene}
+					click={dispatch}
+				/>
+			]);
+
 			setIsCheckPoint( false );
 		}
 		else if( deleteObj ){
@@ -285,8 +284,8 @@ const MapView = (props) => {
 			configuration.enabled = false;
 
 			setControls( Controls => ({
-							controls: Controls.controls,
-							config: configuration 						
+				controls: Controls.controls,
+				config: configuration 						
 			}));
 			
 			setMeasureLine( () => <MapMeasureLine 
@@ -301,8 +300,8 @@ const MapView = (props) => {
 
 
 			setControls( Controls => ({
-							controls: Controls.controls,
-							config: configuration 						
+				controls: Controls.controls,
+				config: configuration 						
 			}));
 			
 			setMeasureLine( () => null );
@@ -323,6 +322,15 @@ const MapView = (props) => {
 
 	}, [isPositionCursor]);
 
+	useEffect(() => {
+		if( isCheckpointGen ){
+			setCheckpointGen( () => <CheckpointGenerator/>);
+		}
+		else{
+			setCheckpointGen( () => null );
+		}
+
+	}, [isCheckpointGen]);
 
 	useEffect(() => {
 		const sceneLoader = async () => {
@@ -361,9 +369,12 @@ const MapView = (props) => {
 			const prevSceneState = JSON.stringify( scene.toJSON() );
 
 			const mapBundle = {
-								scene: JSON.parse( prevSceneState ), 
-								cpPosition: checkPoints.map(elem => ({name: elem.name, position: elem.position}))
-							}
+				scene: JSON.parse( prevSceneState ), 
+				cpPosition: checkPoints.map(elem => ({
+					name: elem.name, position: elem.position
+				}))
+			}
+
 			const message = await requestSaveMapData( mapBundle );
 
 			setMapMessage( (mapMessage) => [...mapMessage, message.message] );
@@ -393,18 +404,20 @@ const MapView = (props) => {
 						    >
 						    	{ label }		
 						    	{ objList }
-						    	{ memoizedLabel() }
 						    	{ measureLine }
 						    	{ positionCursor }
+						    	{ memoizedLabel() }
 						    </MAP.MapCanvas>
 					    </Suspense>
 					</Canvas>
+				    	{ checkpointGen }		
 				    	{ state.selected ? propBox : null }
 			    <BottomBar 
-			    	control={ setControls} 
-			    	setCheckpoint={ setIsCheckPoint }
+			    	control={ setControls } 
 		    		messenger={ setMapMessage }
+			    	setCheckpoint={ setIsCheckPoint }
 		    		setIsMeasureLine={ setIsMeasureLine }
+		    		setIsCheckpointGen={ setIsCheckpointGen }
 		    		setIsPositionCursor={ setIsPositionCursor }
 			    />
 		    </Suspense>
@@ -418,6 +431,7 @@ const BottomBar = (props) => {
 	const [measuring, setMeasuring] = useState( false );
 	const [positionCursor, setPositionCursor] = useState( false );
 	const [openToolBox, setOpenToolBox] = useState( false );
+	const [checkpointGen, setCheckpointGen] = useState( false );
 
 	const handleCreateCheckPoint = () => {
 		props.messenger( (mapMessage) => [...mapMessage, 'Please wait...'] );
@@ -425,13 +439,39 @@ const BottomBar = (props) => {
 		MAP.setEmtyNameCpSpotted( true );
 	}
 
-	const handleMeasureLine = () => {
-		setMeasuring( measuring => !measuring );
+	const handleMeasureLine = () => setMeasuring( measuring => !measuring );
+	const handlePositionCursor = () => setPositionCursor( positionCursor => !positionCursor );
+
+	const handleFreeControl = () => {
+		if( switched === 'free' ) return;
+
+		props.control({
+			controls: FirstPersonControls,
+			config: {
+				lookSpeed: 0.3,
+				movementSpeed: 550,
+				enabled: true
+			}
+		});
+
+		setSwitched( 'free' );
 	}
 
-	const handlePositionCursor = () => {
-		setPositionCursor( positionCursor => !positionCursor );
+	const handleOrbitControl = () => {
+		if( switched === 'orbit' ) return;
+
+		props.control({ 
+			controls: OrbitControls,
+			config: {
+				enabled: true
+			}
+		});
+
+		setSwitched( 'orbit' );
 	}
+
+	const handleToolBox = () => setOpenToolBox( openToolBox => !openToolBox );
+	const handleCheckpointGenerator = () => setCheckpointGen( checkpointGen => !checkpointGen );
 
 	useEffect(() => {
 		props.messenger( mapMessage => [...mapMessage, `Measure-line ${measuring ? 'on' : 'off'}`] );
@@ -442,6 +482,11 @@ const BottomBar = (props) => {
 		props.messenger( mapMessage => [...mapMessage, `Position-cursor ${positionCursor ? 'on' : 'off'}`] );
 		props.setIsPositionCursor( () => positionCursor );
 	}, [positionCursor]);
+
+	useEffect(() => {
+		props.messenger( mapMessage => [...mapMessage, `Checkpoint-generator ${checkpointGen ? 'on' : 'off'}`] );
+		props.setIsCheckpointGen( () => checkpointGen );
+	}, [checkpointGen]);
 
 	return(
 		<div className="map-btm-bar d-flex justify-content-around align-items-center">
@@ -472,14 +517,16 @@ const BottomBar = (props) => {
 
 				<Button 
 					className="tool-button"
+					shortcutKey={ true }
 					name="Checkpoint generator"
+					click={ () => handleCheckpointGenerator() }
 				/>
 			</div>
 			<div className="col-3 d-flex justify-content-center align-items-center">
 	 			<Button 
 	 				shortcutKey={ true } 
 	 				name="Tools" 
-	 				click={() => setOpenToolBox( !openToolBox )}
+	 				click={() => handleToolBox()}
 	 			/>
 	 		</div>					
 
@@ -487,29 +534,12 @@ const BottomBar = (props) => {
 				<Button 
 					className={`${switched === 'free' ? "map-view-selected" : ''} map-vs-btn map-view-fpc`}
 					name="Free" 
-					click={() => { 
-						props.control(() => ({
-												controls: FirstPersonControls,
-												config: {
-													lookSpeed: 0.3,
-													movementSpeed: 550,
-												}
-											}));
-						setSwitched( 'free' );
-					}}
+					click={() => handleFreeControl()}
 				/>
 				<Button 
 					className={`${switched === 'orbit' ? "map-view-selected" : ''} map-vs-btn map-view-oc`} 
 					name="Orbit" 
-					click={() => { 
-						props.control(() => ({ 
-												controls: OrbitControls,
-												config: {
-													enabled: true
-												}
-											}));
-						setSwitched( 'orbit' );
-					}}
+					click={() => handleOrbitControl()}
 				/>
 			</div>
 

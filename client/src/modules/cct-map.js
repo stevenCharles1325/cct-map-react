@@ -274,6 +274,9 @@ const MapCanvas = (props) => {
 
 // Atmosphere
 const Atmosphere = (props) => {
+	// console.log( `Atmosphere ${props.type}` );
+	// console.log( props?.control?.controls,  props?.control?.config );
+
 	return (
 		<group name="Sky">
 			<Stars radius={LAND_SIZE[0]*0.5} count={LAND_SIZE[0]*2} fade />

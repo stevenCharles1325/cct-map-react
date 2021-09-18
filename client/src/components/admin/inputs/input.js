@@ -10,31 +10,22 @@ function Input( props ){
     const size = props.size || { width: '100%' }
 
     return(
-        <div style={{width: size.width, height: size.height || '45px'}} id={props.id.concat('-box')} className="input-bar">
+        <div style={{width: size.width, height: size.height || '45px'}} id={props.id.concat('-box')} className={`input-bar ${props?.className ?? ''}`}>
             <div id={props.id.concat('-msg-box')} className="input-cover d-flex justify-content-center align-items-center text-center"> 
                 <p id={props.id.concat('-msg')} className="input-msg p-0 m-0">
                     {/* Message will be prompted here */}
                 </p> 
             </div>
             <input 
-                className="input-field" 
-                
-                autoFocus={props.autoFocus} 
-
-                style={{width: props.peekBtn ? '90%' : '100%'}} 
-                
                 id={props.id} 
-
-                type={props.type} 
-                
+                type={props.type}
                 name={props.name || null} 
-                
+                className="input-field" 
+                style={{width: props.peekBtn ? '90%' : '100%'}} 
+                autoFocus={props?.autoFocus ?? false} 
                 placeholder={props.placeholder || null} 
-                
                 onChange={props.handleChange} 
-                
-                defaultValue={props.value} 
-                
+                defaultValue={props.value ?? null} 
                 required
             />
             { props.peekBtn || null }

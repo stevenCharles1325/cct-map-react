@@ -1,12 +1,11 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Raycaster, Vector3, Vector2 } from 'three';
 import { Line, Html } from '@react-three/drei';
+import { useFrame } from '@react-three/fiber';
 import debounce from 'lodash.debounce';
 
 
 const MapMeasureLine = ( props ) => {
-	console.log('line 14: Went here on measure-line');
-
 	const line = useRef();
 
 	const mouse = new Vector2();
@@ -21,7 +20,13 @@ const MapMeasureLine = ( props ) => {
 
 	let dragging = false;
 
-	const updateLabel = () => props.label(() => [Object.values(lineCenter), start.distanceTo( end ).toFixed( 2 )]);
+	const updateLabel = () => {
+		 return props.label(() => ([
+		 	Object.values(lineCenter), 
+		 	start.distanceTo( end ).toFixed( 2 )
+		 ]));
+	}
+
 	const memoizedUpdateLabel = useCallback(debounce(updateLabel, 50), [start, end]);
 
 	const mouseLocation = (e) => {
@@ -31,19 +36,15 @@ const MapMeasureLine = ( props ) => {
 	    if( dragging ) memoizedDrag();
 	}
 
-	const handleDragStart = (e) => {
-		e.stopPropagation();		
-		console.log('Started');
-
+	const handleDragStart = () => {
 		setStart(() => start.copy( point ));
 
 		dragging = true;
 	}
 
 	const handleDrag = () => {
-		console.log('line 14: Went here on measure-line');
-
 		setEnd(() => end.copy( point ));
+
 		line?.current?.geometry?.setFromPoints?.([ start, end ]);
 		lineCenter.lerpVectors( start, end, 0.5 );
 
@@ -52,8 +53,6 @@ const MapMeasureLine = ( props ) => {
 
 
 	const handleDragEnd = () => {
-		console.log('Ended');
-
 		setStart( () => start.sub( start ));
 		setEnd( () => end.sub( end ));
 
@@ -64,27 +63,8 @@ const MapMeasureLine = ( props ) => {
 		props.label( () => null );	
 	}
 
-	const memoizedDrag = useCallback( () => handleDrag(), [start, end] );
-
-	useEffect(() => {
-		const runRaycasting = async () => {
-			raycaster.setFromCamera( mouse, props.camera );
-
-			const intersects = raycaster.intersectObjects( props.scene.children, true );
-
-			if( intersects.length ){
-				const currentPoint = intersects[0].point;
-
-				setPoint( () => point.copy( currentPoint ));
-			}
-		}
-
-		const mainLoop = setInterval(() => runRaycasting());
-
-		return () => clearInterval( mainLoop );
-	}, []);
-
-
+	const memoizedDrag = useCallback(() => handleDrag(), [start, end]);
+	
 	useEffect(() => {
 		window.addEventListener('mousemove', mouseLocation );		
 		window.addEventListener('mousedown', handleDragStart );
@@ -97,11 +77,26 @@ const MapMeasureLine = ( props ) => {
 		}
 	}, []);
 
+	useFrame(() => {
+		const runRaycasting = async () => {
+			raycaster.setFromCamera( mouse, props.camera );
+
+			const intersects = raycaster.intersectObjects( props.scene.children, true );
+
+			if( intersects.length ){
+				const currentPoint = intersects[0].point;
+
+				setPoint( () => point.copy( currentPoint ));
+			}
+		}
+
+		runRaycasting();
+	});
 
 	return(	
 		<line ref={ line }>
 			<bufferGeometry />
-			<lineBasicMaterial color={ 0xffffff } lineWidth={ 5 } />
+			<lineBasicMaterial color={ 0xffffff } lineWidth={ 1 } lineCap="round" />
 		</line>
 	);
 }
