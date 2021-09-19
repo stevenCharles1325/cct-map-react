@@ -9,6 +9,12 @@ function Input( props ){
 
     const size = props.size || { width: '100%' }
 
+    const handleOnChange = (e) => {
+        e.stopPropagation();
+
+        props.handleChange();
+    }
+
     return(
         <div style={{width: size.width, height: size.height || '45px'}} id={props.id.concat('-box')} className={`input-bar ${props?.className ?? ''}`}>
             <div id={props.id.concat('-msg-box')} className="input-cover d-flex justify-content-center align-items-center text-center"> 

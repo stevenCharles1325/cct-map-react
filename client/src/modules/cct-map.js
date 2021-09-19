@@ -46,9 +46,11 @@ const defaultMaterial = new THREE.MeshPhysicalMaterial( materialOptions );
 // Checker variable
 var EMPTY_NAME_CP_SPOTTED = false;
 
+
 const setEmtyNameCpSpotted = ( value ) => {
 	EMPTY_NAME_CP_SPOTTED = value;	
 } 
+
 
 // Scene loader
 const loadScene = async ({ userType, data, click, checkPointSaver }) => {
@@ -97,6 +99,7 @@ const loadScene = async ({ userType, data, click, checkPointSaver }) => {
 				}
 
 				prevChild.push(<Build 
+									userType={userType}
 									index={index}
 									key={key}
 									geometry={geometries[index]}
@@ -124,6 +127,7 @@ const Build = (props) => {
 
 		case /checkpoint/.test(data.name):
 			return (<CheckpointBuilder 
+						userType={props.userType}
 						name={getRootName(data.name)}
 						index={props.index}
 						geometry={geometry} 
@@ -134,6 +138,7 @@ const Build = (props) => {
 
 		case /map_object/.test(data.name):
 			return <ObjectBuilder
+						userType={props.userType}
 						index={props.index}
 						geometry={geometry} 
 						object={data} 
@@ -167,6 +172,9 @@ const ObjectBuilder = (props) => {
 		props?.click?.({ data: objRef });
 	}
 	
+	const produceMaterial = () => {
+		return props.userType === 'admin' ? new THREE.MeshPhysicalMaterial( materialOptions ) : defaultMaterial;
+	}
 
 	return(
 		<mesh
@@ -178,7 +186,7 @@ const ObjectBuilder = (props) => {
 			scale={[...Object.values(scale)]}
 			geometry={parsedGeom}
 			position={[...Object.values(position)]}
-			material={defaultMaterial}
+			material={produceMaterial()}
 		>	
 		</mesh>
 	);
@@ -203,6 +211,10 @@ function CheckpointBuilder( props ){
 		props?.click?.({ data: checkpoint });
 	}
 
+	const produceMaterial = () => {
+		return props.userType === 'admin' ? new THREE.MeshPhysicalMaterial( materialOptions ) : defaultMaterial;
+	}
+
 	useEffect(() => {
 		if( checkpoint.current ) props?.saveCheckpoint?.( checkpoint.current );
 	}, [checkpoint.current]);
@@ -214,7 +226,7 @@ function CheckpointBuilder( props ){
 			scale={[...Object.values(scale)]} 
 			position={position} 
 			onDoubleClick={handleClick}
-			material={defaultMaterial}
+			material={produceMaterial()}
 			receiveShadow={true}
 			castShadow={true}
 		>
@@ -242,9 +254,7 @@ const MapCanvas = (props) => {
 	useEffect(() => {
 		camera.position.set( ...CAMERA.position );
 		camera.updateProjectionMatrix();
-		camera.updateMatrixWorld();
 		props.setCam( () => camera );
-		
 	}, [camera]);
 
 	useEffect(() => {
@@ -274,9 +284,6 @@ const MapCanvas = (props) => {
 
 // Atmosphere
 const Atmosphere = (props) => {
-	// console.log( `Atmosphere ${props.type}` );
-	// console.log( props?.control?.controls,  props?.control?.config );
-
 	return (
 		<group name="Sky">
 			<Stars radius={LAND_SIZE[0]*0.5} count={LAND_SIZE[0]*2} fade />
@@ -359,7 +366,7 @@ const Messenger = (props) => {
 const Loader = ( props ) => { 
 	const { progress } = useProgress();
 
-	return <Html center> Loading: { progress }% </Html>
+	return <Html style={{width: 'fit-content'}} center> Loading: { progress }% </Html>
 }
 
 

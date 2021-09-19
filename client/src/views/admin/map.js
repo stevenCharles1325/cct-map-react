@@ -16,7 +16,9 @@ import {
 	Stars,
 	Html,
 	useProgress,
-	SpotLight
+	SpotLight,
+	GizmoHelper,
+	GizmoViewport
 } from '@react-three/drei';
 
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
@@ -25,7 +27,10 @@ import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
 // Components
-import Checkpoints from '../../modules/map-checkpoints';
+import { 
+	Checkpoints, 
+	CheckpointGen 
+} from '../../modules/map-checkpoints';
 import Button from '../../components/admin/buttons/button';
 import MapMenu from '../../components/admin/menu/map-menu';
 import { Input } from '../../components/admin/inputs/input';
@@ -63,6 +68,10 @@ const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
 const MapView = (props) => {
 	const land = useRef();
 	const line = useRef();
+
+	const [mapMessage, setMapMessage] = useState( [] );
+	const [enableMenu, setEnableMenu] = useState( true );
+	const [objectCount, setObjectCount] = useState( 0 );
 
 	const [mapData, setMapData] = useState( null );
 
@@ -112,10 +121,89 @@ const MapView = (props) => {
 	const [isCheckpointGen, setIsCheckpointGen] = useState( false );
 	const [checkpointGen, setCheckpointGen] = useState( null );
 
-	const [mapMessage, setMapMessage] = useState( [] );
-	const [enableMenu, setEnableMenu] = useState( true );
-	const [objectCount, setObjectCount] = useState( 0 );
+	const initGenState = () => ({
+			initPosition: [ 0, 0, 0 ],
+			areaSize: [ 0, 0, 0 ],
+			distance: [ 0, 0, 0 ],
+			roomName: [ 'room', 0, 0 ],
+		});
 
+	const genReducer = ( state, action ) => {
+		switch( action.type ){
+			case 'initPosition':
+				state.initPosition[ action.index ] = action.data;
+				return state;
+
+			case 'areaSize':
+				state.areaSize[ action.index ] = action.data;
+				return state;
+
+			case 'distance':
+				state.distance[ action.index ] = action.data;
+				return state;
+
+			case 'roomName':
+				state.roomName[ action.index ] = action.data;
+				return state;
+
+			case 'start':
+				let {
+					initPosition,
+					areaSize,
+					distance,
+					roomName
+				} = state;
+
+				initPosition = initPosition.map( point => Number(point));
+				distance = distance.map( point => Number(point));
+				areaSize = areaSize.map( point => Number(point));
+
+				let roomNumber = 0;
+				let generatedCheckpoints = [];
+
+				for( let height = 1; height <= areaSize[ 1 ]; height++ ){
+					for( let width = 1; width <= areaSize[ 0 ]; width++ ){
+						for( let depth = 1; depth <= areaSize[ 2 ]; depth++ ){
+							if( roomNumber <= Number(roomName[ 1 ]) ){
+
+								generatedCheckpoints.push(
+										<CheckpointGen
+											click={ dispatch }
+											index={ objectCount }
+											position={ initPosition }
+											saveCheckpoint={reqSetCheckPoints} 
+											name={`${roomName[ 0 ]}${roomNumber}`}
+											key={`checkpoint_${height}-${width}-${depth}`}
+										/>
+									);
+
+
+								initPosition[ 0 ] += distance[ 0 ];
+								initPosition[ 1 ] += distance[ 1 ];
+								initPosition[ 2 ] += distance[ 2 ];
+
+								roomNumber++;
+							}
+						}
+					}
+				}
+
+				setObjList( objList => [...objList, ...generatedCheckpoints]);
+
+				action.type = 'reset';
+				return genReducer( state, action );
+
+			case 'reset':
+				setIsCheckpointGen( false );
+				state = initGenState();
+				return state;
+
+			default:
+				throw new Error('Error in updating generator state');
+		}
+	}
+
+	const [checkpointGenState, checkpointGenDispatch] = useReducer( genReducer, initGenState() );
 
 	const selectHandler = ( state, action ) => {
 
@@ -324,7 +412,7 @@ const MapView = (props) => {
 
 	useEffect(() => {
 		if( isCheckpointGen ){
-			setCheckpointGen( () => <CheckpointGenerator/>);
+			setCheckpointGen( () => <CheckpointGenerator dispatch={ checkpointGenDispatch }/>);
 		}
 		else{
 			setCheckpointGen( () => null );
@@ -366,6 +454,8 @@ const MapView = (props) => {
 
 	const requestSaveMap = async () => {
 		if( scene ){
+			console.log('here');
+
 			const prevSceneState = JSON.stringify( scene.toJSON() );
 
 			const mapBundle = {
@@ -376,6 +466,7 @@ const MapView = (props) => {
 			}
 
 			const message = await requestSaveMapData( mapBundle );
+			console.log( message.message );
 
 			setMapMessage( (mapMessage) => [...mapMessage, message.message] );
 		}	
@@ -386,7 +477,7 @@ const MapView = (props) => {
 		    <Suspense fallback={<MAP.Loader />}>
 			    <MapMenu 
 			    	reqSetUpload={setUpload} 
-			    	reqSaveMap={requestSaveMap} 
+			    	reqSaveMap={() => requestSaveMap()} 
 			    	switch={enableMenu} 
 			    	messenger={setMapMessage} 
 			    	saveAllowed={MAP.EMPTY_NAME_CP_SPOTTED}
@@ -407,6 +498,19 @@ const MapView = (props) => {
 						    	{ measureLine }
 						    	{ positionCursor }
 						    	{ memoizedLabel() }
+						    	<GizmoHelper
+							    	alignment="top-left"
+							    	margin={[width * 0.15, height * 0.15]}
+							    >
+							    	<GizmoViewport 
+							    		axisColors={[
+							    			'rgba(130, 204, 221,1.0)', 
+							    			'rgba(250, 211, 144,1.0)', 
+							    			'rgba(184, 233, 148,1.0)'
+							    		]}
+							    		labelColor="rgba(60, 99, 130,1.0)"
+							    	/>
+							    </GizmoHelper>
 						    </MAP.MapCanvas>
 					    </Suspense>
 					</Canvas>

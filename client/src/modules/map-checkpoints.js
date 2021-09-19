@@ -9,7 +9,6 @@ import { Input } from '../components/admin/inputs/input';
 
 
 // Default material and geometry
-
 const materialOptions = {
 	color: 0x3f4444,
 	roughness: 0.4,
@@ -109,7 +108,38 @@ function Checkpoints ( props ){
 	);
 }
 
+function CheckpointGen ( props ){
+	const checkpoint = useRef();
+
+	useEffect(() => {
+		if(checkpoint.current){
+			props.saveCheckpoint(checkpoint.current);
+		}
+
+	}, [checkpoint.current]);
+
+
+	const handleClick = (e) => {
+		e.stopPropagation();
+
+		props.click({ data: checkpoint });
+	}
+
+
+	return (
+		<mesh 
+			name={`checkpoint_${props.index}_${props.name}`} 
+			position={props.position}
+			ref={checkpoint} 
+			onDoubleClick={handleClick}
+			geometry={defaultGeometry}
+			material={defaultMaterial}
+		>
+		</mesh>
+	);
+}
 
 
 
-export default Checkpoints;
+
+export { Checkpoints, CheckpointGen };

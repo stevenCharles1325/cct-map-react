@@ -11,10 +11,14 @@ export default function Button( props ){
     }
 
     const handleKeyEnter = (e) => {
-        if( !props.listenTo && !props.shortcutKey ) return;
+        e.stopPropagation();
 
+        if( !props.listenTo && !props.shortcutKey ) return;
         if( e.key === props.listenTo ) handleClick(e);
-        if( e.key === name.slice(0, 1).join('').toLowerCase() ) handleClick(e);
+        
+        if( e.altKey ){
+            if( e.key === name.slice(0, 1).join('').toLowerCase() ) handleClick(e);
+        }
     }
 
     useEffect(() => {

@@ -41,42 +41,41 @@ function MapMenu( props ){
     // 
     // ------------------------------------------
 
-        // Main menu handlers 
-        const saveHandler = async () => {
-            if( props.saveAllowed ){ 
-                props.messenger((mapMessage) => [...mapMessage, 'A checkpoint with no name has been found']);
-            }
-            else{
-                props.messenger((mapMessage) => [...mapMessage, 'Saving Map, please wait...']);                
-            }
-            
-            setTimeout(() => {
-                props.reqSaveMap();            
-            }, 3000);
+    // Main menu handlers 
+    const saveHandler = async () => {
+        if( props.saveAllowed ){ 
+            props.messenger((mapMessage) => [...mapMessage, 'A checkpoint with no name has been found']);
         }
+        else{
+            props.messenger((mapMessage) => [...mapMessage, 'Saving Map, please wait...']);
+            props.reqSaveMap();            
+        }
+    }
 
 
-        const closeImportBox = () => {
-            setImpotBox(null);
-        }
+    const closeImportBox = () => {
+        setImpotBox(null);
+    }
 
-        const openImportBox = () => {
-            setImpotBox(<ImportBox 
-                            onClose={closeImportBox}
-                            reqSubmit={props.reqSetUpload}
-                        />);
-        }
+    const openImportBox = () => {
+        setImpotBox(<ImportBox 
+                        onClose={closeImportBox}
+                        reqSubmit={props.reqSetUpload}
+                    />);
+    }
 
-        const previewHandler = () => {
-            console.log('clicked Preview button');
-        }
+    const previewHandler = () => {
+        console.log('clicked Preview button');
+    }
 
     // -----------------------------------------
 
     const saveShortcut = (e) => {
-        if( e.ctrlKey && e.key === "s" ){
-            e.stopPropagation(); 
-            saveHandler();
+
+        if( e.ctrlKey ){
+            e.preventDefault(); 
+            
+            if( e.key === "s" ) saveHandler();
         };
     }
 

@@ -7,14 +7,21 @@ import Button from '../components/admin/buttons/button';
 import '../styles/admin/checkpoint-generator.css';
 
 const CheckpointGenerator = ( props ) => {
+	const { dispatch } = props;
+
+	const fallBackToZero = ( e ) => {
+		return e?.target?.value
+				? e.target.value
+				: 0
+	}
 
 	return (
 		<div className="checkpoint-gen-box py-5">
-			<div style={{height: '10%'}} className="mb-5">
+			<div style={{height: '10%'}} className="mb-3">
 				<h3 className="checkpoint-gen-title">Checkpoint Generator</h3>
 			</div>
 
-			<div style={{height: '85%'}} className="checkpoint-inp-box">
+			<div style={{height: '80%'}} className="checkpoint-inp-box">
 				<ComboBox 
 					title="Starting position"
 					option={[
@@ -23,43 +30,43 @@ const CheckpointGenerator = ( props ) => {
 							name: 'start-x',
 							autofocus: true,
 							placeholder: 'Enter X position',
-							onChange: () => console.log('Changing start-X position'),
+							onChange: (e) => dispatch({type: 'initPosition', index: 0, data: fallBackToZero(e) }),
 						},
 						{
 							type: 'number',
 							name: 'start-y',
 							placeholder: 'Enter Y position',
-							onChange: () => console.log('Changing start-Y position'),
+							onChange: (e) => dispatch({type: 'initPosition', index: 1, data: fallBackToZero(e) }),
 						},
 						{
 							type: 'number',
 							name: 'start-z',
 							placeholder: 'Enter Z position',
-							onChange: () => console.log('Changing start-Z position'),
+							onChange: (e) => dispatch({type: 'initPosition', index: 2, data: fallBackToZero(e) }),
 						},
 					]}
 				/>
 
 				<ComboBox 
-					title="Generator size"
+					title="Generator area size"
 					option={[
 						{
 							type: 'number',
 							name: 'gen-width',
-							placeholder: 'Enter generator width',
-							onChange: () => console.log('Changing start-X position'),
+							placeholder: 'Enter generator width (X)',
+							onChange: (e) => dispatch({type: 'areaSize', index: 0, data: fallBackToZero(e) }),
 						},
 						{
 							type: 'number',
 							name: 'gen-height',
-							placeholder: 'Enter generator height',
-							onChange: () => console.log('Changing start-Y position'),
+							placeholder: 'Enter generator height (Y)',
+							onChange: (e) => dispatch({type: 'areaSize', index: 1, data: fallBackToZero(e) }),
 						},
 						{
 							type: 'number',
 							name: 'gen-depth',
-							placeholder: 'Enter generator depth',
-							onChange: () => console.log('Changing start-Z position'),
+							placeholder: 'Enter generator depth (Z)',
+							onChange: (e) => dispatch({type: 'areaSize', index: 2, data: fallBackToZero(e) }),
 						},
 					]}
 				/>
@@ -71,21 +78,60 @@ const CheckpointGenerator = ( props ) => {
 							type: 'number',
 							name: 'dis-x',
 							placeholder: 'Enter X distance',
-							onChange: () => console.log('Changing start-X position'),
+							onChange: (e) => dispatch({type: 'distance', index: 0, data: fallBackToZero(e) }),
 						},
 						{
 							type: 'number',
 							name: 'dis-y',
 							placeholder: 'Enter Y distance',
-							onChange: () => console.log('Changing start-Y position'),
+							onChange: (e) => dispatch({type: 'distance', index: 1, data: fallBackToZero(e) }),
 						},
 						{
 							type: 'number',
 							name: 'dis-z',
 							placeholder: 'Enter Z distance',
-							onChange: () => console.log('Changing start-Z position'),
+							onChange: (e) => dispatch({type: 'distance', index: 2, data: fallBackToZero(e) }),
 						},
 					]}
+				/>
+
+				<ComboBox 
+					title="Starting Name"
+					option={[
+						{
+							type: 'text',
+							name: 'room-base-name',
+							placeholder: 'Enter room base name',
+							onChange: (e) => dispatch({type: 'roomName', index: 0, data: fallBackToZero(e) }),
+						},
+						{
+							type: 'number',
+							name: 'name-num-range-start',
+							placeholder: 'Enter room range start',
+							onChange: (e) => dispatch({type: 'roomName', index: 1, data: fallBackToZero(e) }),
+						},
+						{
+							type: 'number',
+							name: 'name-num-range-end',
+							placeholder: 'Enter room range end',
+							onChange: (e) => dispatch({type: 'roomName', index: 1, data: fallBackToZero(e) }),
+						}
+					]}
+				/>
+			</div>
+			<div style={{height: '60px'}} className="d-flex flex-row justify-content-around align-items-center">
+				<Button 
+					name="start"
+					listenTo="Enter"
+					style={{backgroundColor: 'rgba(0, 0, 0, 0.3)'}}
+					click={ () => dispatch({type: 'start'})}
+				/>
+
+				<Button
+					name="close"
+					listenTo="Escape"
+					style={{backgroundColor: 'rgba(0, 0, 0, 0.3)'}}
+					click={ () => dispatch({type: 'reset'})}
 				/>
 			</div>
 		</div>
