@@ -7,6 +7,7 @@ import React, {
 	useCallback
 } from 'react';
 
+import uniqid from 'uniqid';
 import debounce from 'lodash.debounce';
 
 import axios from 'axios';
@@ -36,7 +37,6 @@ import MapMenu from '../../components/admin/menu/map-menu';
 import { Input } from '../../components/admin/inputs/input';
 
 
-
 // Style(s)
 import '../../styles/admin/map.css';
 
@@ -45,7 +45,7 @@ import '../../styles/admin/map.css';
 import * as MAP from '../../modules/cct-map';
 import MapMeasureLine from '../../modules/measure-line';
 import PositionCursor from '../../modules/position-cursor';
-import FirstPersonControls from '../../modules/FirstPersonControls'; // DIY wrapper function for three first-person-controls
+import FirstPersonControls from '../../modules/FirstPersonControls';
 import CheckpointGenerator from '../../modules/checkpoint-generator';
 
 
@@ -154,41 +154,71 @@ const MapView = (props) => {
 					roomName
 				} = state;
 
-				initPosition = initPosition.map( point => Number(point));
-				distance = distance.map( point => Number(point));
-				areaSize = areaSize.map( point => Number(point));
-
-				let roomNumber = 0;
-				let generatedCheckpoints = [];
-
-				for( let height = 1; height <= areaSize[ 1 ]; height++ ){
-					for( let width = 1; width <= areaSize[ 0 ]; width++ ){
-						for( let depth = 1; depth <= areaSize[ 2 ]; depth++ ){
-							if( roomNumber <= Number(roomName[ 1 ]) ){
-
-								generatedCheckpoints.push(
-										<CheckpointGen
-											click={ dispatch }
-											index={ objectCount }
-											position={ initPosition }
-											saveCheckpoint={reqSetCheckPoints} 
-											name={`${roomName[ 0 ]}${roomNumber}`}
-											key={`checkpoint_${height}-${width}-${depth}`}
-										/>
-									);
-
-
-								initPosition[ 0 ] += distance[ 0 ];
-								initPosition[ 1 ] += distance[ 1 ];
-								initPosition[ 2 ] += distance[ 2 ];
-
-								roomNumber++;
-							}
-						}
-					}
+				const convertToNumber = ( point ) => {
+					return point === '0'
+							? 1
+							: Number( point );
 				}
 
-				setObjList( objList => [...objList, ...generatedCheckpoints]);
+				const isRoomNumberValid = ( start, end ) => start <= end;
+				const updateInitPosition = ( start, end, index, reset, callback ) => {
+
+					if( isRoomNumberValid( start, end ) ){
+						callback?.();	
+
+						if( reset ){
+							initPosClone = initPosClone.map( (elem, elemIndex) => {
+								if( index === 1 ){
+									return elemIndex === index
+										? elem
+										: initPosition[ elemIndex ];
+								}
+								else if( index === 0 ){
+									return elemIndex === 2
+										? elem
+										: elemIndex === 0
+											? initPosition[ elemIndex ]
+											: elem;
+								}
+							});
+						}
+
+						initPosClone[ index ] += distance[ index ];
+					}				
+				}
+
+				distance = distance.map( convertToNumber );
+				areaSize = areaSize.map( convertToNumber );
+				initPosition = initPosition.map( convertToNumber ).map( (elem, index) => index === 1 ? elem + 50 : elem );
+
+				let initPosClone = new Array(...initPosition);
+				
+				let roomNumber = Number( roomName[1] );
+				
+				for( let height = 1; height <= areaSize[ 1 ]; height++ ){
+					for( let depth = 1; depth <= areaSize[ 2 ]; depth++ ){
+						for( let width = 1; width <= areaSize[ 0 ]; width++ ){
+							
+							updateInitPosition( roomNumber, Number(roomName[2]), 2, false, () => {
+								setObjList( objList => [
+									...objList,
+									<CheckpointGen
+										key={uniqid()}
+										click={dispatch}
+										index={objectCount}
+										name={`${roomName[0]}${roomNumber}`}
+										position={new Array(...initPosClone)}
+										saveCheckpoint={reqSetCheckPoints} 
+									/>	
+								]);
+
+								roomNumber++;	
+							});		
+						}
+						updateInitPosition( roomNumber, Number(roomName[2]), 0, true );		
+					}
+					updateInitPosition( roomNumber, Number(roomName[2]), 1, true );			
+				}
 
 				action.type = 'reset';
 				return genReducer( state, action );
@@ -268,7 +298,7 @@ const MapView = (props) => {
 			return { message : res ? 'Map has been saved successfully' : 'Please try again!' };
 		})
 		.catch( err => {
-			return { message : err } ;
+			return { message : err };
 		});
 	}
 
@@ -276,7 +306,6 @@ const MapView = (props) => {
 
 	useEffect(() => {
 		if( upload || copyObj || isCheckPoint ) setObjectCount((objectCount) => objectCount + 1);
-
 
 		if( upload ){
 			setObjList((objList) => [
@@ -454,8 +483,6 @@ const MapView = (props) => {
 
 	const requestSaveMap = async () => {
 		if( scene ){
-			console.log('here');
-
 			const prevSceneState = JSON.stringify( scene.toJSON() );
 
 			const mapBundle = {

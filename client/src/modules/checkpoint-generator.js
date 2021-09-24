@@ -15,6 +15,7 @@ const CheckpointGenerator = ( props ) => {
 				: 0
 	}
 
+
 	return (
 		<div className="checkpoint-gen-box py-5">
 			<div style={{height: '10%'}} className="mb-3">
@@ -114,7 +115,7 @@ const CheckpointGenerator = ( props ) => {
 							type: 'number',
 							name: 'name-num-range-end',
 							placeholder: 'Enter room range end',
-							onChange: (e) => dispatch({type: 'roomName', index: 1, data: fallBackToZero(e) }),
+							onChange: (e) => dispatch({type: 'roomName', index: 2, data: fallBackToZero(e) }),
 						}
 					]}
 				/>

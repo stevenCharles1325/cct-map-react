@@ -112,9 +112,7 @@ function CheckpointGen ( props ){
 	const checkpoint = useRef();
 
 	useEffect(() => {
-		if(checkpoint.current){
-			props.saveCheckpoint(checkpoint.current);
-		}
+		if(checkpoint.current) props.saveCheckpoint(checkpoint.current);
 
 	}, [checkpoint.current]);
 

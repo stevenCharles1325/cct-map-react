@@ -17,8 +17,8 @@ function MapMenu( props ){
     const menu = useRef( null );
 
     const [isOpen, setIsOpen] = useState( false ); // open and close state of menu
-    const [importBox, setImpotBox] = useState( null ); // Sets up import box 
-
+    const [importBox, setImpotBox] = useState( null ); // Sets up import box
+    const [saving, setSaving] = useState( false ); 
 
     // -----------------------------------------
     // 
@@ -75,8 +75,12 @@ function MapMenu( props ){
         if( e.ctrlKey ){
             e.preventDefault(); 
             
-            if( e.key === "s" ) saveHandler();
-        };
+            if( e.key === "s" ){
+                setSaving( true );
+
+                setTimeout(() => setSaving( false ), 1000);
+            }
+        }
     }
 
     useEffect(() => {
@@ -94,11 +98,14 @@ function MapMenu( props ){
     }, []);
 
     useEffect(() => {
-        document.addEventListener('keydown', saveShortcut);
+        document.addEventListener('keydown', e => saveShortcut(e));
         
-        return () => document.removeEventListener('keydown', saveShortcut);
+        return () => document.removeEventListener('keydown', e => saveShortcut(e));
     }, []);
 
+    useEffect(() => {
+        if( saving ) saveHandler();
+    }, [saving]);
 
     return (
         <>
