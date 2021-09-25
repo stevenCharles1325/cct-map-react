@@ -163,8 +163,17 @@ const ObjectBuilder = (props) => {
 	const loader = new THREE.BufferGeometryLoader();
 	const parsedGeom = loader.parse( geometry );
 
-	const position = new THREE.Vector3(matrix.elements[3], matrix.elements[7], matrix.elements[11]);
-	const scale = new THREE.Vector3(matrix.elements[0], matrix.elements[5], matrix.elements[10]);
+	const position = new THREE.Vector3(
+		matrix.elements[3], 
+		matrix.elements[7], 
+		matrix.elements[11]
+	);
+	
+	const scale = new THREE.Vector3(
+		matrix.elements[0], 
+		matrix.elements[5], 
+		matrix.elements[10]
+	);
 
 	const handleClick = (e) => {
 		e.stopPropagation();
@@ -173,7 +182,9 @@ const ObjectBuilder = (props) => {
 	}
 	
 	const produceMaterial = () => {
-		return props.userType === 'admin' ? new THREE.MeshPhysicalMaterial( materialOptions ) : defaultMaterial;
+		return props.userType === 'admin' 
+				? new THREE.MeshPhysicalMaterial( materialOptions ) 
+				: defaultMaterial;
 	}
 
 	return(
@@ -261,7 +272,6 @@ const MapCanvas = (props) => {
 		if( props?.deleteObj ){
 			delete props.deleteObj.__r3f.handlers.onClick;
 			props.reqSetDelete(() => null);
-
 		}
 	}, [props?.deleteObj]);
 

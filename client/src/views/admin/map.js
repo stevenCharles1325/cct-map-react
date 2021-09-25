@@ -7,11 +7,6 @@ import React, {
 	useCallback
 } from 'react';
 
-import uniqid from 'uniqid';
-import debounce from 'lodash.debounce';
-
-import axios from 'axios';
-
 import {
 	OrbitControls,
 	Stars,
@@ -22,10 +17,18 @@ import {
 	GizmoViewport
 } from '@react-three/drei';
 
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
+import { 
+	Canvas, 
+	useThree,
+	useFrame, 
+	useLoader, 
+} from '@react-three/fiber';
 
+import axios from 'axios';
+import uniqid from 'uniqid';
 import * as THREE from 'three';
+import debounce from 'lodash.debounce';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
 // Components
 import { 
@@ -99,12 +102,14 @@ const MapView = (props) => {
 	const [label, setLabel] = useState( null );
 
 	const LabelDisplay = ({ position, textDisplay }) => {
-		return (<Html 
-					position={ position } 
-					className="non-selectable container"
-				>
-					{ textDisplay }
-				</Html>);
+		return (
+			<Html 
+				position={ position } 
+				className="non-selectable container"
+			>
+				{ textDisplay }
+			</Html>
+		);
 	}
 
 	const measuredDistanceDisplay = () => {
@@ -122,10 +127,10 @@ const MapView = (props) => {
 	const [checkpointGen, setCheckpointGen] = useState( null );
 
 	const initGenState = () => ({
-			initPosition: [ 320.54, 25, -3034.46 ],
-			areaSize: [ 2, 2, 2 ],
-			distance: [ -631.33, 550, 2273.76 ],
-			roomName: [ 'room', 1, 8 ],
+			initPosition: [ 0, 0, 0 ],
+			areaSize: [ 0, 0, 0 ],
+			distance: [ 0, 0, 0 ],
+			roomName: [ 'room', 0, 0 ],
 		});
 
 	const genReducer = ( state, action ) => {
@@ -162,7 +167,8 @@ const MapView = (props) => {
 
 				distance = distance.map( convertToNumber );
 				areaSize = areaSize.map( convertToNumber );
-				initPosition = initPosition.map( convertToNumber ).map( (elem, index) => index === 1 ? elem + 50 : elem );
+				initPosition = initPosition.map( convertToNumber )
+				.map( (elem, index) => index === 1 ? elem + 50 : elem );
 
 				
 				let roomNumber = Number( roomName[1] );
@@ -173,6 +179,7 @@ const MapView = (props) => {
 						: leftOp > rightOp;
 				}
 
+				const isRoomNumberExist = ( ) => !roomName[1] || !roomName[2] ? false : true;
 				const isNegative = ( number ) => number < 0;
 				const evaluateIteration = ( start, end, distance ) => {
 					return start <= end 
@@ -184,44 +191,49 @@ const MapView = (props) => {
 				const depthEnd =  distance[2] * areaSize[2] + initPosition[2];
 				const widthEnd =  distance[0] * areaSize[0] + initPosition[0];
 
-				for( let height = initPosition[1]; 
+				( async () => {
+					for( let height = initPosition[1]; 
 					evaluateCondition(initPosition[1], height, heightEnd); 
 					evaluateIteration(initPosition[1], heightEnd, distance[1]) 
 						? height += distance[1]
 						: height -= distance[1]
 					){
 					
-					for( let depth = initPosition[2];
-						 evaluateCondition(initPosition[2], depth, depthEnd); 
-						 evaluateIteration(initPosition[2], depthEnd, distance[2]) 
-						 	? depth += distance[2] 
-						 	: depth -= distance[2]
-						){
-
-						for( 
-							let width = initPosition[0]; 
-							evaluateCondition(initPosition[0], width, widthEnd); 
-							evaluateIteration(initPosition[0], widthEnd, distance[0]) 
-								? width += distance[0]
-								: width -= distance[0] 
+						for( let depth = initPosition[2];
+							 evaluateCondition(initPosition[2], depth, depthEnd); 
+							 evaluateIteration(initPosition[2], depthEnd, distance[2]) 
+							 	? depth += distance[2] 
+							 	: depth -= distance[2]
 							){
 
-							console.log(initPosition[0], widthEnd, distance[0]);
-							setObjList( objList => [
-								...objList,
-								<CheckpointGen
-									key={uniqid()}
-									click={dispatch}
-									index={objectCount}
-									name={`${roomName[0]}${roomNumber}`}
-									position={new Array(width, height, depth)}
-									saveCheckpoint={reqSetCheckPoints} 
-								/>	
-							]);
-							roomNumber++;
+							for( 
+								let width = initPosition[0]; 
+								evaluateCondition(initPosition[0], width, widthEnd); 
+								evaluateIteration(initPosition[0], widthEnd, distance[0]) 
+									? width += distance[0]
+									: width -= distance[0] 
+								){
+									const generatedName = isRoomNumberExist() 
+										? `${roomName[0]}${roomNumber}`
+										: 'hallway';
+
+									setObjList( objList => [
+										...objList,
+										<CheckpointGen
+											key={uniqid()}
+											click={dispatch}
+											index={objectCount}
+											name={generatedName}
+											saveCheckpoint={reqSetCheckPoints} 
+											position={new Array(width, height, depth)}
+										/>	
+									]);
+
+									roomNumber = isRoomNumberExist() ? roomNumber + 1 : null;
+							}
 						}
 					}
-				}
+				})();
 
 				action.type = 'reset';
 				return genReducer( state, action );
@@ -298,7 +310,11 @@ const MapView = (props) => {
 
 		return await axios.post('/admin/update-map', scene)
 		.then( res => {
-			return { message : res ? 'Map has been saved successfully' : 'Please try again!' };
+			return { 
+				message : res 
+						? 'Map has been saved successfully' 
+						: 'Please try again!' 
+			};
 		})
 		.catch( err => {
 			return { message : err };
@@ -408,11 +424,13 @@ const MapView = (props) => {
 				config: configuration 						
 			}));
 			
-			setMeasureLine( () => <MapMeasureLine 
-									camera={ persCam } 
-									scene={ scene }
-									label={ setLabel }
-						 		  />);
+			setMeasureLine(() => ( 
+				<MapMeasureLine 
+					camera={ persCam } 
+					scene={ scene }
+					label={ setLabel }
+		 		/>
+		 	));
 		}
 		else{
 			const configuration = Controls.config;
@@ -431,10 +449,12 @@ const MapView = (props) => {
 
 	useEffect(() => {
 		if( isPositionCursor ){
-			setPositionCursor( () => <PositionCursor 
-										camera={ persCam } 
-										scene={ scene }
-							 		  />);
+			setPositionCursor(() => ( 
+				<PositionCursor 
+					camera={ persCam } 
+					scene={ scene }
+ 		  		/>
+	  		));
 		}
 		else{
 			setPositionCursor( () => null );
@@ -444,7 +464,11 @@ const MapView = (props) => {
 
 	useEffect(() => {
 		if( isCheckpointGen ){
-			setCheckpointGen( () => <CheckpointGenerator dispatch={ checkpointGenDispatch }/>);
+			setCheckpointGen(() => (
+				<CheckpointGenerator 
+					dispatch={ checkpointGenDispatch }
+				/>
+			));
 		}
 		else{
 			setCheckpointGen( () => null );
@@ -470,7 +494,10 @@ const MapView = (props) => {
 
 					setObjectCount( () => getLastStringToNumber(primitives[primitives.length - 1].key) + 1  );
 
-					setMapMessage((mapMessage) => [...mapMessage, 'Previous scene has been loaded successfully']);
+					setMapMessage((mapMessage) => [
+						...mapMessage, 
+						'Previous scene has been loaded successfully'
+					]);
 				};
 			}
 		}
@@ -496,7 +523,6 @@ const MapView = (props) => {
 			}
 
 			const message = await requestSaveMapData( mapBundle );
-			console.log( message.message );
 
 			setMapMessage( (mapMessage) => [...mapMessage, message.message] );
 		}	
@@ -506,10 +532,10 @@ const MapView = (props) => {
 		<div className="map">
 		    <Suspense fallback={<MAP.Loader />}>
 			    <MapMenu 
-			    	reqSetUpload={setUpload} 
-			    	reqSaveMap={() => requestSaveMap()} 
 			    	switch={enableMenu} 
-			    	messenger={setMapMessage} 
+			    	reqSetUpload={setUpload} 			    	
+			    	messenger={setMapMessage}
+			    	reqSaveMap={() => requestSaveMap()} 
 			    	saveAllowed={MAP.EMPTY_NAME_CP_SPOTTED}
 			    />
 			    	<MAP.Messenger message={mapMessage} messenger={setMapMessage}/>
@@ -939,7 +965,6 @@ const removeEndString = (string) => {
 }
 
 const getLastStringToNumber = (string) => {
-
 	string = string.split('_');
 	string = string[string.length - 1];
 

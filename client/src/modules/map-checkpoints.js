@@ -36,7 +36,7 @@ function Checkpoints ( props ){
 			props.saveCheckpoint(checkpoint.current);
 		}
 
-	}, [checkpoint.current]);
+	}, [checkpoint]);
 
 	// Mouse movement event listener
 	useEffect(() => {
@@ -114,15 +114,13 @@ function CheckpointGen ( props ){
 	useEffect(() => {
 		if(checkpoint.current) props.saveCheckpoint(checkpoint.current);
 
-	}, [checkpoint.current]);
-
+	}, [checkpoint]);
 
 	const handleClick = (e) => {
 		e.stopPropagation();
 
 		props.click({ data: checkpoint });
 	}
-
 
 	return (
 		<mesh 

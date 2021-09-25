@@ -54,7 +54,7 @@ const CheckpointGenerator = ( props ) => {
 						{
 							type: 'number',
 							name: 'gen-width',
-							placeholder: 'Enter generator width (X)',
+							placeholder: 'Enter generator width (Z)',
 							onChange: (e) => dispatch({type: 'areaSize', index: 0, data: fallBackToZero(e) }),
 						},
 						{
@@ -66,7 +66,7 @@ const CheckpointGenerator = ( props ) => {
 						{
 							type: 'number',
 							name: 'gen-depth',
-							placeholder: 'Enter generator depth (Z)',
+							placeholder: 'Enter generator depth (X)',
 							onChange: (e) => dispatch({type: 'areaSize', index: 2, data: fallBackToZero(e) }),
 						},
 					]}
