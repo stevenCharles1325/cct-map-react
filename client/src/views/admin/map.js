@@ -122,10 +122,10 @@ const MapView = (props) => {
 	const [checkpointGen, setCheckpointGen] = useState( null );
 
 	const initGenState = () => ({
-			initPosition: [ 0, 0, 0 ],
-			areaSize: [ 0, 0, 0 ],
-			distance: [ 0, 0, 0 ],
-			roomName: [ 'room', 0, 0 ],
+			initPosition: [ 320.54, 25, -3034.46 ],
+			areaSize: [ 2, 2, 2 ],
+			distance: [ -631.33, 550, 2273.76 ],
+			roomName: [ 'room', 1, 8 ],
 		});
 
 	const genReducer = ( state, action ) => {
@@ -160,64 +160,67 @@ const MapView = (props) => {
 							: Number( point );
 				}
 
-				const isRoomNumberValid = ( start, end ) => start <= end;
-				const updateInitPosition = ( start, end, index, reset, callback ) => {
-
-					if( isRoomNumberValid( start, end ) ){
-						callback?.();	
-
-						if( reset ){
-							initPosClone = initPosClone.map( (elem, elemIndex) => {
-								if( index === 1 ){
-									return elemIndex === index
-										? elem
-										: initPosition[ elemIndex ];
-								}
-								else if( index === 0 ){
-									return elemIndex === 2
-										? elem
-										: elemIndex === 0
-											? initPosition[ elemIndex ]
-											: elem;
-								}
-							});
-						}
-
-						initPosClone[ index ] += distance[ index ];
-					}				
-				}
-
 				distance = distance.map( convertToNumber );
 				areaSize = areaSize.map( convertToNumber );
 				initPosition = initPosition.map( convertToNumber ).map( (elem, index) => index === 1 ? elem + 50 : elem );
 
-				let initPosClone = new Array(...initPosition);
 				
 				let roomNumber = Number( roomName[1] );
-				
-				for( let height = 1; height <= areaSize[ 1 ]; height++ ){
-					for( let depth = 1; depth <= areaSize[ 2 ]; depth++ ){
-						for( let width = 1; width <= areaSize[ 0 ]; width++ ){
-							
-							updateInitPosition( roomNumber, Number(roomName[2]), 2, false, () => {
-								setObjList( objList => [
-									...objList,
-									<CheckpointGen
-										key={uniqid()}
-										click={dispatch}
-										index={objectCount}
-										name={`${roomName[0]}${roomNumber}`}
-										position={new Array(...initPosClone)}
-										saveCheckpoint={reqSetCheckPoints} 
-									/>	
-								]);
 
-								roomNumber++;	
-							});		
+				const evaluateCondition = (start, leftOp, rightOp) => {
+					return start <= rightOp 
+						? leftOp < rightOp
+						: leftOp > rightOp;
+				}
+
+				const isNegative = ( number ) => number < 0;
+				const evaluateIteration = ( start, end, distance ) => {
+					return start <= end 
+						? true
+						: isNegative( distance );
+				}
+
+				const heightEnd =  distance[1] * areaSize[1] + initPosition[1];
+				const depthEnd =  distance[2] * areaSize[2] + initPosition[2];
+				const widthEnd =  distance[0] * areaSize[0] + initPosition[0];
+
+				for( let height = initPosition[1]; 
+					evaluateCondition(initPosition[1], height, heightEnd); 
+					evaluateIteration(initPosition[1], heightEnd, distance[1]) 
+						? height += distance[1]
+						: height -= distance[1]
+					){
+					
+					for( let depth = initPosition[2];
+						 evaluateCondition(initPosition[2], depth, depthEnd); 
+						 evaluateIteration(initPosition[2], depthEnd, distance[2]) 
+						 	? depth += distance[2] 
+						 	: depth -= distance[2]
+						){
+
+						for( 
+							let width = initPosition[0]; 
+							evaluateCondition(initPosition[0], width, widthEnd); 
+							evaluateIteration(initPosition[0], widthEnd, distance[0]) 
+								? width += distance[0]
+								: width -= distance[0] 
+							){
+
+							console.log(initPosition[0], widthEnd, distance[0]);
+							setObjList( objList => [
+								...objList,
+								<CheckpointGen
+									key={uniqid()}
+									click={dispatch}
+									index={objectCount}
+									name={`${roomName[0]}${roomNumber}`}
+									position={new Array(width, height, depth)}
+									saveCheckpoint={reqSetCheckPoints} 
+								/>	
+							]);
+							roomNumber++;
 						}
-						updateInitPosition( roomNumber, Number(roomName[2]), 0, true );		
 					}
-					updateInitPosition( roomNumber, Number(roomName[2]), 1, true );			
 				}
 
 				action.type = 'reset';
