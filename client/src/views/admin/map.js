@@ -132,8 +132,6 @@ const MapView = (props) => {
 	}
 
 	const selectHandler = ( state, action ) => {
-		console.log( action?.data?.current )
-
 		if( action.reset ){
 			if( state.selected ){
 				glassify( state?.selected?.current?.material, true );
@@ -498,8 +496,8 @@ const MapView = (props) => {
 					userType	: 'admin',
 					data 		: mapData,
 					click 		: dispatch, 
-					checkPointSaver: reqSetCheckPoints,
-					setControls : setControls
+					setControls : setControls,
+					checkPointSaver: reqSetCheckPoints
 				}
 
 				const primitives = await MAP.loadScene( params );
