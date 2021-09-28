@@ -3,8 +3,6 @@ import '../../../styles/admin/input.css';
 
 
 
-
-
 function Input( props ){
 
     const size = props.size || { width: '100%' }

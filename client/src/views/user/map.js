@@ -15,7 +15,6 @@ import pathFind from '../../modules/path-finding';
 import * as MAP from '../../modules/cct-map';
 
 
-
 // Style
 import '../../styles/user/map.css';
 
@@ -46,7 +45,7 @@ const MapView = (props) => {
 				setMapMessage((mapMessage) => [...mapMessage, 'Scene has been loaded']);
 
 				setObjects( () => prevScene );
-				setCpPos( props.mapData.cpPos );
+				setCpPos( () => props.mapData.cpPos );
 			}
 			else{
 				setMapMessage((mapMessage) => [...mapMessage, 'Please wait while fetching scene']);
@@ -60,29 +59,31 @@ const MapView = (props) => {
 
 	useEffect(() => {
 		const runPathFind = async () => {
-			const shortestPath = await pathFind( scene, destination );
+			const shortestPath = await pathFind( cpPos, destination );
 
-			setPath(() => [Object.values(destination.start), ...shortestPath]);
-
+			setPath(() => [
+				Object.values(destination.start.position), 
+				...shortestPath
+			]);
 			setDestination(() => null);
 		}
 
-		if( destination && scene ) runPathFind();
+		if( destination && scene && cpPos ) runPathFind();
 
-	}, [destination, scene]);
+	}, [destination, scene, cpPos]);
 
 
 
 	useEffect(() => {
 		if(destination && path.length ) {
 			const createLine = async () => {
-					setLine( () => <Line 
-										points={[...path]} 
-										color={0x34495e} 
-										lineWidth={3}
-									/>);
-
-					// setPath( () => [] );
+				setLine( () => (
+					<Line 
+						points={[...path]} 
+						color={0x34495e} 
+						lineWidth={3}
+					/>
+				));
 			}	
 
 			createLine();

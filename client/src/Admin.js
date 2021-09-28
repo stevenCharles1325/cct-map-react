@@ -1,13 +1,3 @@
-/*
-
-	[COOKIE-BASED AUTHENTICATION APPLIED!]
-
-	NOTES:
-	1.) Fix other views for handling requests
-	2.) Fix auto update using event emitter.
-
-*/
-
 // Libs
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 
@@ -80,7 +70,7 @@ export default function Admin(){
 		else{
 			return( path.isSignInPath() 
 					? <Redirect to={ path.pathname } />
-					: <Redirect to={VIEWS[ 2 ]} />
+					: <Redirect to={ VIEWS[ 2 ] } />
 			);	
 		}
 	}

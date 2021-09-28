@@ -64,8 +64,8 @@ function MapMenu( props ){
                     />);
     }
 
-    const previewHandler = () => {
-        console.log('clicked Preview button');
+    const manualHandler = () => {
+        console.log('clicked Manual button');
     }
 
     // -----------------------------------------
@@ -120,13 +120,13 @@ function MapMenu( props ){
                     <ReactTooltip />
 
                     {[
-                        createButton('mm-save-btn', 'Save',saveImg, props.switch ? saveHandler : () => { 
+                        createButton('mm-save-btn', 'Save', saveImg, props.switch ? saveHandler : () => { 
                             props.messenger((mapMessage) => [...mapMessage, 'Unselect an object first']);
                         }),
-                        createButton('mm-import-btn', 'Import object',importImg, props.switch ? openImportBox : () => { 
+                        createButton('mm-import-btn', 'Import object', importImg, props.switch ? openImportBox : () => { 
                             props.messenger((mapMessage) => [...mapMessage, 'Unselect an object first']);
                         }),
-                        createButton('mm-preview-btn', 'Preview',prevImg, props.switch ? previewHandler : () => { 
+                        createButton('mm-manual-btn', 'Manual', prevImg, props.switch ? manualHandler : () => { 
                             props.messenger((mapMessage) => [...mapMessage, 'Unselect an object first']);
                         })
                     ]}

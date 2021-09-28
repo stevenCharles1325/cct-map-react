@@ -15,7 +15,6 @@ const CheckpointGenerator = ( props ) => {
 				: 0
 	}
 
-
 	return (
 		<div className="checkpoint-gen-box py-5">
 			<div style={{height: '10%'}} className="mb-3">

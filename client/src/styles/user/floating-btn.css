@@ -29,7 +29,7 @@
 	margin-bottom: 10px;
 	border-radius: 5px;
 
-	background-color: rgba(255, 255, 255, 0.7);
+	background-color: white;
 
 	transition: .1s ease-in-out;
 }
@@ -91,3 +91,4 @@
 	border:  none;
 	background-color: transparent;
 }
+

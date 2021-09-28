@@ -53,7 +53,7 @@ const setEmtyNameCpSpotted = ( value ) => {
 
 
 // Scene loader
-const loadScene = async ({ userType, data, click, checkPointSaver }) => {
+const loadScene = async ({ userType, data, click, checkPointSaver, setControls }) => {
 	if( !data || !userType ) return;
 
 	let key;
@@ -78,15 +78,15 @@ const loadScene = async ({ userType, data, click, checkPointSaver }) => {
 		}
 	}
 
-
+	const isNameInvalid = ( object ) => {
+		return !object?.name || /Land/.test(object.name) || /Sky/.test(object.name) ||
+		 ( userType !== 'admin' && /connector/.test(object.name.toLowerCase()) );
+	}
 
 	if( children ){
 		for( let index in children ){
 
-			if ( !children[index]?.name ||
-				/Land/.test(children[index].name) || 
-				/Sky/.test(children[index].name)
-				) continue;
+			if (isNameInvalid( children[index] )) continue;
 
 			if( memo.indexOf(children[index].name) < 0 ){
 				memo.push( children[index].name )
@@ -98,15 +98,18 @@ const loadScene = async ({ userType, data, click, checkPointSaver }) => {
 					key = `map_object_${index}`;
 				}
 
-				prevChild.push(<Build 
-									userType={userType}
-									index={index}
-									key={key}
-									geometry={geometries[index]}
-									data={object.children[index]}
-									click={checkType('click')}
-									saveCheckpoint={checkType('saver')}
-								/>);
+				prevChild.push(
+					<Build 
+						userType={userType}
+						index={index}
+						key={key}
+						geometry={geometries[index]}
+						data={object.children[index]}
+						click={checkType('click')}
+						saveCheckpoint={checkType('saver')}
+						setControls={setControls}
+					/>
+				);
 			}
 		}	
 	}
@@ -124,17 +127,19 @@ const Build = (props) => {
 	const handleClick = () => props.click( objRef.current );
 
 	switch( true ){
-
 		case /checkpoint/.test(data.name):
-			return (<CheckpointBuilder 
-						userType={props.userType}
-						name={getRootName(data.name)}
-						index={props.index}
-						geometry={geometry} 
-						object={data} 
-						click={props?.click} 
-						saveCheckpoint={props?.saveCheckpoint} 
-					/>); 
+			return (
+				<CheckpointBuilder 
+					userType={props.userType}
+					name={getRootName(data.name)}
+					index={props.index}
+					geometry={geometry} 
+					object={data} 
+					click={props?.click} 
+					saveCheckpoint={props?.saveCheckpoint}
+					setControls={props.setControls} 
+				/>
+			); 
 
 		case /map_object/.test(data.name):
 			return <ObjectBuilder
@@ -207,6 +212,8 @@ const ObjectBuilder = (props) => {
 
 function CheckpointBuilder( props ){	
 	const { geometry, object } = props;
+	// console.log(geometry);
+
 	const matrix = new THREE.Matrix4();
 
 	const checkpoint = useRef();
@@ -222,6 +229,30 @@ function CheckpointBuilder( props ){
 		props?.click?.({ data: checkpoint });
 	}
 
+	const handleHover = () => {
+		props.setControls( Controls => {
+			const configuration = Controls.config;
+			configuration.enabled = false;
+
+			return {
+				controls: Controls.controls,
+				config: configuration	
+			}
+		});
+	}
+	
+	const handleHoverOut = () => {
+		props.setControls( Controls => {
+			const configuration = Controls.config;
+			configuration.enabled = true;
+
+			return {
+				controls: Controls.controls,
+				config: configuration	
+			}
+		});
+	}
+
 	const produceMaterial = () => {
 		return props.userType === 'admin' ? new THREE.MeshPhysicalMaterial( materialOptions ) : defaultMaterial;
 	}
@@ -230,6 +261,7 @@ function CheckpointBuilder( props ){
 		if( checkpoint.current ) props?.saveCheckpoint?.( checkpoint.current );
 	}, [checkpoint.current]);
 
+
 	return(
 		<mesh 
 			name={`checkpoint_${props.index}_${props.name}`} 
@@ -237,16 +269,22 @@ function CheckpointBuilder( props ){
 			scale={[...Object.values(scale)]} 
 			position={position} 
 			onDoubleClick={handleClick}
+			onPointerEnter={handleHover}
+			onPointerLeave={handleHoverOut}
 			material={produceMaterial()}
 			receiveShadow={true}
 			castShadow={true}
 		>
-			<sphereGeometry args={[geometry.radius, geometry.widthSegments, geometry.heightSegments]}/>
+			<sphereGeometry 
+				args={[
+					geometry?.radius ?? 50, 
+					geometry?.widthSegments ?? 50, 
+					geometry?.heightSegments ?? 50
+				]}
+			/>
 		</mesh>
 	);
 }
-
-
 
 
 // Canvas;
@@ -376,7 +414,7 @@ const Messenger = (props) => {
 const Loader = ( props ) => { 
 	const { progress } = useProgress();
 
-	return <Html style={{width: 'fit-content'}} center> Loading: { progress }% </Html>
+	return <Html className="loader-progress" center> Loading: { progress }% </Html>
 }
 
 

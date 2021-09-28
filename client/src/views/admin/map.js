@@ -27,7 +27,6 @@ import {
 import axios from 'axios';
 import uniqid from 'uniqid';
 import * as THREE from 'three';
-import debounce from 'lodash.debounce';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
 // Components
@@ -120,6 +119,40 @@ const MapView = (props) => {
 
 	const memoizedLabel = useCallback( () => measuredDistanceDisplay(), [label] );
 
+	const reqSetCheckPoints = ( newCheckpoint ) => {
+		setCheckPoints((checkPoints) => {
+			if( checkPoints.map( cp => cp.name ).indexOf( newCheckpoint.name ) > - 1 ){
+
+				return [...checkPoints];
+			}
+			else{
+				return [...checkPoints, newCheckpoint];
+			}
+		});
+	}
+
+	const selectHandler = ( state, action ) => {
+
+		if( action.reset ){
+			if( state.selected ){
+				glassify( state?.selected?.current?.material, true );
+			}
+			setEnableMenu( true );
+			return { selected: null };
+		}
+
+		if( !state.selected && action.data ){
+			glassify( action?.data?.current?.material );
+		} 
+		else if( state.selected && action.data ){
+			glassify( state?.selected?.current?.material, true );
+			glassify( action?.data?.current?.material );
+		}
+		return { selected: action.data };
+	}
+	const reducer = ( state, action ) => selectHandler( state, action );
+	const [state, dispatch] = useReducer( reducer, {selected: null} );
+
 	const [isPositionCursor, setIsPositionCursor] = useState( false );
 	const [positionCursor, setPositionCursor] = useState( null );
 
@@ -127,11 +160,11 @@ const MapView = (props) => {
 	const [checkpointGen, setCheckpointGen] = useState( null );
 
 	const initGenState = () => ({
-			initPosition: [ 0, 0, 0 ],
-			areaSize: [ 0, 0, 0 ],
-			distance: [ 0, 0, 0 ],
-			roomName: [ 'room', 0, 0 ],
-		});
+		initPosition: [ 0, 0, 0 ],
+		areaSize: [ 0, 0, 0 ],
+		distance: [ 0, 0, 0 ],
+		roomName: [ 'room', 0, 0 ]
+	});
 
 	const genReducer = ( state, action ) => {
 		switch( action.type ){
@@ -171,8 +204,10 @@ const MapView = (props) => {
 				.map( (elem, index) => index === 1 ? elem + 50 : elem );
 
 				
+				let keyNumber = objectCount;
 				let roomNumber = Number( roomName[1] );
 
+				const getKeyNumber = () => keyNumber;
 				const evaluateCondition = (start, leftOp, rightOp) => {
 					return start <= rightOp 
 						? leftOp < rightOp
@@ -190,6 +225,8 @@ const MapView = (props) => {
 				const heightEnd =  distance[1] * areaSize[1] + initPosition[1];
 				const depthEnd =  distance[2] * areaSize[2] + initPosition[2];
 				const widthEnd =  distance[0] * areaSize[0] + initPosition[0];
+
+				const cpAccumulator = [];
 
 				( async () => {
 					for( let height = initPosition[1]; 
@@ -214,25 +251,35 @@ const MapView = (props) => {
 									: width -= distance[0] 
 								){
 									const generatedName = isRoomNumberExist() 
-										? `${roomName[0]}${roomNumber}`
-										: 'hallway';
+										? `${roomName[0].toUpperCase()}${roomNumber}`
+										: 'connector';
 
-									setObjList( objList => [
-										...objList,
+									cpAccumulator.push(
 										<CheckpointGen
-											key={uniqid()}
 											click={dispatch}
-											index={objectCount}
+											index={getKeyNumber()}
 											name={generatedName}
+											key={`checkpoint_${keyNumber}`}
 											saveCheckpoint={reqSetCheckPoints} 
 											position={new Array(width, height, depth)}
-										/>	
-									]);
-
+											setControls={setControls}
+										/>
+									);
+									
 									roomNumber = isRoomNumberExist() ? roomNumber + 1 : null;
+									keyNumber++;
 							}
 						}
 					}
+
+					cpAccumulator.forEach( cp => {
+						setObjList( objList => [
+							...objList,
+							cp		
+						]);
+					});
+
+					setObjectCount( keyNumber );
 				})();
 
 				action.type = 'reset';
@@ -250,44 +297,7 @@ const MapView = (props) => {
 
 	const [checkpointGenState, checkpointGenDispatch] = useReducer( genReducer, initGenState() );
 
-	const selectHandler = ( state, action ) => {
-
-		if( action.reset ){
-			if( state.selected ){
-				glassify( state?.selected?.current?.material, true );
-			}
-			setEnableMenu( true );
-			return { selected: null };
-		}
-
-		if( !state.selected && action.data ){
-			glassify( action?.data?.current?.material );
-		} 
-		else if( state.selected && action.data ){
-			glassify( state?.selected?.current?.material, true );
-			glassify( action?.data?.current?.material );
-		}
-		return { selected: action.data };
-	}
-
-	const reducer = ( state, action ) => selectHandler( state, action );
-
-	const [state, dispatch] = useReducer( reducer, {selected: null} );
 	const [propBox, setPropBox] = useState( null );
-
-	// ==========================================================
-
-	const reqSetCheckPoints = ( newCheckpoint ) => {
-		setCheckPoints((checkPoints) => {
-			if( checkPoints.map( cp => cp.name ).indexOf( newCheckpoint.name ) > - 1 ){
-
-				return [...checkPoints];
-			}
-			else{
-				return [...checkPoints, newCheckpoint];
-			}
-		});
-	}
 
 	const reqSetPropBox = () => dispatch({ reset: true });
 
@@ -350,6 +360,7 @@ const MapView = (props) => {
 						camera={persCam} 
 						scene={scene}
 						click={dispatch}
+						setControls={setControls}
 					/>
 				]);			
 			}
@@ -376,6 +387,7 @@ const MapView = (props) => {
 					camera={persCam} 
 					scene={scene}
 					click={dispatch}
+					setControls={setControls}	
 				/>
 			]);
 
@@ -392,7 +404,7 @@ const MapView = (props) => {
 			dispatch({ reset: true });
 		}
 		
-	}, [upload, copyObj, deleteObj, isCheckPoint, checkPoints, objList]);
+	},  [upload, copyObj, deleteObj, isCheckPoint, checkPoints, objList, objectCount]);
 
 
 	useEffect(() => {
@@ -467,6 +479,7 @@ const MapView = (props) => {
 			setCheckpointGen(() => (
 				<CheckpointGenerator 
 					dispatch={ checkpointGenDispatch }
+					setControls={setControls}	
 				/>
 			));
 		}
@@ -484,7 +497,8 @@ const MapView = (props) => {
 					userType	: 'admin',
 					data 		: mapData,
 					click 		: dispatch, 
-					checkPointSaver: reqSetCheckPoints
+					checkPointSaver: reqSetCheckPoints,
+					setControls : setControls
 				}
 
 				const primitives = await MAP.loadScene( params );
@@ -711,7 +725,6 @@ const BottomBar = (props) => {
 }
 
 
-
 // Cloning an imported object
 const MapClone = (props) => {
 	const object = props.object;
@@ -766,8 +779,6 @@ const MapImport = (props) => {
 		</mesh>
 	);
 }
-
-
 
 
 // Property Box
@@ -898,7 +909,6 @@ const PropertyBox = (props) => {
 }
 
 
-
 // Property input field
 const PropBoxInp = (props) => {
 
@@ -945,6 +955,7 @@ const removeByKey = (list, objToDelete) => {
 	return list.filter( removeDeletedObject );
 }
 
+
 const removeByName = (list, objToDelete) => {
 	const removeDeletedObject = (elem) => {
 		let name = objToDelete.name;
@@ -963,6 +974,7 @@ const removeEndString = (string) => {
 
 	return string;
 }
+
 
 const getLastStringToNumber = (string) => {
 	string = string.split('_');

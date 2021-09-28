@@ -161,28 +161,25 @@ var FirstPersonControls = function ( object, domElement ) {
     };
 
     this.onKeyDown = function ( event ) {
+      if( event.target.nodeName === 'CANVAS' ){
+        switch ( event.code ) {
+          case 'ArrowUp':
+          case 'KeyW': this.moveForward = true; break;
 
-      // event.preventDefault();
+          case 'ArrowLeft':
+          case 'KeyA': this.moveLeft = true; break;
 
-      switch ( event.code ) {
+          case 'ArrowDown':
+          case 'KeyS': this.moveBackward = true; break;
 
-        case 'ArrowUp':
-        case 'KeyW': this.moveForward = true; break;
+          case 'ArrowRight':
+          case 'KeyD': this.moveRight = true; break;
 
-        case 'ArrowLeft':
-        case 'KeyA': this.moveLeft = true; break;
+          case 'KeyR': this.moveUp = true; break;
+          case 'KeyF': this.moveDown = true; break;
 
-        case 'ArrowDown':
-        case 'KeyS': this.moveBackward = true; break;
-
-        case 'ArrowRight':
-        case 'KeyD': this.moveRight = true; break;
-
-        case 'KeyR': this.moveUp = true; break;
-        case 'KeyF': this.moveDown = true; break;
-
+        }
       }
-
     };
 
     this.onKeyUp = function ( event ) {
