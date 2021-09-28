@@ -3,7 +3,8 @@ import React, {
 	useReducer, 
 	useEffect, 
 	useRef, 
-	Suspense, 
+	Suspense,
+	useCallback
 } from 'react';
 
 import {
@@ -11,21 +12,31 @@ import {
 	Stars,
 	Html,
 	useProgress,
-	SpotLight
+	SpotLight,
+	GizmoHelper,
+	GizmoViewport
 } from '@react-three/drei';
 
-import { Canvas, useFrame, useLoader, useThree } from '@react-three/fiber';
-import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader'
+import { 
+	Canvas, 
+	useThree,
+	useFrame, 
+	useLoader, 
+} from '@react-three/fiber';
 
-
+import axios from 'axios';
+import uniqid from 'uniqid';
 import * as THREE from 'three';
-
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
 // Components
+import { 
+	Checkpoints, 
+	CheckpointGen 
+} from '../../modules/map-checkpoints';
+import Button from '../../components/admin/buttons/button';
 import MapMenu from '../../components/admin/menu/map-menu';
 import { Input } from '../../components/admin/inputs/input';
-import Button from '../../components/admin/buttons/button';
-import Checkpoints from '../../modules/map-checkpoints';
 
 
 // Style(s)
@@ -33,14 +44,19 @@ import '../../styles/admin/map.css';
 
 
 // Module
-import FirstPersonControls from '../../modules/FirstPersonControls'; // DIY wrapper function for three first-person-controls
 import * as MAP from '../../modules/cct-map';
+import MapMeasureLine from '../../modules/measure-line';
+import PositionCursor from '../../modules/position-cursor';
+import FirstPersonControls from '../../modules/FirstPersonControls';
+import CheckpointGenerator from '../../modules/checkpoint-generator';
 
 
 // Loading components
 import CircStyleLoad from '../../components/admin/load-bar/circ-load';
 import InfiniteStyleLoad from '../../components/admin/load-bar/inf-load';
 
+const width = window.innerWidth;
+const height = window.innerHeight;
 
 const materialOptions = {
 	color: 0x3f4444,
@@ -53,6 +69,13 @@ const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
 
 const MapView = (props) => {
 	const land = useRef();
+	const line = useRef();
+
+	const [mapMessage, setMapMessage] = useState( [] );
+	const [enableMenu, setEnableMenu] = useState( true );
+	const [objectCount, setObjectCount] = useState( 0 );
+
+	const [mapData, setMapData] = useState( null );
 
 	const [upload, setUpload] = useState( null );
 	const [objList, setObjList] = useState( [] );
@@ -60,19 +83,53 @@ const MapView = (props) => {
 	const [copyObj, setCopyObj] = useState( null );
 	const [deleteObj, setDeleteObj] = useState( null );
 
-	const [Controls, setControls] = useState( {controls: OrbitControls, config: null} );
-	const [isCheckPoint, setIsCheckPoint] = useState( false );
+	const [Controls, setControls] = useState({ 
+		controls: OrbitControls, 
+		config: {
+			enabled: true
+		}
+	});
 
 	const [persCam, setPersCam] = useState( null );
 	const [scene, setScene] = useState( null );
 
+	const [isCheckPoint, setIsCheckPoint] = useState( false );
 	const [checkPoints, setCheckPoints] = useState( [] );
 
-	const [mapMessage, setMapMessage] = useState( [] );
+	const [measureLine, setMeasureLine] = useState( null );
+	const [isMeasureLine, setIsMeasureLine] = useState( false );
+	const [label, setLabel] = useState( null );
 
-	const [enableMenu, setEnableMenu] = useState( true );
+	const LabelDisplay = ({ position, textDisplay }) => {
+		return (
+			<Html 
+				position={ position } 
+				className="non-selectable container"
+			>
+				{ textDisplay }
+			</Html>
+		);
+	}
 
-	const [objectCount, setObjectCount] = useState( 0 );
+	const measuredDistanceDisplay = () => {
+		if( !label || label[1] === "0.00" ) return;
+		
+		return <LabelDisplay position={label[0]} textDisplay={label[1]}/>;
+	}
+
+	const memoizedLabel = useCallback( () => measuredDistanceDisplay(), [label] );
+
+	const reqSetCheckPoints = ( newCheckpoint ) => {
+		setCheckPoints((checkPoints) => {
+			if( checkPoints.map( cp => cp.name ).indexOf( newCheckpoint.name ) > - 1 ){
+
+				return [...checkPoints];
+			}
+			else{
+				return [...checkPoints, newCheckpoint];
+			}
+		});
+	}
 
 	const selectHandler = ( state, action ) => {
 		console.log( action?.data?.current )
@@ -94,90 +151,247 @@ const MapView = (props) => {
 		}
 		return { selected: action.data };
 	}
+	const reducer = ( state, action ) => selectHandler( state, action );
+	const [state, dispatch] = useReducer( reducer, {selected: null} );
 
-	const reducer = (state, action) => {
-		return selectHandler( state, action );
+	const [isPositionCursor, setIsPositionCursor] = useState( false );
+	const [positionCursor, setPositionCursor] = useState( null );
+
+	const [isCheckpointGen, setIsCheckpointGen] = useState( false );
+	const [checkpointGen, setCheckpointGen] = useState( null );
+
+	const initGenState = () => ({
+		initPosition: [ 0, 0, 0 ],
+		areaSize: [ 0, 0, 0 ],
+		distance: [ 0, 0, 0 ],
+		roomName: [ 'room', 0, 0 ]
+	});
+
+	const genReducer = ( state, action ) => {
+		switch( action.type ){
+			case 'initPosition':
+				state.initPosition[ action.index ] = action.data;
+				return state;
+
+			case 'areaSize':
+				state.areaSize[ action.index ] = action.data;
+				return state;
+
+			case 'distance':
+				state.distance[ action.index ] = action.data;
+				return state;
+
+			case 'roomName':
+				state.roomName[ action.index ] = action.data;
+				return state;
+
+			case 'start':
+				let {
+					initPosition,
+					areaSize,
+					distance,
+					roomName
+				} = state;
+
+				const convertToNumber = ( point ) => {
+					return point === '0'
+							? 1
+							: Number( point );
+				}
+
+				distance = distance.map( convertToNumber );
+				areaSize = areaSize.map( convertToNumber );
+				initPosition = initPosition.map( convertToNumber )
+				.map( (elem, index) => index === 1 ? elem + 50 : elem );
+
+				
+				let keyNumber = objectCount;
+				let roomNumber = Number( roomName[1] );
+
+				const getKeyNumber = () => keyNumber;
+				const evaluateCondition = (start, leftOp, rightOp) => {
+					return start <= rightOp 
+						? leftOp < rightOp
+						: leftOp > rightOp;
+				}
+
+				const isRoomNumberExist = ( ) => !roomName[1] || !roomName[2] ? false : true;
+				const isNegative = ( number ) => number < 0;
+				const evaluateIteration = ( start, end, distance ) => {
+					return start <= end 
+						? true
+						: isNegative( distance );
+				}
+
+				const heightEnd =  distance[1] * areaSize[1] + initPosition[1];
+				const depthEnd =  distance[2] * areaSize[2] + initPosition[2];
+				const widthEnd =  distance[0] * areaSize[0] + initPosition[0];
+
+				const cpAccumulator = [];
+
+				( async () => {
+					for( let height = initPosition[1]; 
+					evaluateCondition(initPosition[1], height, heightEnd); 
+					evaluateIteration(initPosition[1], heightEnd, distance[1]) 
+						? height += distance[1]
+						: height -= distance[1]
+					){
+					
+						for( let depth = initPosition[2];
+							 evaluateCondition(initPosition[2], depth, depthEnd); 
+							 evaluateIteration(initPosition[2], depthEnd, distance[2]) 
+							 	? depth += distance[2] 
+							 	: depth -= distance[2]
+							){
+
+							for( 
+								let width = initPosition[0]; 
+								evaluateCondition(initPosition[0], width, widthEnd); 
+								evaluateIteration(initPosition[0], widthEnd, distance[0]) 
+									? width += distance[0]
+									: width -= distance[0] 
+								){
+									const generatedName = isRoomNumberExist() 
+										? `${roomName[0].toUpperCase()}${roomNumber}`
+										: 'connector';
+
+									cpAccumulator.push(
+										<CheckpointGen
+											click={dispatch}
+											index={getKeyNumber()}
+											name={generatedName}
+											key={`checkpoint_${keyNumber}`}
+											saveCheckpoint={reqSetCheckPoints} 
+											position={new Array(width, height, depth)}
+											setControls={setControls}
+										/>
+									);
+									
+									roomNumber = isRoomNumberExist() ? roomNumber + 1 : null;
+									keyNumber++;
+							}
+						}
+					}
+
+					cpAccumulator.forEach( cp => {
+						setObjList( objList => [
+							...objList,
+							cp		
+						]);
+					});
+
+					setObjectCount( keyNumber );
+				})();
+
+				action.type = 'reset';
+				return genReducer( state, action );
+
+			case 'reset':
+				setIsCheckpointGen( false );
+				state = initGenState();
+				return state;
+
+			default:
+				throw new Error('Error in updating generator state');
+		}
 	}
 
-	const [state, dispatch] = useReducer( reducer, {selected: null} );
+	const [checkpointGenState, checkpointGenDispatch] = useReducer( genReducer, initGenState() );
+
 	const [propBox, setPropBox] = useState( null );
 
+	const reqSetPropBox = () => dispatch({ reset: true });
 
-	// ==========================================================
-
-	function reqSetCheckPoints ( newCheckpoint ) {
-		setCheckPoints((checkPoints) => {
-			if( checkPoints.map( cp => cp.name ).indexOf( newCheckpoint.name ) > - 1){
-
-				return [...checkPoints];
-			}
-			else{
-				return [...checkPoints, newCheckpoint];
-			}
+	// Fetches map data
+	const requestMapData = async () => {
+		axios.get('/admin/map-data')
+		.then( res => {
+			setMapData( res.data );
+		})
+		.catch( err => {
+			console.log( err );
+			setTimeout( () => requestMapData(), 5000 );
 		});
 	}
 
-	function reqSetPropBox() {
-		dispatch({ reset: true });
+
+	// Requests to save map
+	const requestSaveMapData = async (scene) => {	
+		if( !scene ) return;
+
+		return await axios.post('/admin/update-map', scene)
+		.then( res => {
+			return { 
+				message : res 
+						? 'Map has been saved successfully' 
+						: 'Please try again!' 
+			};
+		})
+		.catch( err => {
+			return { message : err };
+		});
 	}
 
+	useEffect(() => requestMapData(), []);
 
 	useEffect(() => {
 		if( upload || copyObj || isCheckPoint ) setObjectCount((objectCount) => objectCount + 1);
 
-
 		if( upload ){
 			setObjList((objList) => [
-										...objList, 
-										<MapImport
-											key={`map_object_${objectCount}`} 
-											index={objectCount} 
-											object={upload} 
-											click={dispatch} 
-										/>
-									]);
+				...objList, 
+				<MapImport
+					key={`map_object_${objectCount}`} 
+					index={objectCount} 
+					object={upload} 
+					click={dispatch} 
+				/>
+			]);
 			setMapMessage((mapMessage) => [...mapMessage, '3D object had been uploaded successfully']);			
 			setUpload( null );
 		}
 		else if( copyObj ){
 			if( copyObj.name.search('checkpoint') > -1 ){
 				setObjList((objList) => [
-											...objList, 
-											<Checkpoints 
-												index={objectCount} 
-												key={`checkpoint_${objectCount}`}
-												saveCheckpoint={reqSetCheckPoints} 
-												camera={persCam} 
-												scene={scene}
-												click={dispatch}
-											/>
-										]);			
+					...objList, 
+					<Checkpoints 
+						index={objectCount} 
+						key={`checkpoint_${objectCount}`}
+						saveCheckpoint={reqSetCheckPoints} 
+						camera={persCam} 
+						scene={scene}
+						click={dispatch}
+						setControls={setControls}
+					/>
+				]);			
 			}
 			else if( copyObj.name.search('map_object') > -1 ){
 				setObjList((objList) => [
-											...objList, 
-											<MapClone 
-												key={`map_object_${objectCount}`} 
-												index={objectCount} 
-												object={copyObj} 
-												click={dispatch} 
-											/>
-										]);			
+					...objList, 
+					<MapClone 
+						key={`map_object_${objectCount}`} 
+						index={objectCount} 
+						object={copyObj} 
+						click={dispatch} 
+					/>
+				]);			
 			}
-			setCopyObj( null );	
 
+			setCopyObj( null );	
 		}
 		else if( isCheckPoint ){
 			setObjList((objList) => [...objList, 
-							<Checkpoints 
-								index={objectCount}
-								key={`checkpoint_${objectCount}`} 
-								saveCheckpoint={reqSetCheckPoints} 
-								camera={persCam} 
-								scene={scene}
-								click={dispatch}
-							/>
-						]);
+				<Checkpoints 
+					index={objectCount}
+					key={`checkpoint_${objectCount}`} 
+					saveCheckpoint={reqSetCheckPoints} 
+					camera={persCam} 
+					scene={scene}
+					click={dispatch}
+					setControls={setControls}	
+				/>
+			]);
+
 			setIsCheckPoint( false );
 		}
 		else if( deleteObj ){
@@ -191,7 +405,7 @@ const MapView = (props) => {
 			dispatch({ reset: true });
 		}
 		
-	}, [upload, copyObj, deleteObj, isCheckPoint, checkPoints, objList]);
+	},  [upload, copyObj, deleteObj, isCheckPoint, checkPoints, objList, objectCount]);
 
 
 	useEffect(() => {
@@ -205,15 +419,76 @@ const MapView = (props) => {
 							setCheckPoints={setCheckPoints}
 							scene={scene}
 						/>);
-			MAP.setPropBoxDetected( !MAP.PROP_BOX_DETECTED );
 		}
 		else{
 			setPropBox( null );
-			MAP.setPropBoxDetected( !MAP.PROP_BOX_DETECTED );
 		}
 
 	}, [state.selected]);
 
+
+	useEffect(() => {
+		if( isMeasureLine ){
+			const configuration = Controls.config;
+			configuration.enabled = false;
+
+			setControls( Controls => ({
+				controls: Controls.controls,
+				config: configuration 						
+			}));
+			
+			setMeasureLine(() => ( 
+				<MapMeasureLine 
+					camera={ persCam } 
+					scene={ scene }
+					label={ setLabel }
+		 		/>
+		 	));
+		}
+		else{
+			const configuration = Controls.config;
+			configuration.enabled = true;
+
+
+			setControls( Controls => ({
+				controls: Controls.controls,
+				config: configuration 						
+			}));
+			
+			setMeasureLine( () => null );
+		}
+
+	}, [isMeasureLine]);
+
+	useEffect(() => {
+		if( isPositionCursor ){
+			setPositionCursor(() => ( 
+				<PositionCursor 
+					camera={ persCam } 
+					scene={ scene }
+ 		  		/>
+	  		));
+		}
+		else{
+			setPositionCursor( () => null );
+		}
+
+	}, [isPositionCursor]);
+
+	useEffect(() => {
+		if( isCheckpointGen ){
+			setCheckpointGen(() => (
+				<CheckpointGenerator 
+					dispatch={ checkpointGenDispatch }
+					setControls={setControls}	
+				/>
+			));
+		}
+		else{
+			setCheckpointGen( () => null );
+		}
+
+	}, [isCheckpointGen]);
 
 	useEffect(() => {
 		const sceneLoader = async () => {
@@ -221,9 +496,10 @@ const MapView = (props) => {
 				
 				const params = {
 					userType	: 'admin',
-					data 		: props.mapData,
+					data 		: mapData,
 					click 		: dispatch, 
-					checkPointSaver: reqSetCheckPoints
+					checkPointSaver: reqSetCheckPoints,
+					setControls : setControls
 				}
 
 				const primitives = await MAP.loadScene( params );
@@ -233,43 +509,48 @@ const MapView = (props) => {
 
 					setObjectCount( () => getLastStringToNumber(primitives[primitives.length - 1].key) + 1  );
 
-					setMapMessage((mapMessage) => [...mapMessage, 'Previous scene has been loaded successfully']);
+					setMapMessage((mapMessage) => [
+						...mapMessage, 
+						'Previous scene has been loaded successfully'
+					]);
 				};
 			}
 		}
 
-		if( !props.mapData ){
+		if( !mapData ){
 			setMapMessage((mapMessage) => [...mapMessage, 'Fetching previous scene']);			
 		}
 		else{
 			sceneLoader();
 		}
 
-	}, [props.mapData]);
+	}, [mapData]);
 
 	const requestSaveMap = async () => {
 		if( scene ){
 			const prevSceneState = JSON.stringify( scene.toJSON() );
 
 			const mapBundle = {
-								scene: JSON.parse( prevSceneState ), 
-								cpPosition: checkPoints.map(elem => ({name: elem.name, position: elem.position}))
-							}
-			const message = await props.reqSaveMapData( mapBundle );
+				scene: JSON.parse( prevSceneState ), 
+				cpPosition: checkPoints.map(elem => ({
+					name: elem.name, position: elem.position
+				}))
+			}
+
+			const message = await requestSaveMapData( mapBundle );
 
 			setMapMessage( (mapMessage) => [...mapMessage, message.message] );
 		}	
 	}
 
-
 	return(
 		<div className="map">
 		    <Suspense fallback={<MAP.Loader />}>
 			    <MapMenu 
-			    	reqSetUpload={setUpload} 
-			    	reqSaveMap={requestSaveMap} 
 			    	switch={enableMenu} 
-			    	messenger={setMapMessage} 
+			    	reqSetUpload={setUpload} 			    	
+			    	messenger={setMapMessage}
+			    	reqSaveMap={() => requestSaveMap()} 
 			    	saveAllowed={MAP.EMPTY_NAME_CP_SPOTTED}
 			    />
 			    	<MAP.Messenger message={mapMessage} messenger={setMapMessage}/>
@@ -283,12 +564,37 @@ const MapView = (props) => {
 						    	deleteObj={deleteObj}
 						    	reqSetDelete={setDeleteObj}
 						    >
+						    	{ label }		
 						    	{ objList }
+						    	{ measureLine }
+						    	{ positionCursor }
+						    	{ memoizedLabel() }
+						    	<GizmoHelper
+							    	alignment="top-left"
+							    	margin={[width * 0.15, height * 0.15]}
+							    >
+							    	<GizmoViewport 
+							    		axisColors={[
+							    			'rgba(130, 204, 221,1.0)', 
+							    			'rgba(250, 211, 144,1.0)', 
+							    			'rgba(184, 233, 148,1.0)'
+							    		]}
+							    		labelColor="rgba(60, 99, 130,1.0)"
+							    	/>
+							    </GizmoHelper>
 						    </MAP.MapCanvas>
 					    </Suspense>
 					</Canvas>
+				    	{ checkpointGen }		
 				    	{ state.selected ? propBox : null }
-			    <BottomBar control={setControls} setCheckpoint={setIsCheckPoint} />
+			    <BottomBar 
+			    	control={ setControls } 
+		    		messenger={ setMapMessage }
+			    	setCheckpoint={ setIsCheckPoint }
+		    		setIsMeasureLine={ setIsMeasureLine }
+		    		setIsCheckpointGen={ setIsCheckpointGen }
+		    		setIsPositionCursor={ setIsPositionCursor }
+			    />
 		    </Suspense>
 		</div>
  	);
@@ -297,41 +603,127 @@ const MapView = (props) => {
 
 const BottomBar = (props) => {
 	const [switched, setSwitched] = useState( 'orbit' );
+	const [measuring, setMeasuring] = useState( false );
+	const [positionCursor, setPositionCursor] = useState( false );
+	const [openToolBox, setOpenToolBox] = useState( false );
+	const [checkpointGen, setCheckpointGen] = useState( false );
 
 	const handleCreateCheckPoint = () => {
+		props.messenger( (mapMessage) => [...mapMessage, 'Please wait...'] );
 		props.setCheckpoint( true );
 		MAP.setEmtyNameCpSpotted( true );
 	}
 
+	const handleMeasureLine = () => setMeasuring( measuring => !measuring );
+	const handlePositionCursor = () => setPositionCursor( positionCursor => !positionCursor );
+
+	const handleFreeControl = () => {
+		if( switched === 'free' ) return;
+
+		props.control({
+			controls: FirstPersonControls,
+			config: {
+				lookSpeed: 0.3,
+				movementSpeed: 550,
+				enabled: true
+			}
+		});
+
+		setSwitched( 'free' );
+	}
+
+	const handleOrbitControl = () => {
+		if( switched === 'orbit' ) return;
+
+		props.control({ 
+			controls: OrbitControls,
+			config: {
+				enabled: true
+			}
+		});
+
+		setSwitched( 'orbit' );
+	}
+
+	const handleToolBox = () => setOpenToolBox( openToolBox => !openToolBox );
+	const handleCheckpointGenerator = () => setCheckpointGen( checkpointGen => !checkpointGen );
+
+	useEffect(() => {
+		props.messenger( mapMessage => [...mapMessage, `Measure-line ${measuring ? 'on' : 'off'}`] );
+		props.setIsMeasureLine( () => measuring );
+	}, [measuring]);
+
+	useEffect(() => {
+		props.messenger( mapMessage => [...mapMessage, `Position-cursor ${positionCursor ? 'on' : 'off'}`] );
+		props.setIsPositionCursor( () => positionCursor );
+	}, [positionCursor]);
+
+	useEffect(() => {
+		props.messenger( mapMessage => [...mapMessage, `Checkpoint-generator ${checkpointGen ? 'on' : 'off'}`] );
+		props.setIsCheckpointGen( () => checkpointGen );
+	}, [checkpointGen]);
+
 	return(
 		<div className="map-btm-bar d-flex justify-content-around align-items-center">
-			<div className="col-7 map-view-switch d-flex justify-content-end align-items-center">
-				<Button classname={`${switched === 'free' ? "map-view-selected" : ''} map-vs-btn map-view-fpc`} name="Free" click={() => { 
-						props.control(() => ({
-												controls: FirstPersonControls,
-												config: {
-													lookSpeed: 0.3,
-													movementSpeed: 550
-												}
-											}));
-						setSwitched( 'free' );
-				}}/>
-				<Button classname={`${switched === 'orbit' ? "map-view-selected" : ''} map-vs-btn map-view-oc`} name="Orbit" click={() => { 
-						props.control(() => ({ 
-												controls: OrbitControls,
-												config: null
-											}));
-						setSwitched( 'orbit' );
-				}}/>
+			<div 
+				style={{
+					height: openToolBox 
+								? 'fit-content' 
+								: '0px',
+					padding: openToolBox
+								? '5px 0px 5px 0px'
+								: '0px'
+
+						}} 
+				className="map-tool-box"
+			>
+				<Button
+					className="tool-button"
+					shortcutKey={ true }
+					name="Measure line"
+					click={ () => handleMeasureLine() }
+				/>
+
+				<Button 
+					className="tool-button"
+					name="Position cursor"
+					click={ () => handlePositionCursor() }
+				/>
+
+				<Button 
+					className="tool-button"
+					shortcutKey={ true }
+					name="Checkpoint generator"
+					click={ () => handleCheckpointGenerator() }
+				/>
+			</div>
+			<div className="col-3 d-flex justify-content-center align-items-center">
+	 			<Button 
+	 				shortcutKey={ true } 
+	 				name="Tools" 
+	 				click={() => handleToolBox()}
+	 			/>
+	 		</div>					
+
+			<div className="col-4 map-view-switch d-flex justify-content-center align-items-center">
+				<Button 
+					className={`${switched === 'free' ? "map-view-selected" : ''} map-vs-btn map-view-fpc`}
+					name="Free" 
+					click={() => handleFreeControl()}
+				/>
+				<Button 
+					className={`${switched === 'orbit' ? "map-view-selected" : ''} map-vs-btn map-view-oc`} 
+					name="Orbit" 
+					click={() => handleOrbitControl()}
+				/>
 			</div>
 
-			<div className="col-5 map-checkpoint d-flex justify-content-center align-items-center">
-				<Button className="map-checkpoint-btn" name="Place Checkpoint" click={handleCreateCheckPoint}/>
+			<div className="col-3 d-flex justify-content-center align-items-center">
+				<Button shortcutKey={true} name="Place Checkpoint" click={handleCreateCheckPoint}/>
 			</div>
 		</div>
 	);
 }
-
 
 
 // Cloning an imported object
@@ -388,8 +780,6 @@ const MapImport = (props) => {
 		</mesh>
 	);
 }
-
-
 
 
 // Property Box
@@ -520,7 +910,6 @@ const PropertyBox = (props) => {
 }
 
 
-
 // Property input field
 const PropBoxInp = (props) => {
 
@@ -567,6 +956,7 @@ const removeByKey = (list, objToDelete) => {
 	return list.filter( removeDeletedObject );
 }
 
+
 const removeByName = (list, objToDelete) => {
 	const removeDeletedObject = (elem) => {
 		let name = objToDelete.name;
@@ -586,8 +976,8 @@ const removeEndString = (string) => {
 	return string;
 }
 
-const getLastStringToNumber = (string) => {
 
+const getLastStringToNumber = (string) => {
 	string = string.split('_');
 	string = string[string.length - 1];
 

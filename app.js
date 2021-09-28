@@ -26,6 +26,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser('6c-65-6d-6f-6e'));
 app.use(express.static(path.join(__dirname, 'public')));
 
+<<<<<<< HEAD
 
 function authenticate(req, res, next) {
   if( req.signedCookies.loggedIn ){
@@ -52,8 +53,11 @@ app.use('/', usersRouter);
 //   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
 //   next();
 // });
+=======
+>>>>>>> path-finding
 
 
+<<<<<<< HEAD
 // const whitelist = ['http://localhost:3000', 'http://localhost:443']
 // const corsOptions = {
 //   origin: function (origin, callback) {
@@ -78,8 +82,41 @@ if (process.env.NODE_ENV === 'production') {
     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
   });
 }
+=======
+
+app.use(cors());
+
+// if (process.env.NODE_ENV === 'production') {
+//   // Serve any static files
+//   app.use(express.static(path.join(__dirname, 'client/build')));
+// // Handle React routing, return all requests to React app
+//   app.get('*', function(req, res) {
+//     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+//   });
+// }
 
 
+// app.use((req, res, next) => { // line 27
+//   res.setHeader('Access-Control-Allow-Origin', '*');
+//   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+//   next();
+// });
+>>>>>>> path-finding
+
+
+// const whitelist = ['http://localhost:3000', 'http://localhost:443'] // line 31
+// const corsOptions = {
+//   origin: function (origin, callback) {
+//     console.log("** Origin of request " + origin)
+//     if (whitelist.indexOf(origin) !== -1 || !origin) {
+//       console.log("Origin acceptable")
+//       callback(null, true)
+//     } else {
+//       console.log("Origin rejected")
+//       callback(new Error('Not allowed by CORS'))
+//     }
+//   }
+// }
 
 
 module.exports = app;

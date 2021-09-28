@@ -15,7 +15,6 @@ import '../../styles/admin/sign-up.css';
 
 export default function Signup( props ){
     const validator = new Validator();
-    const requestSignUp = props.reqSignUp;
 
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
@@ -29,11 +28,23 @@ export default function Signup( props ){
             width: '90%'
         }
 
-    const usernameChangeHandler = ( e ) => setUsername( () => e.target.value )
-    const passwordChangeHandler = ( e ) => setPassword( () => e.target.value )
-    const emailChangeHandler = ( e ) => setEmail( () => e.target.value )
-    const numberChangeHandler = ( e ) => setNumber( () => e.target.value )
-    const cPasswordChangeHandler = ( e ) => setCPassword( () => e.target.value )
+    const requestSignUp = async ( data ) => {
+        await axios.post('/admin/sign-up', data)
+        .then( res => {
+            console.log( res.data.message );
+            props.Event.emit('enter');
+        })
+        .catch( err => {
+            console.log( err );
+            setTimeout( () => requestSignUp(), 5000 );
+        });
+    }
+
+    const usernameChangeHandler = ( e ) => setUsername( () => e.target.value );
+    const passwordChangeHandler = ( e ) => setPassword( () => e.target.value );
+    const emailChangeHandler = ( e ) => setEmail( () => e.target.value );
+    const numberChangeHandler = ( e ) => setNumber( () => e.target.value );
+    const cPasswordChangeHandler = ( e ) => setCPassword( () => e.target.value );
 
     const handleRequestSignUp = () => {
 

@@ -13,6 +13,7 @@ ReactDOM.render(
         <Route path="/admin">
           <Admin/>
         </Route>
+
         <Route path="/">
           <User/>
         </Route>

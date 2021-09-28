@@ -45,7 +45,6 @@ const defaultMaterial = new THREE.MeshPhysicalMaterial( materialOptions );
 
 // Checker variable
 var EMPTY_NAME_CP_SPOTTED = false;
-var PROP_BOX_DETECTED = false;
 
 
 const setEmtyNameCpSpotted = ( value ) => {
@@ -53,13 +52,8 @@ const setEmtyNameCpSpotted = ( value ) => {
 } 
 
 
-const setPropBoxDetected = ( value ) => {
-	PROP_BOX_DETECTED = value;	
-} 
-
-
 // Scene loader
-const loadScene = async ({ userType, data, click, checkPointSaver }) => {
+const loadScene = async ({ userType, data, click, checkPointSaver, setControls }) => {
 	if( !data || !userType ) return;
 
 	let key;
@@ -84,15 +78,15 @@ const loadScene = async ({ userType, data, click, checkPointSaver }) => {
 		}
 	}
 
-
+	const isNameInvalid = ( object ) => {
+		return !object?.name || /Land/.test(object.name) || /Sky/.test(object.name) ||
+		 ( userType !== 'admin' && /connector/.test(object.name.toLowerCase()) );
+	}
 
 	if( children ){
 		for( let index in children ){
 
-			if ( !children[index]?.name ||
-				/Land/.test(children[index].name) || 
-				/Sky/.test(children[index].name)
-				) continue;
+			if (isNameInvalid( children[index] )) continue;
 
 			if( memo.indexOf(children[index].name) < 0 ){
 				memo.push( children[index].name )
@@ -104,6 +98,7 @@ const loadScene = async ({ userType, data, click, checkPointSaver }) => {
 					key = `map_object_${index}`;
 				}
 
+<<<<<<< HEAD
 				prevChild.push(<Build 
 									userType={userType}
 									index={index}
@@ -113,6 +108,20 @@ const loadScene = async ({ userType, data, click, checkPointSaver }) => {
 									click={checkType('click')}
 									saveCheckpoint={checkType('saver')}
 								/>);
+=======
+				prevChild.push(
+					<Build 
+						userType={userType}
+						index={index}
+						key={key}
+						geometry={geometries[index]}
+						data={object.children[index]}
+						click={checkType('click')}
+						saveCheckpoint={checkType('saver')}
+						setControls={setControls}
+					/>
+				);
+>>>>>>> path-finding
 			}
 		}	
 	}
@@ -130,8 +139,8 @@ const Build = (props) => {
 	const handleClick = () => props.click( objRef.current );
 
 	switch( true ){
-
 		case /checkpoint/.test(data.name):
+<<<<<<< HEAD
 			return (<CheckpointBuilder 
 						userType={props.userType}
 						name={getRootName(data.name)}
@@ -141,6 +150,20 @@ const Build = (props) => {
 						click={props?.click} 
 						saveCheckpoint={props?.saveCheckpoint} 
 					/>); 
+=======
+			return (
+				<CheckpointBuilder 
+					userType={props.userType}
+					name={getRootName(data.name)}
+					index={props.index}
+					geometry={geometry} 
+					object={data} 
+					click={props?.click} 
+					saveCheckpoint={props?.saveCheckpoint}
+					setControls={props.setControls} 
+				/>
+			); 
+>>>>>>> path-finding
 
 		case /map_object/.test(data.name):
 			return <ObjectBuilder
@@ -169,8 +192,17 @@ const ObjectBuilder = (props) => {
 	const loader = new THREE.BufferGeometryLoader();
 	const parsedGeom = loader.parse( geometry );
 
-	const position = new THREE.Vector3(matrix.elements[3], matrix.elements[7], matrix.elements[11]);
-	const scale = new THREE.Vector3(matrix.elements[0], matrix.elements[5], matrix.elements[10]);
+	const position = new THREE.Vector3(
+		matrix.elements[3], 
+		matrix.elements[7], 
+		matrix.elements[11]
+	);
+	
+	const scale = new THREE.Vector3(
+		matrix.elements[0], 
+		matrix.elements[5], 
+		matrix.elements[10]
+	);
 
 	const handleClick = (e) => {
 		e.stopPropagation();
@@ -179,7 +211,13 @@ const ObjectBuilder = (props) => {
 	}
 	
 	const produceMaterial = () => {
+<<<<<<< HEAD
 		return props.userType === 'admin' ? new THREE.MeshPhysicalMaterial( materialOptions ) : defaultMaterial;
+=======
+		return props.userType === 'admin' 
+				? new THREE.MeshPhysicalMaterial( materialOptions ) 
+				: defaultMaterial;
+>>>>>>> path-finding
 	}
 
 	return(
@@ -202,6 +240,7 @@ const ObjectBuilder = (props) => {
 
 function CheckpointBuilder( props ){	
 	const { geometry, object } = props;
+
 	const matrix = new THREE.Matrix4();
 
 	const checkpoint = useRef();
@@ -217,6 +256,33 @@ function CheckpointBuilder( props ){
 		props?.click?.({ data: checkpoint });
 	}
 
+<<<<<<< HEAD
+=======
+	const handleHover = () => {
+		props.setControls( Controls => {
+			const configuration = Controls.config;
+			configuration.enabled = false;
+
+			return {
+				controls: Controls.controls,
+				config: configuration	
+			}
+		});
+	}
+	
+	const handleHoverOut = () => {
+		props.setControls( Controls => {
+			const configuration = Controls.config;
+			configuration.enabled = true;
+
+			return {
+				controls: Controls.controls,
+				config: configuration	
+			}
+		});
+	}
+
+>>>>>>> path-finding
 	const produceMaterial = () => {
 		return props.userType === 'admin' ? new THREE.MeshPhysicalMaterial( materialOptions ) : defaultMaterial;
 	}
@@ -225,6 +291,7 @@ function CheckpointBuilder( props ){
 		if( checkpoint.current ) props?.saveCheckpoint?.( checkpoint.current );
 	}, [checkpoint.current]);
 
+
 	return(
 		<mesh 
 			name={`checkpoint_${props.index}_${props.name}`} 
@@ -232,16 +299,25 @@ function CheckpointBuilder( props ){
 			scale={[...Object.values(scale)]} 
 			position={position} 
 			onDoubleClick={handleClick}
+<<<<<<< HEAD
+=======
+			onPointerEnter={handleHover}
+			onPointerLeave={handleHoverOut}
+>>>>>>> path-finding
 			material={produceMaterial()}
 			receiveShadow={true}
 			castShadow={true}
 		>
-			<sphereGeometry args={[geometry.radius, geometry.widthSegments, geometry.heightSegments]}/>
+			<sphereGeometry 
+				args={[
+					geometry?.radius ?? 50, 
+					geometry?.widthSegments ?? 50, 
+					geometry?.heightSegments ?? 50
+				]}
+			/>
 		</mesh>
 	);
 }
-
-
 
 
 // Canvas;
@@ -267,7 +343,6 @@ const MapCanvas = (props) => {
 		if( props?.deleteObj ){
 			delete props.deleteObj.__r3f.handlers.onClick;
 			props.reqSetDelete(() => null);
-
 		}
 	}, [props?.deleteObj]);
 
@@ -294,7 +369,7 @@ const Atmosphere = (props) => {
 		<group name="Sky">
 			<Stars radius={LAND_SIZE[0]*0.5} count={LAND_SIZE[0]*2} fade />
 			{ 
-				props?.type === 'user' ? <OrbitControls /> : <props.control.controls enabled={PROP_BOX_DETECTED} {...props?.control?.config}/>
+				props?.type === 'user' ? <OrbitControls /> : <props.control.controls {...props?.control?.config}/>
 			}
 			<ambientLight intensity={0.5}/>
 			<spotLight
@@ -372,7 +447,7 @@ const Messenger = (props) => {
 const Loader = ( props ) => { 
 	const { progress } = useProgress();
 
-	return <Html center> Loading: { progress }% </Html>
+	return <Html className="loader-progress" center> Loading: { progress }% </Html>
 }
 
 
@@ -394,11 +469,9 @@ export {
 	Atmosphere,
 	ObjectBuilder,
 	CheckpointBuilder,
-	PROP_BOX_DETECTED,
 	EMPTY_NAME_CP_SPOTTED,
 	isCheckpointObject,
 	getBaseName,
 	getRootName,
 	setEmtyNameCpSpotted,
-	setPropBoxDetected
 };

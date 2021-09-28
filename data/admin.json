@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
     "status": {
         "exist": true,
         "loggedIn": true
@@ -8,4 +9,12 @@
     "email": "stevencharles1325@gmail.com",
     "number": "09454610579",
     "image": "/images/admin/profile-pics/admin-pic-800.png"
+=======
+    "exist": true,
+    "username": "steven05",
+    "password": "steven123123",
+    "email": "stevencharles1325@gmail.com",
+    "number": "09454610579",
+    "image": "/images/admin/profile-pics/admin-pic-875.png"
+>>>>>>> path-finding
 }

@@ -17,8 +17,8 @@ function MapMenu( props ){
     const menu = useRef( null );
 
     const [isOpen, setIsOpen] = useState( false ); // open and close state of menu
-    const [importBox, setImpotBox] = useState( null ); // Sets up import box 
-
+    const [importBox, setImpotBox] = useState( null ); // Sets up import box
+    const [saving, setSaving] = useState( false ); 
 
     // -----------------------------------------
     // 
@@ -35,48 +35,53 @@ function MapMenu( props ){
     // -----------------------------------------
 
 
-
-    // ==========================================
-
-
-
     //-------------------------------------------
     // 
     //          Menu event handlers
     // 
     // ------------------------------------------
 
-        // Main menu handlers 
-        const saveHandler = async () => {
-            if( props.saveAllowed ){ 
-                props.messenger((mapMessage) => [...mapMessage, 'A checkpoint with no name has been found']);
-            }
-            else{
-                props.messenger((mapMessage) => [...mapMessage, 'Saving Map, please wait...']);                
-            }
-            
-            setTimeout(() => {
-                props.reqSaveMap();            
-            }, 3000);
+    // Main menu handlers 
+    const saveHandler = async () => {
+        if( props.saveAllowed ){ 
+            props.messenger((mapMessage) => [...mapMessage, 'A checkpoint with no name has been found']);
         }
+        else{
+            props.messenger((mapMessage) => [...mapMessage, 'Saving Map, please wait...']);
+            props.reqSaveMap();            
+        }
+    }
 
 
-        const closeImportBox = () => {
-            setImpotBox(null);
-        }
+    const closeImportBox = () => {
+        setImpotBox(null);
+    }
 
-        const openImportBox = () => {
-            setImpotBox(<ImportBox 
-                            onClose={closeImportBox}
-                            reqSubmit={props.reqSetUpload}
-                        />);
-        }
+    const openImportBox = () => {
+        setImpotBox(<ImportBox 
+                        onClose={closeImportBox}
+                        reqSubmit={props.reqSetUpload}
+                    />);
+    }
 
-        const previewHandler = () => {
-            console.log('clicked Preview button');
-        }
+    const manualHandler = () => {
+        console.log('clicked Manual button');
+    }
 
     // -----------------------------------------
+
+    const saveShortcut = (e) => {
+
+        if( e.ctrlKey ){
+            e.preventDefault(); 
+            
+            if( e.key === "s" ){
+                setSaving( true );
+
+                setTimeout(() => setSaving( false ), 1000);
+            }
+        }
+    }
 
     useEffect(() => {
         if( menu && menu.current ){
@@ -90,8 +95,17 @@ function MapMenu( props ){
                 menu.current.onmouseout = null;    
             }
         }
-    });
+    }, []);
 
+    useEffect(() => {
+        document.addEventListener('keydown', e => saveShortcut(e));
+        
+        return () => document.removeEventListener('keydown', e => saveShortcut(e));
+    }, []);
+
+    useEffect(() => {
+        if( saving ) saveHandler();
+    }, [saving]);
 
     return (
         <>
@@ -106,13 +120,13 @@ function MapMenu( props ){
                     <ReactTooltip />
 
                     {[
-                        createButton('mm-save-btn', 'Save',saveImg, props.switch ? saveHandler : () => { 
+                        createButton('mm-save-btn', 'Save', saveImg, props.switch ? saveHandler : () => { 
                             props.messenger((mapMessage) => [...mapMessage, 'Unselect an object first']);
                         }),
-                        createButton('mm-import-btn', 'Import object',importImg, props.switch ? openImportBox : () => { 
+                        createButton('mm-import-btn', 'Import object', importImg, props.switch ? openImportBox : () => { 
                             props.messenger((mapMessage) => [...mapMessage, 'Unselect an object first']);
                         }),
-                        createButton('mm-preview-btn', 'Preview',prevImg, props.switch ? previewHandler : () => { 
+                        createButton('mm-manual-btn', 'Manual', prevImg, props.switch ? manualHandler : () => { 
                             props.messenger((mapMessage) => [...mapMessage, 'Unselect an object first']);
                         })
                     ]}

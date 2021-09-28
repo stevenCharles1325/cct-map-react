@@ -12,10 +12,42 @@ code {
 }
 
 :root{
-   --components-color: rgba(255, 255, 255, 0.6);
-   --components-text-color: rgba(0, 0, 0, 0.95);
-   --card-color: rgba(255, 255, 255, 0.5);
-   --title-color: rgb( 255, 255, 255 );
+  --components-color: rgba(255, 255, 255, 0.6);
+  --components-text-color: rgba(0, 0, 0, 0.95);
+  --card-color: rgba(255, 255, 255, 0.5);
+  --title-color: rgb( 255, 255, 255 );
+}
+
+.map-message{
+  position: absolute;
+  top: 5%;
+  left: 10%;
+
+  z-index: 3;
+
+  width: fit-content;
+  height:  50px;
+
+  background-color: #f5f6fa;
+  color: black;
+
+  text-align: center;
+
+  border-radius: 10px;
+  transition: .2s ease-in-out;
+}
+
+.loader-progress{
+  width: 150px;
+  height: 30px;
+
+  padding: 3px 0px 3px 0px;
+
+  text-align: center;
+  background-color: rgba( 0, 0, 0, 0.9 );
+  color: white;
+
+  border-radius: 25px;
 }
 
 ::-webkit-scrollbar{

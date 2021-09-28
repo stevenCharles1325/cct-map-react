@@ -13,7 +13,9 @@
     "express-fileupload": "^1.2.1",
     "http-errors": "~1.6.3",
     "jade": "^0.29.0",
-    "morgan": "~1.9.1"
+    "js-cookie": "^3.0.1",
+    "morgan": "~1.9.1",
+    "uniqid": "^5.4.0"
   },
   "heroku-postbuild": "cd client && npm install && npm install --only=dev --no-shrinkwrap && npm run build"
 }

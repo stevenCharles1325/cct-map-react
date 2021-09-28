@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import '../../../styles/admin/button.css';
 
 export default function Button( props ){
+    const name = props?.name?.split?.('');
 
     const handleClick = (e) => {
         e.stopPropagation();
@@ -10,9 +11,14 @@ export default function Button( props ){
     }
 
     const handleKeyEnter = (e) => {
-        if( !props.listenTo ) return;
+        e.stopPropagation();
 
+        if( !props.listenTo && !props.shortcutKey ) return;
         if( e.key === props.listenTo ) handleClick(e);
+        
+        if( e.altKey ){
+            if( e.key === name.slice(0, 1).join('').toLowerCase() ) handleClick(e);
+        }
     }
 
     useEffect(() => {
@@ -21,5 +27,23 @@ export default function Button( props ){
         return () => window.removeEventListener('keydown', handleKeyEnter);
     }, []);
 
-    return <button id={props.id} disabled={props.disabled || false} style={ props.style ?? null } className={ props.classname ?? "btn"} type={props.type} onClick={handleClick}> { props.name } </button>
+    return(
+        <button 
+            id={ props.id } 
+            disabled={ props.disabled || false } 
+            style={ props.style ?? null } 
+            className={ props.className ?? "btn" } 
+            type={ props.type } 
+            onClick={ handleClick }
+        > 
+            { 
+                props?.shortcutKey 
+                    ? (<>
+                            <u>{ name.slice(0, 1).join('') }</u>
+                            { name.slice(1, name.length).join('') }
+                        </>)
+                    : name
+            }              
+        </button>
+    );
 }

@@ -9,7 +9,6 @@ import { Input } from '../components/admin/inputs/input';
 
 
 // Default material and geometry
-
 const materialOptions = {
 	color: 0x3f4444,
 	roughness: 0.4,
@@ -28,8 +27,8 @@ function Checkpoints ( props ){
 	const checkpoint = useRef();
 
 
-	const _mousePos = new THREE.Vector2();
-	const _raycaster = new THREE.Raycaster();
+	const mousePos = new THREE.Vector2();
+	const raycaster = new THREE.Raycaster();
 
 
 	useEffect(() => {
@@ -37,7 +36,7 @@ function Checkpoints ( props ){
 			props.saveCheckpoint(checkpoint.current);
 		}
 
-	}, [checkpoint.current]);
+	}, [checkpoint]);
 
 	// Mouse movement event listener
 	useEffect(() => {
@@ -56,8 +55,8 @@ function Checkpoints ( props ){
 
 	useFrame(() => {
 		if( !isPlaced ){
-			_raycaster.setFromCamera( _mousePos, props.camera );
-			const intersects = _raycaster.intersectObjects( props.scene.children );
+			raycaster.setFromCamera( mousePos, props.camera );
+			const intersects = raycaster.intersectObjects( props.scene.children );
 			
 			if( intersects.length ){
 				if( intersects[0].object.id === checkpoint.current.id ){
@@ -77,8 +76,8 @@ function Checkpoints ( props ){
 	const mouseLocation = (e) => {
 		e.stopPropagation();
 
-		_mousePos.x = ( e.offsetX / window.innerWidth ) * 2 - 1;
-	    _mousePos.y = - ( e.offsetY / window.innerHeight ) * 2 + 1;
+		mousePos.x = ( e.offsetX / window.innerWidth ) * 2 - 1;
+	    mousePos.y = - ( e.offsetY / window.innerHeight ) * 2 + 1;
 	}
 
 
@@ -96,12 +95,90 @@ function Checkpoints ( props ){
 		props.click({ data: checkpoint });
 	}
 
+	const handleHover = () => {
+		props.setControls( Controls => {
+			const configuration = Controls.config;
+			configuration.enabled = false;
+
+			return {
+				controls: Controls.controls,
+				config: configuration	
+			}
+		});
+	}
+
+	const handleHoverOut = () => {
+		props.setControls( Controls => {
+			const configuration = Controls.config;
+			configuration.enabled = true;
+
+			return {
+				controls: Controls.controls,
+				config: configuration	
+			}
+		});
+	}
 
 	return (
 		<mesh 
 			name={`checkpoint_${props.index}_`} 
 			ref={checkpoint} 
 			onDoubleClick={handleClick}
+			onPointerEnter={ isPlaced ? handleHover : null }
+			onPointerLeave={ handleHoverOut }
+			geometry={defaultGeometry}
+			material={defaultMaterial}
+		>
+		</mesh>
+	);
+}
+
+function CheckpointGen ( props ){
+	const checkpoint = useRef();
+
+	useEffect(() => {
+		if(checkpoint.current) props.saveCheckpoint(checkpoint.current);
+
+	}, [checkpoint]);
+
+	const handleClick = (e) => {
+		e.stopPropagation();
+
+		props.click({ data: checkpoint });
+	}
+
+	const handleHover = () => {
+		props.setControls( Controls => {
+			const configuration = Controls.config;
+			configuration.enabled = false;
+
+			return {
+				controls: Controls.controls,
+				config: configuration	
+			}
+		});
+	}
+
+	const handleHoverOut = () => {
+		props.setControls( Controls => {
+			const configuration = Controls.config;
+			configuration.enabled = true;
+
+			return {
+				controls: Controls.controls,
+				config: configuration	
+			}
+		});
+	}
+
+	return (
+		<mesh 
+			name={`checkpoint_${props.index}_${props.name}`} 
+			position={props.position}
+			ref={checkpoint} 
+			onDoubleClick={handleClick}
+			onPointerEnter={handleHover}
+			onPointerLeave={handleHoverOut}
 			geometry={defaultGeometry}
 			material={defaultMaterial}
 		>
@@ -112,4 +189,4 @@ function Checkpoints ( props ){
 
 
 
-export default Checkpoints;
+export { Checkpoints, CheckpointGen };

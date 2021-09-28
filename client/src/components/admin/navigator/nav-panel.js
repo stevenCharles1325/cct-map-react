@@ -9,23 +9,35 @@ import menuImg from '../../../images/admin/menu.png';
 
 
 export default function NavPanel( props ){
-    const [admin, setAdmin] = useState( props.admin );
+    const [admin, setAdmin] = useState( null );
     const [navSwitch, setNavSwitch] = useState( false );
 
-    const requestSetAdminOffline = () => {
-        props.reqSignOut({
-            status: { exist: admin.status.exist, loggedIn: false },
-            username: admin.username,
-            password: admin.password,
-            email: admin.email,
-            number: admin.number
+
+    const requestSignOut = async ( data ) => {
+        await axios.put('/admin/sign-out')
+        .then( () => props.Event.emit('exit'))
+        .catch( err => {
+            console.error( err );
+            setTimeout( () => requestSignOut(), 5000 );    
         });
     }
-
 
     const handleNavPanel = () => {
         setNavSwitch( !navSwitch );
     }
+
+    useEffect(() => {
+        const fetchAdminData = async () => {
+            axios.get('/admin')
+            .then( res => setAdmin( res.data ) )
+            .catch( err => {
+                console.log( err );
+                setTimeout( () => fetchAdminData(), 5000 );
+            });
+        }
+
+        fetchAdminData();
+    }, []);
 
     useEffect( () => {
         const navBtn = document.querySelector('#menu-btn');
@@ -36,10 +48,6 @@ export default function NavPanel( props ){
         }
     }, [navSwitch]);
 
-
-    useEffect( () => {
-        setAdmin( props.admin );
-    }, [props.admin]);
 
     useEffect( () => {
         window.addEventListener('keydown', (e) => {
@@ -65,7 +73,7 @@ export default function NavPanel( props ){
                     </div>
                     <div className="col-10 np-name-container" >
                         <h4 className="user-name text-truncate m-0">
-                            { admin.username ? admin.username : 'Fetching name...'}
+                            { admin?.username ?? 'Fetching name...' }
                         </h4>
                     </div>
                 </div>
@@ -74,7 +82,6 @@ export default function NavPanel( props ){
 
                 {/* Navigation panel links */}
                 <div className="np-link-box d-flex flex-column align-items-end">
-
                     { produceBtnLinks( props.dirs ) }
                 </div>
 
@@ -85,7 +92,7 @@ export default function NavPanel( props ){
                     <div className="np-logout-container d-flex flex-row">
                         {/* Insert leave icon here */}
                         <button className="np-logout-btn" 
-                        onClick={ requestSetAdminOffline }>Log out</button>
+                        onClick={ requestSignOut }>Log out</button>
                     </div>
                 </div>
             </div>

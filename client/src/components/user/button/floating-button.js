@@ -31,7 +31,9 @@ const FloatingButton = (props) => {
 	const [p2pForm, setP2pForm] = useState( null );
 
 	const escapeListener = (e) => {
-		if( e.key === 'Escape' ) return dispatch({type: 'menu'});
+		if( e.key === 'Escape' ){
+			return dispatch({type: 'menu'});
+		}
 	}
 
 	useEffect(() => {
@@ -77,29 +79,64 @@ const FloatingButton = (props) => {
 
 
 const P2pForm = (props) => {
-
 	const { cpPos } = props;
 
-    const getRootName = (name) => name?.replace?.(/checkpoint_([0-9]+)_/, ''); // Example: Checkpoint_room123 becomes -> room123
-    const options = cpPos?.map?.( item => (<option key={item.name} value={item.name}> {getRootName(item.name)} </option>) )
+	// Example: Checkpoint_room123 becomes -> room123
+    const getRootName = (name) => name?.replace?.(/checkpoint_([0-9]+)_/, '');
+    const options = [];
 
-    const [destination, setDestination] = useState({ start: cpPos?.[0]?.name, end: cpPos?.[0]?.name });
+	cpPos?.forEach?.( item => {
+    	if( !/connector/.test(item.name.toLowerCase()) ){
+    		options.push(
+    			<option 
+		    		key={item.name} 
+		    		value={item.name}
+			    > 
+		    		{getRootName(item.name)} 
+		    	</option>
+		    );
+    	}
+    });
+
+    const [destination, setDestination] = useState({
+	    start: cpPos?.[0], 
+	    end: cpPos?.[1] 
+ 	});
+
+ 	const locatePosition = ( name ) => {
+ 		let position = null;
+
+ 		cpPos.forEach( cp => {
+ 			if( cp.name.indexOf(name) > -1 ){
+ 				position = cp.position;
+ 			}
+ 		});
+
+ 		return position;
+ 	}
 
     const reqSetLocation = (e) => {
-    	setDestination({ start: e.target.value, end: destination.end });
+    	setDestination({ 
+    		start: {
+    			name: e.target.value,
+    			position: locatePosition( e.target.value )
+    		}, 
+    		end: destination.end
+		});
     }
 
 	const reqSetDestination = (e) => {
-    	setDestination({ start: destination.start, end: e.target.value });
+    	setDestination({ 
+    		start: destination.start, 
+    		end: {
+    			name: e.target.value,
+    			position: locatePosition( e.target.value )    			
+    		}
+    	});
     }
 
     const reqRunP2PAlgo = () => {
-    	const filterElem = ( elem ) => {
-    		if( elem.name === destination.start || elem.name === destination.end ) return true;
-    	}
-
-    	const positions = cpPos.filter( filterElem ).map( elem => elem.position );
-		props.setDestination({start: positions?.[0], end: positions?.[1] ? positions[1] : positions[0] });
+		props.setDestination( destination );
 		props.dispatch({type: 'p2p'}); // Closes p2p form
     }
     
@@ -123,7 +160,7 @@ const P2pForm = (props) => {
 					</select>
 				</div>
 
-				<button style={{color: 'black'}} className="btn btn-dark" onClick={reqRunP2PAlgo}>locate</button>
+				<button style={{color: 'white'}} className="btn btn-dark" onClick={reqRunP2PAlgo}>locate</button>
 			</div>
 		</div>
 	);
