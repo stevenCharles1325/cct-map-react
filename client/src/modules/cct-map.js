@@ -97,18 +97,6 @@ const loadScene = async ({ userType, data, click, checkPointSaver, setControls }
 				else{
 					key = `map_object_${index}`;
 				}
-
-<<<<<<< HEAD
-				prevChild.push(<Build 
-									userType={userType}
-									index={index}
-									key={key}
-									geometry={geometries[index]}
-									data={object.children[index]}
-									click={checkType('click')}
-									saveCheckpoint={checkType('saver')}
-								/>);
-=======
 				prevChild.push(
 					<Build 
 						userType={userType}
@@ -121,7 +109,6 @@ const loadScene = async ({ userType, data, click, checkPointSaver, setControls }
 						setControls={setControls}
 					/>
 				);
->>>>>>> path-finding
 			}
 		}	
 	}
@@ -139,18 +126,7 @@ const Build = (props) => {
 	const handleClick = () => props.click( objRef.current );
 
 	switch( true ){
-		case /checkpoint/.test(data.name):
-<<<<<<< HEAD
-			return (<CheckpointBuilder 
-						userType={props.userType}
-						name={getRootName(data.name)}
-						index={props.index}
-						geometry={geometry} 
-						object={data} 
-						click={props?.click} 
-						saveCheckpoint={props?.saveCheckpoint} 
-					/>); 
-=======
+		case /checkpoint/.test(data.name): 
 			return (
 				<CheckpointBuilder 
 					userType={props.userType}
@@ -163,8 +139,6 @@ const Build = (props) => {
 					setControls={props.setControls} 
 				/>
 			); 
->>>>>>> path-finding
-
 		case /map_object/.test(data.name):
 			return <ObjectBuilder
 						userType={props.userType}
@@ -211,13 +185,9 @@ const ObjectBuilder = (props) => {
 	}
 	
 	const produceMaterial = () => {
-<<<<<<< HEAD
-		return props.userType === 'admin' ? new THREE.MeshPhysicalMaterial( materialOptions ) : defaultMaterial;
-=======
 		return props.userType === 'admin' 
 				? new THREE.MeshPhysicalMaterial( materialOptions ) 
 				: defaultMaterial;
->>>>>>> path-finding
 	}
 
 	return(
@@ -256,8 +226,6 @@ function CheckpointBuilder( props ){
 		props?.click?.({ data: checkpoint });
 	}
 
-<<<<<<< HEAD
-=======
 	const handleHover = () => {
 		props.setControls( Controls => {
 			const configuration = Controls.config;
@@ -282,7 +250,6 @@ function CheckpointBuilder( props ){
 		});
 	}
 
->>>>>>> path-finding
 	const produceMaterial = () => {
 		return props.userType === 'admin' ? new THREE.MeshPhysicalMaterial( materialOptions ) : defaultMaterial;
 	}
@@ -299,11 +266,8 @@ function CheckpointBuilder( props ){
 			scale={[...Object.values(scale)]} 
 			position={position} 
 			onDoubleClick={handleClick}
-<<<<<<< HEAD
-=======
 			onPointerEnter={handleHover}
 			onPointerLeave={handleHoverOut}
->>>>>>> path-finding
 			material={produceMaterial()}
 			receiveShadow={true}
 			castShadow={true}
