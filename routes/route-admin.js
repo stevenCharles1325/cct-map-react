@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 var express = require('express');
 var router = express.Router();
 var fs = require('fs');
@@ -14,13 +16,27 @@ const admin_profile_path = path.join(__dirname, '../client/public/images/admin/p
 
 
 
-function authenticate( req, res, next ) {
-  if( req.signedCookies.loggedIn && req.signedCookies.loggedIn === '1' ){
+// function authentication( req, res, next ) {
+//   if( req.signedCookies.loggedIn && req.signedCookies.loggedIn === '1' ){
+//     next();
+//   }
+//   else{
+//     return res.sendStatus( 401 );
+//   }
+// }
+
+function authentication ( req, res, next ) {
+  const authenHeader = req.headers['authentication'];
+  const token = authenHeader && authenHeader.split(' ')[ 1 ];
+
+  if( !token ) return res.sendStatus( 401 );
+
+  jwt.verify( token, process.env.ACCESS_TOKEN_SECRET, ( err, user ) => {
+    if( err ) return res.sendStatus( 403 );
+
+    req.user = user;
     next();
-  }
-  else{
-    return res.sendStatus( 401 );
-  }
+  });
 }
 
 router.get('/check', async (req, res, next) => {
@@ -182,46 +198,46 @@ router.post('/update-map', authenticate, async (req, res, next) => {
 ///////////////////// SIGN-IN  &  SIGN-UP ////////////////////////////
 
 // SIGN-IN route.
-router.put('/sign-in', async (req, res, next) => {
-  const { username, password } = req.body;
-  const admin_data = JSON.parse(fs.readFileSync( data_path ));
+// router.put('/sign-in', async (req, res, next) => {
+//   const { username, password } = req.body;
+//   const admin_data = JSON.parse(fs.readFileSync( data_path ));
   
-  if(  username === admin_data.username ){
-    if( password === admin_data.password ){
-      res.cookie('loggedIn', '1', { signed: true });
-      return res.status( 200 ).json({ message: 'signed-in' });
-    }
-    else{
-      return res.status( 401 ).json({ which: 'password' });
-    }
-  }
-  else{
-    return res.status( 401 ).json({ which: 'username' });
-  }
+//   if(  username === admin_data.username ){
+//     if( password === admin_data.password ){
+//       res.cookie('loggedIn', '1', { signed: true });
+//       return res.status( 200 ).json({ message: 'signed-in' });
+//     }
+//     else{
+//       return res.status( 401 ).json({ which: 'password' });
+//     }
+//   }
+//   else{
+//     return res.status( 401 ).json({ which: 'username' });
+//   }
 
-});
+// });
 
 
 
 // SIGN-UP route.
-router.post('/sign-up', async(req, res, next) => {
-  const { username, password, email, number } = req.body;
-  const data = {
-    exist: true,
-    username : username,
-    password : password,
-    email : email,
-    number : number
-  };
+// router.post('/sign-up', async(req, res, next) => {
+//   const { username, password, email, number } = req.body;
+//   const data = {
+//     exist: true,
+//     username : username,
+//     password : password,
+//     email : email,
+//     number : number
+//   };
 
-  fs.writeFile( data_path, JSON.stringify(data, null, 4), err => {
-    if( err ) return res.status(503).json({message: `Couldn't fulfill the request to save data`});
+//   fs.writeFile( data_path, JSON.stringify(data, null, 4), err => {
+//     if( err ) return res.status(503).json({message: `Couldn't fulfill the request to save data`});
     
-    res.cookie('loggedIn', '1', { signed: true });  
-    return res.status(201).json({ message: "signed-up" });
-  });
+//     // res.cookie('loggedIn', '1', { signed: true });  
+//     return res.status(201).json({ message: "signed-up" });
+//   });
 
-});
+// });
 
 
 

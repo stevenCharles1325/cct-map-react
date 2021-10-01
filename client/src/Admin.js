@@ -59,37 +59,36 @@ export default function Admin(){
     	{ url: VIEWS[ 4 ], icon: settingsIcon, title:'Settings' }
 	];
 
-	const probeCookie = () => {
-		const cookie = Cookies.get('loggedIn');
+	// const probeCookie = () => {
+	// 	const cookie = Cookies.get('token');
 
-		if( cookie ){
-			return( path.isSignInPath() || path.isSignUpPath() || path.isRoot()
-					? <Redirect to={ path.home() } />
-					: <Redirect to={ path.pathname } />
-			);
-		}
-		else{
-			return( path.isSignInPath() 
-					? <Redirect to={ path.pathname } />
-					: <Redirect to={ VIEWS[ 2 ] } />
-			);	
-		}
-	}
+	// 	if( cookie ){
+	// 		return( path.isSignInPath() || path.isSignUpPath() || path.isRoot()
+	// 				? <Redirect to={ path.home() } />
+	// 				: <Redirect to={ path.pathname } />
+	// 		);
+	// 	}
+	// 	else{
+	// 		return( path.isSignInPath() 
+	// 				? <Redirect to={ path.pathname } />
+	// 				: <Redirect to={VIEWS[ 2 ]} />
+	// 		);	
+	// 	}
+	// }
 
-	const probeAdmin = async () => {
-		
-		return await axios.get('/admin/check')
-		.then( res => (
-			res.data
-				? probeCookie()
-				: <Redirect to={ VIEWS[ 3 ] } />
-		))
-		.catch( err => {
-			ErrorHandler.handle( err, probeAdmin, 1 );
+	// const probeAdmin = async () => {
+	// 	return await axios.get('/admin/check')
+	// 	.then( res => (
+	// 		res.data
+	// 			? probeCookie()
+	// 			: <Redirect to={VIEWS[ 3 ]} />
+	// 	))
+	// 	.catch( err => {
+	// 		console.log( err );
 
-			return <ErrorPage />;
-		});
-	}
+	// 		return <ErrorPage />;
+	// 	});
+	// }
 
 	const emitEvents = () => {
 		Event.on('enter', () => setView( () => <Redirect to={ path.home() }/> ));
@@ -99,14 +98,14 @@ export default function Admin(){
 		}));
 	}
 
-	const load = async () => {
-		path.exist()
-			? setView( await probeAdmin() )
-			: setView( path.notFound() );	
-	}
+	// const load = async () => {
+	// 	path.exist()
+	// 		? setView( await probeAdmin() )
+	// 		: setView( path.notFound() );	
+	// }
 
 	useEffect(() => {				
-		load();
+		// load();
 		emitEvents();
 
 		setBundle({ 
@@ -121,7 +120,7 @@ export default function Admin(){
 		<div className="admin">
 			<Suspense fallback={<Loading />}>	
 				{ bundle ? routeHandler( bundle ) : null }
-				{ view ?? null }
+				{ view }
 			</Suspense>
 		</div>
 	);

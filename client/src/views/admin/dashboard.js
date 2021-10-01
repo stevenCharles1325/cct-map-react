@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { Redirect } from 'react-router-dom';
 import { Line, Bar } from 'react-chartjs-2';
+import Cookies from 'js-cookie';
+import axios from 'axios';
+
 
 import ImageBall from '../../components/admin/image/image-ball';
 
@@ -14,10 +17,21 @@ import '../../styles/admin/dashboard.css';
 export default function Dashboard( props ) {
     const { ErrorHandler } = props;
     const [graphData, setGraphData] = useState( null );
+    const [redirect, setRedirect] = useState( null );
 
     // Fetches the data from the server and sets the admin.
     const requestGraphData = async () => {
-        await axios.get('/admin/graph-data')
+        const token = Cookies.get('token');
+
+        if( !token ){
+            setRedirect(<Redirect to="/sign-in"/>);
+        }
+
+        await axios.get('/admin/graph-data', {
+            headers: {
+                'Bearer': token
+            }
+        })
         .then( res => {
             setGraphData( res.data );
         })
