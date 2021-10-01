@@ -14,6 +14,8 @@ import '../../styles/admin/sign-up.css';
 
 
 export default function Signup( props ){
+    const { ErrorHandler } = props;
+
     const validator = new Validator();
 
     const [username, setUsername] = useState('');
@@ -35,8 +37,7 @@ export default function Signup( props ){
             props.Event.emit('enter');
         })
         .catch( err => {
-            console.log( err );
-            setTimeout( () => requestSignUp(), 5000 );
+            ErrorHandler.handle( err, requestSignUp, 8, data );
         });
     }
 

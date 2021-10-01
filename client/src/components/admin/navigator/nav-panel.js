@@ -7,6 +7,10 @@ import ButtonLink from '../buttons/button-link';
 import '../../../styles/admin/nav-panel.css';
 import menuImg from '../../../images/admin/menu.png';
 
+import CustomErrorHandler from '../../../modules/customErrorHandler';
+
+
+const ErrorHandler = new CustomErrorHandler( 5, 5000 );
 
 export default function NavPanel( props ){
     const [admin, setAdmin] = useState( null );
@@ -17,8 +21,7 @@ export default function NavPanel( props ){
         await axios.put('/admin/sign-out')
         .then( () => props.Event.emit('exit'))
         .catch( err => {
-            console.error( err );
-            setTimeout( () => requestSignOut(), 5000 );    
+            ErrorHandler.handle( err, requestSignOut, 11, data );  
         });
     }
 
@@ -31,8 +34,7 @@ export default function NavPanel( props ){
             axios.get('/admin')
             .then( res => setAdmin( res.data ) )
             .catch( err => {
-                console.log( err );
-                setTimeout( () => fetchAdminData(), 5000 );
+                ErrorHandler.handle( err, requestSignOut, 12 );  
             });
         }
 
@@ -104,12 +106,12 @@ export default function NavPanel( props ){
 
 function produceBtnLinks( dirs ){
     return dirs.map( dir => (
-                        <ButtonLink
-                            key={dirs.indexOf(dir).toString()}
-                            id={'btn-link-'.concat(dirs.indexOf(dir).toString())}
-                            url={dir.url}
-                            icon={dir.icon}
-                            title={dir.title}
-                        />
-                    ));
+        <ButtonLink
+            key={dirs.indexOf(dir).toString()}
+            id={'btn-link-'.concat(dirs.indexOf(dir).toString())}
+            url={dir.url}
+            icon={dir.icon}
+            title={dir.title}
+        />
+    ));
 }

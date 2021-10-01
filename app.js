@@ -27,23 +27,6 @@ app.use(cookieParser('6c-65-6d-6f-6e'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 
-function authenticate(req, res, next) {
-  if( req.signedCookies.loggedIn ){
-    if( req.signedCookies.loggedIn === '1' ){
-      next();
-    }
-    else{
-      req.cookie('loggedIn', '1', { signed : true });
-      next();
-    }
-  }
-  else{
-    return res.status( 401 ).json({ message: 'You are not authenticated!'});
-  }
-}
-
-app.use(authenticate);
-
 app.use('/admin', indexRouter);
 app.use('/', usersRouter);
 

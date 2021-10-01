@@ -11,7 +11,7 @@ import FloatingButton from '../../components/user/button/floating-button';
 
 
 // Modules
-import pathFind from '../../modules/path-finding';
+import { pathFind, createNodes } from '../../modules/path-finding';
 import * as MAP from '../../modules/cct-map';
 
 
@@ -55,35 +55,53 @@ const MapView = (props) => {
 
 	}, [props.mapData]);
 
-
+	useEffect(() => {
+		if( cpPos ) createNodes( cpPos );
+	}, [cpPos]);
 
 	useEffect(() => {
 		const runPathFind = async () => {
-			const shortestPath = await pathFind( cpPos, destination );
+			const shortestPath = await pathFind( destination );
 
-			setPath(() => [
-				Object.values(destination.start.position), 
-				...shortestPath
-			]);
-			setDestination(() => null);
+			if( !shortestPath ){
+				setMapMessage( mapMessage => [
+					...mapMessage,
+					'Unable to provide path'
+				]);
+			}
+			else{
+				setMapMessage( mapMessage => [
+					...mapMessage,
+					'Displaying path'
+				]);
+
+				setPath(() => [...shortestPath]);
+			}
+			setDestination(() => null);	
+
 		}
 
 		if( destination && scene && cpPos ) runPathFind();
 
-	}, [destination, scene, cpPos]);
+	}, [destination, scene]);
 
 
 
 	useEffect(() => {
 		if(destination && path.length ) {
 			const createLine = async () => {
-				setLine( () => (
-					<Line 
-						points={[...path]} 
-						color={0x34495e} 
-						lineWidth={3}
-					/>
-				));
+				setLine( null );
+				setTimeout(() => {
+					setLine(() => (
+						<Line 
+							points={[...path]} 
+							color={0x34495e} 
+							lineWidth={3}
+						/>
+					));
+				}, 1000);
+
+				setPath(() => []);
 			}	
 
 			createLine();

@@ -106,7 +106,7 @@ const loadScene = async ({ userType, data, click, checkPointSaver, setControls }
 						data={object.children[index]}
 						click={checkType('click')}
 						saveCheckpoint={checkType('saver')}
-						setControls={setControls}
+						setControls={ userType === 'admin' ? setControls : null }
 					/>
 				);
 			}
@@ -136,7 +136,7 @@ const Build = (props) => {
 					object={data} 
 					click={props?.click} 
 					saveCheckpoint={props?.saveCheckpoint}
-					setControls={props.setControls} 
+					setControls={props?.setControls} 
 				/>
 			); 
 		case /map_object/.test(data.name):
@@ -227,25 +227,30 @@ function CheckpointBuilder( props ){
 	}
 
 	const handleHover = () => {
-		props.setControls( Controls => {
+		props?.setControls?.( Controls => {
 			const configuration = Controls.config;
 			configuration.enabled = false;
 
 			return {
 				controls: Controls.controls,
-				config: configuration	
+				config: configuration,
+				event: Controls.event
 			}
 		});
 	}
 	
 	const handleHoverOut = () => {
-		props.setControls( Controls => {
+		props?.setControls?.( Controls => {
+			console.log(Controls.event);
 			const configuration = Controls.config;
-			configuration.enabled = true;
+			configuration.enabled = !Controls.event
+				? true
+				: false;;
 
 			return {
 				controls: Controls.controls,
-				config: configuration	
+				config: configuration,
+				event: Controls.event
 			}
 		});
 	}
@@ -397,7 +402,11 @@ const Messenger = (props) => {
 			setTimeout(() => setMsg(() => ''), DECAY_TIME);
 		}
 
-		message.forEach( pendingMsg => setTimeout(() => displayMessage(pendingMsg), DECAY_TIME) );
+		message.forEach( pendingMsg => {
+			if( typeof pendingMsg === 'string' ){
+				setTimeout(() => displayMessage(pendingMsg), DECAY_TIME);
+			}
+		});
 	}, [message]);
 
 	return (

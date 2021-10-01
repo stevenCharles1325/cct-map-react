@@ -68,6 +68,8 @@ const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
 
 
 const MapView = (props) => {
+	const { ErrorHandler } = props;
+
 	const land = useRef();
 	const line = useRef();
 
@@ -80,14 +82,14 @@ const MapView = (props) => {
 	const [upload, setUpload] = useState( null );
 	const [objList, setObjList] = useState( [] );
 
-	const [copyObj, setCopyObj] = useState( null );
 	const [deleteObj, setDeleteObj] = useState( null );
 
 	const [Controls, setControls] = useState({ 
 		controls: OrbitControls, 
 		config: {
 			enabled: true
-		}
+		},
+		event: null
 	});
 
 	const [persCam, setPersCam] = useState( null );
@@ -131,12 +133,16 @@ const MapView = (props) => {
 		});
 	}
 
+	const [propBoxCont, setPropBoxCont] = useState( null );
+	const [propBox, setPropBox] = useState( null );
 	const selectHandler = ( state, action ) => {
 		if( action.reset ){
 			if( state.selected ){
 				glassify( state?.selected?.current?.material, true );
 			}
+	
 			setEnableMenu( true );
+			setPropBoxCont( null );
 			return { selected: null };
 		}
 
@@ -147,8 +153,16 @@ const MapView = (props) => {
 			glassify( state?.selected?.current?.material, true );
 			glassify( action?.data?.current?.material );
 		}
+
+		if( action.data ){
+			setEnableMenu( false );
+
+			setPropBoxCont(action.data.current);
+		}
+
 		return { selected: action.data };
 	}
+
 	const reducer = ( state, action ) => selectHandler( state, action );
 	const [state, dispatch] = useReducer( reducer, {selected: null} );
 
@@ -256,12 +270,12 @@ const MapView = (props) => {
 									cpAccumulator.push(
 										<CheckpointGen
 											click={dispatch}
-											index={getKeyNumber()}
 											name={generatedName}
+											index={getKeyNumber()}
+											setControls={setControls}
 											key={`checkpoint_${keyNumber}`}
 											saveCheckpoint={reqSetCheckPoints} 
 											position={new Array(width, height, depth)}
-											setControls={setControls}
 										/>
 									);
 									
@@ -296,7 +310,6 @@ const MapView = (props) => {
 
 	const [checkpointGenState, checkpointGenDispatch] = useReducer( genReducer, initGenState() );
 
-	const [propBox, setPropBox] = useState( null );
 
 	const reqSetPropBox = () => dispatch({ reset: true });
 
@@ -307,8 +320,7 @@ const MapView = (props) => {
 			setMapData( res.data );
 		})
 		.catch( err => {
-			console.log( err );
-			setTimeout( () => requestMapData(), 5000 );
+			ErrorHandler.handle( err, requestMapData, 3 );
 		});
 	}
 
@@ -326,6 +338,7 @@ const MapView = (props) => {
 			};
 		})
 		.catch( err => {
+			ErrorHandler.handle( err, requestSaveMapData, 4, scene );
 			return { message : err };
 		});
 	}
@@ -333,60 +346,31 @@ const MapView = (props) => {
 	useEffect(() => requestMapData(), []);
 
 	useEffect(() => {
-		if( upload || copyObj || isCheckPoint ) setObjectCount((objectCount) => objectCount + 1);
+		if( upload || isCheckPoint ) setObjectCount((objectCount) => objectCount + 1);
 
 		if( upload ){
 			setObjList((objList) => [
 				...objList, 
 				<MapImport
-					key={`map_object_${objectCount}`} 
-					index={objectCount} 
 					object={upload} 
 					click={dispatch} 
+					index={objectCount} 
+					key={`map_object_${objectCount}`} 
 				/>
 			]);
 			setMapMessage((mapMessage) => [...mapMessage, '3D object had been uploaded successfully']);			
 			setUpload( null );
 		}
-		else if( copyObj ){
-			if( copyObj.name.search('checkpoint') > -1 ){
-				setObjList((objList) => [
-					...objList, 
-					<Checkpoints 
-						index={objectCount} 
-						key={`checkpoint_${objectCount}`}
-						saveCheckpoint={reqSetCheckPoints} 
-						camera={persCam} 
-						scene={scene}
-						click={dispatch}
-						setControls={setControls}
-					/>
-				]);			
-			}
-			else if( copyObj.name.search('map_object') > -1 ){
-				setObjList((objList) => [
-					...objList, 
-					<MapClone 
-						key={`map_object_${objectCount}`} 
-						index={objectCount} 
-						object={copyObj} 
-						click={dispatch} 
-					/>
-				]);			
-			}
-
-			setCopyObj( null );	
-		}
 		else if( isCheckPoint ){
 			setObjList((objList) => [...objList, 
 				<Checkpoints 
+					scene={scene}
+					camera={persCam} 
+					click={dispatch}
 					index={objectCount}
+					setControls={setControls}	
 					key={`checkpoint_${objectCount}`} 
 					saveCheckpoint={reqSetCheckPoints} 
-					camera={persCam} 
-					scene={scene}
-					click={dispatch}
-					setControls={setControls}	
 				/>
 			]);
 
@@ -403,26 +387,27 @@ const MapView = (props) => {
 			dispatch({ reset: true });
 		}
 		
-	},  [upload, copyObj, deleteObj, isCheckPoint, checkPoints, objList, objectCount]);
-
+	},  [upload, deleteObj, isCheckPoint, checkPoints, objList, objectCount]);
 
 	useEffect(() => {
-		if( state.selected ){
-			setEnableMenu( false );
-			setPropBox(<PropertyBox 
-							properties={state.selected.current} 
-							close={reqSetPropBox} 
-							copy={setCopyObj} 
-							remove={setDeleteObj}
-							setCheckPoints={setCheckPoints}
-							scene={scene}
-						/>);
+		if( propBoxCont ){
+			setPropBox( null );
+			setTimeout(() => {
+				setPropBox(() => 
+					<PropertyBox
+						scene={scene}
+						remove={setDeleteObj}
+						close={reqSetPropBox} 
+						setCheckPoints={setCheckPoints}
+						properties={propBoxCont} 
+					/>
+				);
+			}, 1000);
 		}
 		else{
 			setPropBox( null );
 		}
-
-	}, [state.selected]);
+	}, [propBoxCont]);
 
 
 	useEffect(() => {
@@ -432,7 +417,8 @@ const MapView = (props) => {
 
 			setControls( Controls => ({
 				controls: Controls.controls,
-				config: configuration 						
+				config: configuration,
+				event: 'measuring'						
 			}));
 			
 			setMeasureLine(() => ( 
@@ -450,7 +436,8 @@ const MapView = (props) => {
 
 			setControls( Controls => ({
 				controls: Controls.controls,
-				config: configuration 						
+				config: configuration,
+				event: null						
 			}));
 			
 			setMeasureLine( () => null );
@@ -618,14 +605,15 @@ const BottomBar = (props) => {
 	const handleFreeControl = () => {
 		if( switched === 'free' ) return;
 
-		props.control({
+		props.control( Controls => ({
 			controls: FirstPersonControls,
 			config: {
 				lookSpeed: 0.3,
 				movementSpeed: 550,
 				enabled: true
-			}
-		});
+			},
+			event: Controls.event
+		}));
 
 		setSwitched( 'free' );
 	}
@@ -633,12 +621,13 @@ const BottomBar = (props) => {
 	const handleOrbitControl = () => {
 		if( switched === 'orbit' ) return;
 
-		props.control({ 
+		props.control( Controls => ({
 			controls: OrbitControls,
 			config: {
 				enabled: true
-			}
-		});
+			},
+			event: Controls.event
+		}));
 
 		setSwitched( 'orbit' );
 	}
@@ -782,9 +771,7 @@ const MapImport = (props) => {
 
 // Property Box
 const PropertyBox = (props) => {
-	const { scene } = props;
-
-	const properties = props.properties;
+	const { scene, properties } = props;
 
     const inputSize = {width: '90%', height: '50px'};
 
@@ -825,7 +812,6 @@ const PropertyBox = (props) => {
     }
 
 
-
     // Edit position functions
 	const reqEditPosX = (e) => {
         properties.position.x = parseInt(e.target.value);
@@ -838,7 +824,6 @@ const PropertyBox = (props) => {
     const reqEditPosZ = (e) => {
         properties.position.z = parseInt(e.target.value);
     }
-
 
 
     // Edit rotation functions
@@ -855,11 +840,6 @@ const PropertyBox = (props) => {
     }   
 
 
-    const handleCopy = () => {
-    	props.copy( properties );
-    }
-
-
     const handleDelete = () => {
     	props.remove( () => properties );
     }
@@ -867,7 +847,7 @@ const PropertyBox = (props) => {
 	return(
         <div className="obj-prop-box d-flex flex-column justify-content-around align-items-center p-3">
             <div style={{height: '8%'}} className="container-fluid d-flex flex-row-reverse pr-2 mb-2">
-                <Button name="close" click={props.close}/>
+                <Button listenTo='Enter' name="close" click={props.close}/>
             </div>
             <div  style={{height: '10%'}} style={{height: '50px'}}  className="text-center">
                 <h2>Properties</h2>
@@ -891,12 +871,8 @@ const PropertyBox = (props) => {
             	
             	<PropBoxInp id="posZ" size={inputSize}  value={properties.position.z} handleChange={reqEditPosZ} name="Position Z"/>             	
             </div>   
-            <div style={{height: '10%', width: '100%'}} className="d-flex justify-content-between align-items-center">
+            <div style={{height: '10%', width: '100%'}} className="d-flex justify-content-center align-items-center">
             	{[
-            		{
-            			name: 'copy',
-            			action: handleCopy
-            		},
             		{
             			name: 'delete',
             			action: handleDelete

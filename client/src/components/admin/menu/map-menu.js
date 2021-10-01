@@ -13,6 +13,12 @@ import prevImg from '../../../images/admin/preview.png';
 import '../../../styles/admin/map-menu.css';
 
 
+import CustomErrorHandler from '../../../modules/customErrorHandler';
+
+
+const ErrorHandler = new CustomErrorHandler( 5, 5000 );
+
+
 function MapMenu( props ){
     const menu = useRef( null );
 
@@ -195,9 +201,7 @@ function ImportBox( props ){
                 props.onClose();
             })
             .catch( err => {
-                if ( err ){
-                    console.log( err );
-                }
+                ErrorHandler.handle( err, uploadSubmitHandler, 13, e );
             });
         }
 

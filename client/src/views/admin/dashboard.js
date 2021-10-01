@@ -12,6 +12,7 @@ import '../../styles/admin/dashboard.css';
 
 // Main function
 export default function Dashboard( props ) {
+    const { ErrorHandler } = props;
     const [graphData, setGraphData] = useState( null );
 
     // Fetches the data from the server and sets the admin.
@@ -21,8 +22,7 @@ export default function Dashboard( props ) {
             setGraphData( res.data );
         })
         .catch( err => {
-            console.log( err );
-            setTimeout( () => requestGraphData(), 5000 );    
+            ErrorHandler.handle( err, requestGraphData, 2 );
         });
     }  
 

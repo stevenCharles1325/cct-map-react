@@ -8,8 +8,9 @@ import ImageBall from '../../components/admin/image/image-ball';
 import '../../styles/admin/settings.css';
 
 export default function Settings( props ){
+    const { ErrorHandler } = props;
+
     const validator = new Validator();
-    
 
     const [admin, setAdmin] = useState( null );
 
@@ -75,8 +76,7 @@ export default function Settings( props ){
         await axios.put('/admin/set-admin', data)
         .then( res => console.log( res.data.message ))
         .catch( err => {
-            console.log( err );
-            setTimeout( () => requestSetAdmin(), 5000 );
+            ErrorHandler.handle( err, requestSetAdmin, 5, data );
         });
     }
 
@@ -92,8 +92,7 @@ export default function Settings( props ){
         axios.get('/admin')
         .then( res => setAdmin(() => res.data) )
         .catch( err => {
-            console.log( err );
-            setTimeout( () => fetchAdminData(), 5000 );
+            ErrorHandler.handle( err, fetchAdminData, 6 );
         });
     }
 

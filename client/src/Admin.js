@@ -24,7 +24,9 @@ import './styles/admin/admin.css';
 
 // Modules
 import EventEmitter from './modules/custom-event-emitter';
+import CustomErrorHandler from './modules/customErrorHandler';
 
+const ErrorHandler = new CustomErrorHandler( 5, 5000 );
 const Event = new EventEmitter();
 const ROOT = '/admin';
 const VIEWS = [
@@ -57,7 +59,6 @@ export default function Admin(){
     	{ url: VIEWS[ 4 ], icon: settingsIcon, title:'Settings' }
 	];
 
-	
 	const probeCookie = () => {
 		const cookie = Cookies.get('loggedIn');
 
@@ -76,14 +77,15 @@ export default function Admin(){
 	}
 
 	const probeAdmin = async () => {
+		
 		return await axios.get('/admin/check')
 		.then( res => (
 			res.data
 				? probeCookie()
-				: <Redirect to={VIEWS[ 3 ]} />
+				: <Redirect to={ VIEWS[ 3 ] } />
 		))
 		.catch( err => {
-			console.log( err );
+			ErrorHandler.handle( err, probeAdmin, 1 );
 
 			return <ErrorPage />;
 		});
@@ -109,7 +111,8 @@ export default function Admin(){
 
 		setBundle({ 
 				dirs: directories,
-				Event: Event
+				Event: Event,
+				ErrorHandler: ErrorHandler
 			});
 	}, []);
 

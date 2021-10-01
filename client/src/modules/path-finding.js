@@ -1,34 +1,47 @@
 import React from 'react';
 import { Vector3 } from 'three';
-import debounce from 'lodash.debounce';
 
-const DELAY = 100;
+let shortestPaths = {};
+let nodes = {};
 
 class Node{
 	constructor( checkpoint ){
 		this.name = checkpoint.name;
 		this.vector = new Vector3( ...Object.values(checkpoint.position) );
 		this.neighbors = [];
-		
-		this.radius = 1500;
+
+		this.radius = 600;
 		this.points = 5;
-		this.floor = 0;
+		this.floor = this.vector.y;
 
 		this.isTravelled = false;
-		this.isConnector = /connector/.test(this.name.toLowerCase());
-	}
-
-	addNeighbor( neighbor ){
-		if( neighbor.vector.distanceTo(this.vector) <= this.radius ){
-			this.neighbors.push( neighbor );
-		}
+		this.isConnector = /connector/.test( this.name.toLowerCase() );
 	}
 
 	travelled(){
 		this.isTravelled = true;
 	}
-}
 
+	isInRadiusOf( other ){
+		return this.vector.distanceTo(other.vector) <= this.radius;
+	}
+
+	sameFloorOf( other ){
+		return this.floor === other.floor || Math.abs(this.floor - other.floor) <= 50;
+	}
+
+	areConnectors( other ){
+		return this.isConnector && other.isConnector;
+	}
+
+	addNeighbor( neighbor ){
+		if( this.neighbors.map( neighbor => neighbor.name ).indexOf	( neighbor.name ) > - 1 ) return;
+		if( this.areConnectors( neighbor ) || (this.isInRadiusOf( neighbor ) && this.sameFloorOf( neighbor ))){
+			this.neighbors.push( neighbor );
+			neighbor.addNeighbor( this );
+		}
+	}
+}
 
 const findLowest = ( numList ) => { 
 	let lowest = Infinity;
@@ -47,88 +60,160 @@ const findLowest = ( numList ) => {
 }
 
 
-const linkNodes = ( nodes ) => {
+const mergeArrays = (left, right) => {
+  const mergedArray = [];
+
+  while (left.length && right.length) {
+    mergedArray.push(left[0] > right[0] ? right.shift() : left.shift());
+  }
+
+  while (left.length) {
+    mergedArray.push( left.shift() );
+  }
+
+  while (right.length) {
+    mergedArray.push( right.shift() );
+  }
+
+  return mergedArray;
+}
+
+const mergeSort = (list) => {
+  if( list.length < 2 ) return list;
+
+  const middle = Math.floor(list.length / 2);
+
+  const left = list.slice(0, middle);
+  const right = list.slice(middle, list.length);
+
+  const sorted_left = mergeSort(left);
+  const sorted_right = mergeSort(right);
+
+  return mergeArrays(sorted_left, sorted_right)
+}
+
+
+const linkNodes = ( nodes, memo = [] ) => {
 	const names = Object.keys( nodes );
 
-	names.forEach( leftName => {
-		names.forEach( rightName => {
-			if( leftName !== rightName ){
-				nodes[leftName].addNeighbor( nodes[rightName] );
-			} 
-		});		
+	const numbers = {};
+
+	Object.keys( nodes ).forEach( elem => {
+		if( /connector/.test(elem.toLowerCase()) )
+			numbers[ Number(elem.split('CONNECTOR')[1]) ] = elem;
+	});
+
+
+	const sortedNumbers = mergeSort(Object.keys( numbers ).map( elem => Number(elem) ));
+	sortedNumbers.forEach( (elem, index) => {
+		if( index < sortedNumbers.length - 1 ){
+			nodes[ numbers[elem] ].addNeighbor( nodes[ numbers[sortedNumbers[index + 1]] ] );
+		}
+	});
+
+	names.forEach( name1 => {
+		names.forEach( name2 => {
+			if( name1 != name2 && (nodes[name1].isConnector || nodes[name2].isConnector) ){
+				nodes[name1].addNeighbor( nodes[name2] );
+			}
+		});
 	});
 
 	return nodes;
 }
 
+const traverse = ( name, destination, points = 0, path = [], isLocated = false ) => {
+	if( isLocated || nodes[name].isTravelled ) return [path, points, isLocated];
+	console.log( name );
 
-const traverse = ( node, destination, points = 0, path = [], destinationLocated = false ) => {	
-	path.push( node.vector.toArray() );
-	points += node.points;
-	
-	if( (!node.isConnector && !node.vector.equals( destination )) ||destinationLocated ){
-		 return [ points, path, destinationLocated ];
-	}
-	else if((!node.isConnector && node.vector.equals( destination ))) {
-		return [ points, path, true ];
-	}
-	
-	node.travelled();	
+	path.push( nodes[name].vector.toArray() );
+	points += nodes[name].points;
+	nodes[name].travelled();
 
-	node.neighbors.forEach( neighbor => {
-		if(neighbor.vector.equals( destination )){
-			[ points, path, destinationLocated ] = traverse( neighbor, destination, points, path, true );
-			return;
+	if( nodes[name].isConnector ){
+		nodes[name].neighbors.forEach( neighbor => {
+			if( neighbor.vector.equals( destination ) ){
+				path.push( neighbor.vector.toArray() );
+				points += neighbor.points;
+				neighbor.travelled();
+
+				[path, points, isLocated] = traverse( 
+					neighbor.name, 
+					destination, 
+					points, 
+					path,  
+					true 
+				);
+				return;
+			}
+		});
+
+		if( !isLocated ){
+			nodes[name].neighbors.forEach( neighbor => {
+				if( neighbor.isConnector && !neighbor.isTravelled ){
+					[path, points, isLocated] = traverse( 
+						neighbor.name, 
+						destination, 
+						points, 
+						path,  
+						isLocated 
+					);
+				}
+			});			
 		}
-		else if( neighbor.isConnector && !neighbor.isTravelled ){
-			[ points, path, destinationLocated ] = traverse( neighbor, destination, points, path );
-		}
-	});
+	}	
+	else{
+		nodes[name].neighbors.forEach( neighbor => {
+			if( neighbor.isConnector && !neighbor.isTravelled ){
+				[path, points, isLocated] = traverse( 
+					neighbor.name, 
+					destination, 
+					points, 
+					path,  
+					isLocated
+				);
+			}
+		});
+	}
 
-	return [ points, path, destinationLocated ];
+	return [path, points, isLocated]
 }
 
 
-async function pathFind( checkpoints, destination ){
-	if( !checkpoints || !destination ) return [];
-
-	let highestY = 0;
-	
-	let shortestPaths = {};
-	let nodes = {};
-
-	checkpoints.forEach( cp => {
-		if( cp.position.y > highestY ) highestY = cp.position.y;
-	});
+const createNodes = checkpoints => {
+	if( !checkpoints ) return [];
 
 	checkpoints.forEach( cp => {
 		const node = new Node( cp );
-
-		const nodeY = node.vector.y;
-		let index = 4;
-
-		for( let floor = highestY; floor >= (highestY / 4); floor -= (highestY / 4)){
-			if( nodeY <= floor ) node.floor = index ;
-
-			index--;
-		}
 
 		nodes[ cp.name ] = node ;
 	});		
 
 	nodes = linkNodes( nodes );
-	console.log( nodes );
+}
 
-	const vectDestination = new Vector3( ...Object.values(destination.end.position) );	
+
+async function pathFind( destination ){
+	if( !destination ) return [];
+
+	shortestPaths = {};
+	const vectDestination = new Vector3( ...Object.values(destination.end.position) );
+
+	if( nodes[ destination.start.name ].vector.equals( vectDestination ) ) return [];
+
+	nodes[ destination.start.name ].travelled();
 	nodes[ destination.start.name ].neighbors.forEach( neighbor => {
-		console.log(`NEIGHBOR: ${neighbor.name}`);		
-		const [ points, path, destinationLocated ] = traverse( 
-			neighbor, 
+		const [ path, points, isLocated ] = traverse( 
+			neighbor.name, 
 			vectDestination, 
 			nodes[ destination.start.name ].points
 		);
-
-		if( !shortestPaths[ points ] && destinationLocated ) shortestPaths[ points ] = path;
+ 	
+		if( !shortestPaths[ points ] && isLocated ) shortestPaths[ points ] = [
+			Object.values(destination.start.position),
+			...path,
+			Object.values(destination.end.position)
+		];
 	});
 
 	Object.keys( nodes ).forEach( nodeKey => {
@@ -137,10 +222,15 @@ async function pathFind( checkpoints, destination ){
 
 	const lowestKey = findLowest(Object.keys( shortestPaths ));
 
-	console.log( shortestPaths );
-	console.log(' PATH FINDING IS FINISHED ');
+	console.log( nodes );
+
+	console.log(`${Object.keys(shortestPaths).length} paths: ${lowestKey} points`);
 	return shortestPaths[ lowestKey ];
 }
 
 
-export default pathFind;
+
+
+export { pathFind, createNodes };
+
+

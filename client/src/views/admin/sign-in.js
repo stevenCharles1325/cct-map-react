@@ -11,6 +11,8 @@ import signin_img from '../../images/admin/sign-in.png';
 
 
 export default function Signin( props ){
+    const { ErrorHandler } = props;
+
     const [username, setUsername] = useState( null );
     const [password, setPassword] = useState( null );
     const [signIn, setSignIn] = useState( false );
@@ -41,8 +43,7 @@ export default function Signin( props ){
                     }
                 }
                 else{
-                    console.log( err );
-                    setTimeout( () => reqSetAdminSignIn(), 5000 );
+                    ErrorHandler.handle( err, reqSetAdminSignIn, 7, data );
                 }
             });
         }

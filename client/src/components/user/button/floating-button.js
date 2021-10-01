@@ -81,32 +81,32 @@ const FloatingButton = (props) => {
 const P2pForm = (props) => {
 	const { cpPos } = props;
 
+	let newSet = cpPos.filter( elem => !/connector/.test(elem.name.toLowerCase()) )
+	
 	// Example: Checkpoint_room123 becomes -> room123
     const getRootName = (name) => name?.replace?.(/checkpoint_([0-9]+)_/, '');
     const options = [];
 
-	cpPos?.forEach?.( item => {
-    	if( !/connector/.test(item.name.toLowerCase()) ){
-    		options.push(
-    			<option 
-		    		key={item.name} 
-		    		value={item.name}
-			    > 
-		    		{getRootName(item.name)} 
-		    	</option>
-		    );
-    	}
+	newSet?.forEach?.( item => {
+		options.push(
+			<option 
+	    		key={item.name} 
+	    		value={item.name}
+		    > 
+	    		{getRootName(item.name)} 
+	    	</option>
+	    );
     });
 
     const [destination, setDestination] = useState({
-	    start: cpPos?.[0], 
-	    end: cpPos?.[1] 
+	    start: newSet?.[0], 
+	    end: newSet?.[0] 
  	});
 
  	const locatePosition = ( name ) => {
  		let position = null;
 
- 		cpPos.forEach( cp => {
+ 		newSet.forEach( cp => {
  			if( cp.name.indexOf(name) > -1 ){
  				position = cp.position;
  			}

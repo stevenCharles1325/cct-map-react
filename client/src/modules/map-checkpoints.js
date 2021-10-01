@@ -22,7 +22,6 @@ const defaultGeometry = new THREE.SphereGeometry( ...geometryOptions );
 
 
 function Checkpoints ( props ){
-
 	const [isPlaced, setIsPlaced] = useState( false );
 	const checkpoint = useRef();
 
@@ -47,7 +46,9 @@ function Checkpoints ( props ){
 
 
 	useEffect(() => {
-		!isPlaced ? window.addEventListener('click', place) : window.removeEventListener('click', place);
+		!isPlaced 
+			? window.addEventListener('click', place) 
+			: window.removeEventListener('click', place);
 
 		return () => window.removeEventListener('click', place);
 	}, [isPlaced]);
@@ -102,7 +103,8 @@ function Checkpoints ( props ){
 
 			return {
 				controls: Controls.controls,
-				config: configuration	
+				config: configuration,
+				event: Controls.event	
 			}
 		});
 	}
@@ -110,24 +112,27 @@ function Checkpoints ( props ){
 	const handleHoverOut = () => {
 		props.setControls( Controls => {
 			const configuration = Controls.config;
-			configuration.enabled = true;
+			configuration.enabled = !Controls.event
+				? true
+				: false;;
 
 			return {
 				controls: Controls.controls,
-				config: configuration	
+				config: configuration,
+				event: Controls.event	
 			}
 		});
 	}
 
 	return (
 		<mesh 
-			name={`checkpoint_${props.index}_`} 
 			ref={checkpoint} 
-			onDoubleClick={handleClick}
-			onPointerEnter={ isPlaced ? handleHover : null }
-			onPointerLeave={ handleHoverOut }
 			geometry={defaultGeometry}
 			material={defaultMaterial}
+			onDoubleClick={handleClick}
+			onPointerLeave={ handleHoverOut }
+			name={`checkpoint_${props.index}_`} 			
+			onPointerEnter={ isPlaced ? handleHover : null }
 		>
 		</mesh>
 	);
@@ -161,26 +166,31 @@ function CheckpointGen ( props ){
 
 	const handleHoverOut = () => {
 		props.setControls( Controls => {
+			console.log(Controls.event);
+
 			const configuration = Controls.config;
-			configuration.enabled = true;
+			configuration.enabled = !Controls.event
+				? true
+				: false;;;
 
 			return {
 				controls: Controls.controls,
-				config: configuration	
+				config: configuration,
+				event: Controls.event	
 			}
 		});
 	}
 
 	return (
 		<mesh 
-			name={`checkpoint_${props.index}_${props.name}`} 
-			position={props.position}
 			ref={checkpoint} 
+			position={props.position}
+			geometry={defaultGeometry}
+			material={defaultMaterial}
 			onDoubleClick={handleClick}
 			onPointerEnter={handleHover}
 			onPointerLeave={handleHoverOut}
-			geometry={defaultGeometry}
-			material={defaultMaterial}
+			name={`checkpoint_${props.index}_${props.name}`} 
 		>
 		</mesh>
 	);

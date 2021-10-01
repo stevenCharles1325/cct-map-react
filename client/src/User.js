@@ -1,7 +1,9 @@
 import React, { Suspense, useState, useEffect } from 'react';
 import axios from 'axios';
-import { Switch, Route, Redirect } from 'react-router-dom';
+import { Switch, Route, Redirect, Link } from 'react-router-dom';
 
+// Module
+import CustomErrorHandler from './modules/customErrorHandler';
 
 // Loader
 import MainLoader from './components/user/loader/main-loader';
@@ -12,8 +14,10 @@ import './styles/user/user.css';
 
 // Views
 const MapView = React.lazy(() => import('./views/user/map'));
+const AboutView = React.lazy(() => import('./views/user/about'));
 
 
+const ErrorHandler = new CustomErrorHandler( 5, 5000 );
 const ROOT = '/';
 const VIEWS = [
 	`${ROOT}map`,
@@ -31,7 +35,7 @@ function User( props ){
 			console.log( res.data.message );
 		})
 		.catch( err => {
-			errorHandler( err );
+			ErrorHandler.handle( err, requestMapData, 1 );
 		});
 	}
 
@@ -51,21 +55,23 @@ function User( props ){
 				</Route>
 
 				<Route exact path={VIEWS[1]}>
-					<div>About</div>
-
+					<Suspense fallback={<MainLoader/>}>
+						<AboutView/>
+					</Suspense>
 				</Route>
 
 				<Route path={window.location.pathname}>
-					<div>page not found</div>
+					<div style={{width: '100%', height: '100%'}} className="d-flex flex-column justify-content-center align-items-center">
+						<h1>PAGE NOT FOUND</h1>
+						<p>Sorry but the page that you are trying to access does not exist</p>
+						<Link to='/map'>
+							<h5>Wanna go to map?</h5>
+						</Link>
+					</div>
 				</Route>
 			</Switch>
 		</div>
 	);
-}
-
-
-const errorHandler = ( err ) => {
-	console.log( err );
 }
 
 
