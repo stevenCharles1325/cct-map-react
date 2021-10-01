@@ -10,12 +10,26 @@ const fs = require('fs');
 const data_path = path.join(__dirname, '/data/admin.json');
 const tokens_path = path.join(__dirname, '/data/tokens.json');
 
+const cors = require('cors');
+
+auth.use(express.json());
+auth.use(cors());
+
+auth.all('*', async ( req, res, next ) => {
+	if( req.secure ){
+		return next();
+	}
+	else{
+		return res.redirect(307, `https://${ req.hostname }:${ auth.get('secPort') }/${ req.url }`);
+	}
+});
+	
 const requestAccessToken = ( user ) => {
-	return jwt.sign( user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15s' } );
+	return jwt.sign( user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '24h' } );
 };
 
 
-auth.post('/sign-up', async ( req, res ) => {
+auth.post('/auth/sign-up', async ( req, res ) => {
 	const { username, password, email, number } = req.body;
 	const data = {
 		exist: true,
@@ -31,53 +45,55 @@ auth.post('/sign-up', async ( req, res ) => {
 	    });
 	    
 	    const user = { name: username };
-		const accessToken = requestAccessToken( user );
-		const refreshToken = jwt.sign( user, process.env.REFRESH_TOKEN_SECRET ); 
+			const accessToken = requestAccessToken( user );
+			const refreshToken = jwt.sign( user, process.env.REFRESH_TOKEN_SECRET ); 
 
-		fs.readFile( tokens_path, ( err, tokens ) => {
-			if( err ) return res.sendStatus( 500 );
-
-			const parsedTokens = JSON.parse( tokens ).push( refreshToken );
-
-			fs.writeFile( tokens_path, JSON.stringify( parsedTokens ), ( err ) => {
+			fs.readFile( tokens_path, ( err, tokens ) => {
 				if( err ) return res.sendStatus( 500 );
+
+				const parsedTokens = JSON.parse( tokens ).push( refreshToken );
+
+				fs.writeFile( tokens_path, JSON.stringify( parsedTokens ), ( err ) => {
+					if( err ) return res.sendStatus( 500 );
 
 		    	return res.status( 200 ).json({ 
 		    		message: 'signed-up', 
-		    		accessToken: accessToken, 
+		    		accessToken: accessToken,
 		    		refreshToken: refreshToken 
 		    	});
-			});	
-		});
+				});	
+			});
   	});
 });
 
 
-auth.post('/sign-in', async ( req, res ) => {
+auth.post('/auth/sign-in', async ( req, res ) => {
   const { username, password } = req.body;
   const admin_data = JSON.parse(fs.readFileSync( data_path ));
   
   if(  username === admin_data.username ){
     if( password === admin_data.password ){
     	const user = { name: username };
-		const accessToken = requestAccessToken( user );
-		const refreshToken = jwt.sign( user, process.env.REFRESH_TOKEN_SECRET ); 
+			const accessToken = requestAccessToken( user );
+			const refreshToken = jwt.sign( user, process.env.REFRESH_TOKEN_SECRET ); 
 
     	fs.readFile( tokens_path, ( err, tokens ) => {
-			if( err ) return res.sendStatus( 500 );
-
-			const parsedTokens = JSON.parse( tokens ).push( refreshToken );
-
-			fs.writeFile( tokens_path, JSON.stringify( parsedTokens ), ( err ) => {
 				if( err ) return res.sendStatus( 500 );
+
+				const parsedTokens = JSON.parse( tokens )
+
+				parsedTokens.push( refreshToken );
+
+				fs.writeFile( tokens_path, JSON.stringify( parsedTokens, null, 4 ), ( err ) => {
+					if( err ) return res.sendStatus( 500 );
 
 		    	return res.status( 200 ).json({ 
 		    		message: 'signed-in', 
 		    		accessToken: accessToken, 
 		    		refreshToken: refreshToken 
 		    	});
-			});	
-		});
+				});	
+			});
     }
     else{
     	return res.status( 403 ).json({ which: 'password' });
@@ -89,29 +105,16 @@ auth.post('/sign-in', async ( req, res ) => {
 });
 
 
-auth.delete('/sign-out', async ( req, res ) => {
-	fs.readFile( tokens_path, ( err, tokens ) => {
-		if( err ) return res.sendStatus( 500 );
+auth.post('/auth/refresh-token', async ( req, res ) => {
+	console.log('hereee', req.body.token);
 
-		const parsedTokens = JSON.parse( tokens ).filter( token => token !== req.body.token );
-
-		fs.writeFile( tokens_path, JSON.stringify( parsedTokens ), ( err ) => {
-			if( err ) return res.sendStatus( 500 );
-
-	    	return res.sendStatus( 203 );
-		});	
-	});
-});
-
-
-auth.post('/token', async ( req, res ) => {
 	fs.readFile( tokens_path, ( err, tokens ) => {
 		if( err ) return res.sendStatus( 500 );
 
 		const refreshToken = req.body.token;
 
 		if( !refreshToken ) return res.sendStatus( 401 );
-		if( !token.includes( refreshToken ) ) return res.sendStatus( 403 );
+		if( !tokens.includes( refreshToken ) ) return res.sendStatus( 403 );
 
 		jwt.verify( refreshToken, process.env.REFRESH_TOKEN_SECRET, ( err, user ) => {
 			if( err ) return res.sendStatus( 403 );

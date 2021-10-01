@@ -24,9 +24,11 @@ import {
 	useLoader, 
 } from '@react-three/fiber';
 
+
 import axios from 'axios';
 import uniqid from 'uniqid';
 import * as THREE from 'three';
+import Cookies from 'js-cookie';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
 // Components
@@ -315,12 +317,33 @@ const MapView = (props) => {
 
 	// Fetches map data
 	const requestMapData = async () => {
-		axios.get('/admin/map-data')
+		const token = Cookies.get('token');
+		const rtoken = Cookies.get('rtoken');
+
+        if( !token ){
+            return props.Event.emit('unauthorized');
+        }
+
+		axios.get('https://localhost:4443/admin/map-data', {
+            headers: {
+                'authentication': `Bearer ${token}`
+            }
+        })
 		.then( res => {
 			setMapData( res.data );
 		})
 		.catch( err => {
 			ErrorHandler.handle( err, requestMapData, 3 );
+
+			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
+                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                .then( res => {
+                    Cookies.set('token', res.data.accessToken)
+
+                    setTimeout(() => requestMapData(), 1000);
+                })
+                .catch( err => props?.Event?.emit?.('unauthorized'));
+            }
 		});
 	}
 
@@ -329,7 +352,18 @@ const MapView = (props) => {
 	const requestSaveMapData = async (scene) => {	
 		if( !scene ) return;
 
-		return await axios.post('/admin/update-map', scene)
+		const token = Cookies.get('token');
+		const rtoken = Cookies.get('rtoken');
+
+        if( !token ){
+            return props.Event.emit('unauthorized');
+        }
+
+		return await axios.post('https://localhost:4443/admin/update-map', scene, {
+            headers: {
+                'authentication': `Bearer ${token}`
+            }
+        })
 		.then( res => {
 			return { 
 				message : res 
@@ -339,6 +373,17 @@ const MapView = (props) => {
 		})
 		.catch( err => {
 			ErrorHandler.handle( err, requestSaveMapData, 4, scene );
+
+			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
+                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                .then( res => {
+                    Cookies.set('token', res.data.accessToken)
+
+                    setTimeout(() => requestSaveMapData(scene), 1000);
+                })
+                .catch( err => props?.Event?.emit?.('unauthorized'));
+            }
+
 			return { message : err };
 		});
 	}

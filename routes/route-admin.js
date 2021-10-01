@@ -1,12 +1,12 @@
-require('dotenv').config();
 
 var express = require('express');
 var router = express.Router();
 var fs = require('fs');
 var path = require('path');
-
+var jwt = require('jsonwebtoken');
 
 // Paths
+const tokens_path = path.join(__dirname, '../data/tokens.json');
 const data_path = path.join(__dirname, '../data/admin.json');
 const graph_path = path.join(__dirname, '../data/records.json');
 const scene_path = path.join(__dirname, '../data/scene.json');
@@ -14,16 +14,6 @@ const cpPos_path = path.join(__dirname, '../data/cp-position.json');
 const models_path = path.join(__dirname, `../client/public/models`);
 const admin_profile_path = path.join(__dirname, '../client/public/images/admin/profile-pics');
 
-
-
-// function authentication( req, res, next ) {
-//   if( req.signedCookies.loggedIn && req.signedCookies.loggedIn === '1' ){
-//     next();
-//   }
-//   else{
-//     return res.sendStatus( 401 );
-//   }
-// }
 
 function authentication ( req, res, next ) {
   const authenHeader = req.headers['authentication'];
@@ -39,18 +29,22 @@ function authentication ( req, res, next ) {
   });
 }
 
-router.get('/check', async (req, res, next) => {
+router.get('/check-existence', async (req, res, next) => {
   const adminExist = JSON.parse( fs.readFileSync( data_path ) ).exist;
 
-  return res.status( 200 ).json( adminExist );
+  return res.status( 200 ).json({ adminExist });
 });
+
+
+router.get('/check-status', authentication, async (req, res, next) => {
+  return res.sendStatus( 200 );
+})
 
 
 ///////////////////// ADMIN-DATA  &  GRAPH-DATA ////////////////////////
 
 // ADMIN-DATA route. 
-router.get('/', authenticate, async (req, res, next) => {
-
+router.get('/', authentication, async (req, res, next) => {
   const admin_data = JSON.parse(fs.readFileSync( data_path ));
 
   return res.status( 200 ).json( admin_data );  
@@ -58,7 +52,7 @@ router.get('/', authenticate, async (req, res, next) => {
 
   
 // GRAPH-DATA route.
-router.get('/graph-data', authenticate, async (req, res, next) => {
+router.get('/graph-data', authentication, async (req, res, next) => {
 
   const graph_data = JSON.parse(fs.readFileSync( graph_path ));
 
@@ -67,7 +61,7 @@ router.get('/graph-data', authenticate, async (req, res, next) => {
 
 
 // MAP-DATA route.
-router.get('/map-data', authenticate, async (req, res, next) => {
+router.get('/map-data', authentication, async (req, res, next) => {
 
   const map_data = JSON.parse(fs.readFileSync( scene_path ));
 
@@ -80,7 +74,7 @@ router.get('/map-data', authenticate, async (req, res, next) => {
 ///////////////////// UPLOAD 3D OBJECT ////////////////////////
 
 // UPLOAD-3D route.
-router.post('/obj-upload', authenticate, async (req, res, next) => {
+router.post('/obj-upload', authentication, async (req, res, next) => {
   // clear all files in Models folder
   fs.readdir(models_path, (err, files) => {
     if( err ){
@@ -119,7 +113,7 @@ router.post('/obj-upload', authenticate, async (req, res, next) => {
 
 
 ///////////////////// GET ADMIN PICTURE  ////////////////////////
-router.get('/picture', authenticate, async (req, res, next) => {
+router.get('/picture', authentication, async (req, res, next) => {
   fs.readFile( data_path, (err, data) => {
     if( err ) return res.status( 503 ).json({message: `[READFILE]: Something went wrong, please try again`});
 
@@ -132,7 +126,7 @@ router.get('/picture', authenticate, async (req, res, next) => {
 
 
 ///////////////////// UPDATE ADMIN PICTURE  ////////////////////////
-router.put('/upload-picture', authenticate, async (req, res, next) => {
+router.put('/upload-picture', authentication, async (req, res, next) => {
   if( !req.files ) return res.status( 400 ).json({ message: 'No file found'});
 
 
@@ -174,7 +168,7 @@ router.put('/upload-picture', authenticate, async (req, res, next) => {
 
 
 ///////////////////// UPDATE MAP DATA  ////////////////////////
-router.post('/update-map', authenticate, async (req, res, next) => {
+router.post('/update-map', authentication, async (req, res, next) => {
   const { scene, cpPosition } = req.body;
 
   
@@ -240,16 +234,10 @@ router.post('/update-map', authenticate, async (req, res, next) => {
 // });
 
 
-
-
-
-
-
-
 ///////////////////// CHANGE-ADMIN-DATA  &  SET-ADMIN-STATUS ( ONLINE and OFFLINE )  ////////////////////////
 
 // SET-ADMIN route.
-router.put('/set-admin', authenticate, async(req, res, next) => {
+router.put('/set-admin', authentication, async(req, res, next) => {
   const { username, password, email, number } = req.body;
   const admin_data = JSON.parse( fs.readFileSync(data_path) );
 
@@ -268,10 +256,18 @@ router.put('/set-admin', authenticate, async(req, res, next) => {
 
 
 // ADMIN-STATUS route.
-router.put('/sign-out', authenticate, async(req, res, next) => {
-  res.clearCookie('loggedIn');
+router.delete('/sign-out', authentication, async ( req, res ) => {
+  fs.readFile( tokens_path, ( err, tokens ) => {
+    if( err ) return res.sendStatus( 500 );
 
-  return res.sendStatus( 200 );
+    const parsedTokens = JSON.parse( tokens ).filter( token => token !== req.body.token );
+
+    fs.writeFile( tokens_path, JSON.stringify( parsedTokens, null, 4 ), ( err ) => {
+      if( err ) return res.sendStatus( 500 );
+
+        return res.sendStatus( 203 );
+    }); 
+  });
 });
 
 

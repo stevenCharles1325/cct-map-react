@@ -3,11 +3,19 @@
 /**
  * Module dependencies.
  */
-
+var fs = require('fs');
+var path = require('path');
 var app = require('../app');
 var auth = require('../auth');
 var debug = require('debug')('server:server');
 var http = require('http');
+var https = require('https');
+
+
+var options = {
+  key: fs.readFileSync( path.join(__dirname, '/91517924_cct-map.key') ),
+  cert: fs.readFileSync( path.join(__dirname, '/91517924_cct-map.cert') )
+};
 
 /**
  * Get port from environment and store in Express.
@@ -16,11 +24,13 @@ var http = require('http');
 // Request port
 var port = normalizePort(process.env.PORT || '3500');
 app.set('port', port);
+app.set('secPort', 4443);
 
 
 // Authentication port
 var authPort = normalizePort(process.env.PORT || '4000');
 auth.set('port', authPort);
+auth.set('secPort', 4444);
 
 /**
  * Create HTTP server.
@@ -29,10 +39,15 @@ auth.set('port', authPort);
 var server = http.createServer(app);
 var authServer = http.createServer(auth);
 
+var secureServer = https.createServer(options, app);
+var secureAuthServer = https.createServer(options, auth);
+
+
 /**
  * Listen on provided port, on all network interfaces.
  */
 
+// =========================== NOT SECURED ============================
 // MAIN: Request server
 server.listen(port, () => {
   console.log(`listening on port: ${port}`);
@@ -47,6 +62,30 @@ authServer.listen(authPort, () => {
 });
 authServer.on('error', onError);
 authServer.on('listening', onListening);
+
+// =====================================================================
+
+
+// ============================== SECURED ==============================
+
+// MAIN: Request server
+secureServer.listen(app.get('secPort'), () => {
+  console.log(`listening on port: ${ app.get('secPort') }`);
+});
+secureServer.on('error', onError);
+secureServer.on('listening', onListening);
+
+
+// Authentication server
+secureAuthServer.listen(auth.get('secPort'), () => {
+  console.log(`listening on port: ${ auth.get('secPort') }`);
+});
+secureAuthServer.on('error', onError);
+secureAuthServer.on('listening', onListening);
+
+// ======================================================================
+
+
 
 
 /**

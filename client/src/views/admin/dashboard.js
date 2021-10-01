@@ -17,19 +17,19 @@ import '../../styles/admin/dashboard.css';
 export default function Dashboard( props ) {
     const { ErrorHandler } = props;
     const [graphData, setGraphData] = useState( null );
-    const [redirect, setRedirect] = useState( null );
 
     // Fetches the data from the server and sets the admin.
     const requestGraphData = async () => {
         const token = Cookies.get('token');
+        const rtoken = Cookies.get('rtoken');
 
         if( !token ){
-            setRedirect(<Redirect to="/sign-in"/>);
+            return props?.Event?.emit?.('unauthorized');
         }
 
-        await axios.get('/admin/graph-data', {
+        await axios.get('https://localhost:4443/admin/graph-data', {
             headers: {
-                'Bearer': token
+                'authentication': `Bearer ${token}`
             }
         })
         .then( res => {
@@ -37,6 +37,16 @@ export default function Dashboard( props ) {
         })
         .catch( err => {
             ErrorHandler.handle( err, requestGraphData, 2 );
+
+            if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
+                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                .then( res => {
+                    Cookies.set('token', res.data.accessToken)
+
+                    setTimeout(() => requestGraphData(), 1000);
+                })
+                .catch( err => props?.Event?.emit?.('unauthorized'));
+            }
         });
     }  
 

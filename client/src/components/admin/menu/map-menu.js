@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import ReactTooltip from 'react-tooltip';
+import Cookies from 'js-cookie';
 import axios from 'axios';
 
 import ImageBall from '../image/image-ball';
@@ -184,26 +185,43 @@ function ImportBox( props ){
 
 
     const uploadSubmitHandler = async (e) => {
-            e.preventDefault();
+        const token = Cookies.get('token');
+        const rtoken = Cookies.get('rtoken');
 
-            const formData = new FormData();
-
-            formData.append('object', file);
-
-            await axios.post('/admin/obj-upload', formData, {
-                headers: {
-                    'Content-Type': 'text/plain'
-                }
-            })
-            .then( res => {
-                const { fileName, filePath } = res.data;
-                props.reqSubmit( {fileName, filePath} );
-                props.onClose();
-            })
-            .catch( err => {
-                ErrorHandler.handle( err, uploadSubmitHandler, 13, e );
-            });
+        if( !token ){
+            return props?.Event?.emit?.('unauthorized');
         }
+
+        e.preventDefault();
+
+        const formData = new FormData();
+
+        formData.append('object', file);
+
+        await axios.post('https://localhost:4443/admin/obj-upload', formData, {
+            headers: {
+                'Content-Type': 'text/plain',
+                'authentication': `Bearer ${token}`
+            }
+        })
+        .then( res => {
+            const { fileName, filePath } = res.data;
+            props.reqSubmit( {fileName, filePath} );
+            props.onClose();
+        })
+        .catch( err => {
+            ErrorHandler.handle( err, uploadSubmitHandler, 13, e );
+
+            if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
+                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                .then( res => {
+                    Cookies.set('token', res.data.accessToken)
+                    setTimeout(() => uploadSubmitHandler(e), 1000);
+                })
+                .catch( err => props?.Event?.emit?.('unauthorized'));
+            }
+        });
+    }
 
     return (
         <div className="import-box d-flex flex-column p-3 align-items-center justify-content-around">

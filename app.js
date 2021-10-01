@@ -13,6 +13,15 @@ var usersRouter = require('./routes/route-users');
 
 var app = express();
 
+app.all('*', async ( req, res, next ) => {
+	if( req.secure ){
+		return next();
+	}
+	else{
+		return res.redirect(307, `https://${ req.hostname }:${ app.get('secPort') }/${ req.url }`);
+	}
+});
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
@@ -23,7 +32,7 @@ app.use(fileUpload());
 app.use(logger('dev'));
 app.use(express.json({ limit: '500mb' }));
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser('6c-65-6d-6f-6e'));
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 

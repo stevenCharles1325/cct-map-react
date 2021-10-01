@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-
+import Cookies from 'js-cookie';
 
 import { Input, displayMessage }from '../../components/admin/inputs/input';
 import Button from '../../components/admin/buttons/button';
@@ -30,11 +30,26 @@ export default function Signup( props ){
             width: '90%'
         }
 
-    const requestSignUp = async ( data ) => {
-        await axios.post('/admin/sign-up', data)
+    const checkAdminExistence = async () =>{
+        axios.get('https://localhost:4443/admin/check-existence')
         .then( res => {
+            if( res.data.adminExist ){
+                return props?.Event?.emit?.('enter');
+            }
+        })
+        .catch( err => {
+            ErrorHandler.handle( err, checkAdminExistence, 15 );        
+        });
+    }    
+
+    const requestSignUp = async ( data ) => {
+        await axios.post('httpss://localhost:4444/auth/sign-up', data)
+        .then( res => {
+            Cookies.set('token', res.data.accessToken);  
+            Cookies.set('rtoken', res.data.refreshToken);
+              
             console.log( res.data.message );
-            props.Event.emit('enter');
+            return props?.Event?.emit?.('enter');
         })
         .catch( err => {
             ErrorHandler.handle( err, requestSignUp, 8, data );
@@ -95,6 +110,8 @@ export default function Signup( props ){
             return
         }
     }
+
+    useEffect(() => checkAdminExistence(), []);
 
     useEffect(() => {
         if( signUp ) handleRequestSignUp();
