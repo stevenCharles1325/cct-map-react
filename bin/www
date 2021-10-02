@@ -21,8 +21,8 @@ var debug = require('debug')('server:server');
 var cpuLenght = os.cpus().length;
 
 var options = {
-  key: fs.readFileSync( path.join(__dirname, '/91517924_cct-map.key') ),
-  cert: fs.readFileSync( path.join(__dirname, '/91517924_cct-map.cert') )
+  key: fs.readFileSync( path.join(__dirname, '/.key') ),
+  cert: fs.readFileSync( path.join(__dirname, '/.cert') )
 };
 
 /**

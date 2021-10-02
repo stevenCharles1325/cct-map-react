@@ -45,7 +45,6 @@ app.use('/admin', indexRouter);
 app.use('/', usersRouter);
 
 
-
 function shouldCompress( req, res ){
 	if( req.headers['x-no-compression']){
 		return false;
@@ -53,6 +52,19 @@ function shouldCompress( req, res ){
 
 	return compression.filter(req, res);
 }
+
+
+if (process.env.NODE_ENV === 'production') {
+	// Serve any static files
+	app.use(express.static(path.join(__dirname, 'client/build')));
+
+	// Handle React routing, return all requests to React app
+	app.get('*', function(req, res) {
+		res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+	});
+}
+
+
 // app.use((req, res, next) => { // previously on line 44
 //   res.setHeader('Access-Control-Allow-Origin', '*');
 //   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
@@ -74,28 +86,6 @@ function shouldCompress( req, res ){
 // }
 
 // app.use(cors(corsOptions));
-
-// if (process.env.NODE_ENV === 'production') {
-//   // Serve any static files
-//   app.use(express.static(path.join(__dirname, 'client/build')));
-// // Handle React routing, return all requests to React app
-//   app.get('*', function(req, res) {
-//     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-//   });
-// }
-
-
-// if (process.env.NODE_ENV === 'production') {
-//   // Serve any static files
-//   app.use(express.static(path.join(__dirname, 'client/build')));
-// // Handle React routing, return all requests to React app
-//   app.get('*', function(req, res) {
-//     res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-//   });
-// }
-
-
-
 
 
 // const whitelist = ['http://localhost:3000', 'http://localhost:443'] // line 31
