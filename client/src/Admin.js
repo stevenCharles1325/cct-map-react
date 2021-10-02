@@ -50,6 +50,7 @@ const PageNotFound = React.lazy(() => import('./views/admin/pageNotFound'));
 export default function Admin(){
 	const [bundle, setBundle] = useState( null );
 	const [view, setView] = useState( null );
+	const [screenWidth, setScreenWidth] = useState( window.innerWidth );
 
 	const path = new Path( window.location.pathname );
 	
@@ -59,8 +60,6 @@ export default function Admin(){
     	{ url: VIEWS[ 4 ], icon: settingsIcon, title:'Settings' }
 	];
 
-
-	
 
 	const emitEvents = () => {
 		Event.on('enter', () => setView( () => <Redirect to={ path.home() }/> ));
@@ -88,6 +87,10 @@ export default function Admin(){
 			: setView( path.notFound() );	
 	}
 
+	const resize = (e) => {
+		setScreenWidth(() => e.currentTarget.innerWidth);
+	}
+
 	useEffect(() => {				
 		load();
 		emitEvents();
@@ -100,17 +103,61 @@ export default function Admin(){
 	}, []);
 
 
-	return(
-		<div className="admin">
+	useEffect(() => {
+		window.addEventListener('resize', resize);
+
+		return () => window.removeEventListener('resize', resize);
+	}, []);
+
+	
+	const MainApp = () => {
+		return(
 			<Suspense fallback={<Loading />}>	
 				{ bundle ? routeHandler( bundle ) : null }
 				{ view }
-				{  }
 			</Suspense>
+		);
+	}
+
+	return(
+		<div className="admin">
+			{ 
+				screenWidth <= 950 
+					? <Unavailable />
+					: <MainApp />
+			}
 		</div>
 	);
 }
 
+
+function Unavailable(){
+	return(
+		<div 
+			style={{
+				width: '100%', 
+				height: '100%', 
+				backgroundColor: 'black',
+				color: 'rgba(255, 255, 255, 0.6)',
+				overflowY: 'auto',
+				textAlign: 'center'
+			}}
+
+			className="px-5 d-flex flex-column justify-content-center align-items-center"
+		>	
+			<h1>WE'RE REALLY SORRY</h1>
+			<br/>
+			<h5>NOT AVAILABLE ON TABLET OR MOBILE PHONES</h5>
+			<br/>
+			<br/>
+			<p className="px-5">
+				This happens when you minimize the size of the app.
+				Try maximizing the app, or if you are using your tablet
+				or mobile phone please switch to your laptop or PC. 
+			</p>
+		</div>
+	);
+}
 
 function routeHandler( bundle ){
 	return(

@@ -47,16 +47,45 @@ router.get('/check-status', authentication, async (req, res, next) => {
 router.get('/', authentication, async (req, res, next) => {
   const admin_data = JSON.parse(fs.readFileSync( data_path ));
 
+
+
   return res.status( 200 ).json( admin_data );  
 });
 
   
 // GRAPH-DATA route.
 router.get('/graph-data', authentication, async (req, res, next) => {
+  fs.readFile(graph_path, (err, records) => {
+    if( err ) return res.sendStatus( 503 );
 
-  const graph_data = JSON.parse(fs.readFileSync( graph_path ));
+    const date = new Date().toString();
+    const currentYear = date.split(' ')[ 3 ];
+    const currentMonth = date.split(' ')[ 1 ];
+    let numberTime = Number(date.split(' ')[ 4 ].split(':')[0]);
+    let currentTime = numberTime > 12 ? `${numberTime - 12} PM` : `${numberTime} AM`
 
-  return res.status( 200 ).json( graph_data );  
+    let convertedRecords = JSON.parse( records );
+
+    if( convertedRecords.year !== currentYear ){
+      convertedRecords.year = currentYear;
+
+      Object.keys( convertedRecords.annRate ).forEach( key => {
+        convertedRecords.annRate[ key ] = 0;
+      });      
+    }
+
+    if( numberTime < 7 || numberTime > 18 ){
+      convertedRecords.currRate.forEach( (rate, index) => {
+        convertedRecords.currRate[ index ] = 0;
+      }); 
+    }
+
+    fs.writeFile(graph_path, JSON.stringify( convertedRecords, null, 4 ), async (err) => {
+        if( err ) console.log( err );
+
+        return res.status( 200 ).json( convertedRecords );
+    });
+  });
 });
 
 

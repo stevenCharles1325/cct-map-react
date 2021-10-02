@@ -311,7 +311,7 @@ const MapView = (props) => {
 	}
 
 	const [checkpointGenState, checkpointGenDispatch] = useReducer( genReducer, initGenState() );
-
+	const [manual, setManual] = useState( null );
 
 	const reqSetPropBox = () => dispatch({ reset: true });
 
@@ -578,6 +578,7 @@ const MapView = (props) => {
 		    <Suspense fallback={<MAP.Loader />}>
 			    <MapMenu 
 			    	switch={enableMenu} 
+			    	setManual={setManual}
 			    	reqSetUpload={setUpload} 			    	
 			    	messenger={setMapMessage}
 			    	reqSaveMap={() => requestSaveMap()} 
@@ -615,6 +616,7 @@ const MapView = (props) => {
 						    </MAP.MapCanvas>
 					    </Suspense>
 					</Canvas>
+						{ manual }
 				    	{ checkpointGen }		
 				    	{ state.selected ? propBox : null }
 			    <BottomBar 

@@ -116,7 +116,7 @@ export default function Dashboard( props ) {
                                                 outer: "left-graph-box d-flex flex-column align-items-center",
                                                 inner: "left-graph"
                                             }}
-                                            dataLabels={ range(7, 11) }
+                                            dataLabels={['7 AM', '8 AM', '9 AM', '10 AM', '11 AM', '12 AM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM']}
                                             data={ Object.values( graphData?.currRate ) }
                                             backgroundColor="transparent"
                                             title="Current Viewers Rate" 
@@ -136,7 +136,7 @@ export default function Dashboard( props ) {
                                                 'rgb(196, 196, 196)', 
                                                 'rgb(221, 221, 221)'
                                             ]}
-                                            title="Annual Viewers Rate" 
+                                            title="Monthly Viewers Rate" 
                                             options={ topGraphOption } 
                                         />
                                     </>
@@ -236,12 +236,6 @@ function Graph( props ){
 
 
 //////////////////////// OTHER LOGIC(S) /////////////////////////////
-
-function range( start = 0, end , step = 1){
-    const rangeArr = Array(end);
-    return rangeArr.fill(0).map( (val) => (val + (rangeArr.length - (rangeArr.indexOf(val)+1) )).toString() );
-}
-
 
 function convertBytesToMegaBytes( bytes ){
     return (bytes / 1048576).toFixed( 2 );

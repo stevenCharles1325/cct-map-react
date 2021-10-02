@@ -37,13 +37,13 @@ const FloatingButton = (props) => {
 	}
 
 	useEffect(() => {
-		if( state.p2pFormState ){
+		if( state.p2pFormState && props?.cpPos ){
 			setP2pForm( () => <P2pForm dispatch={dispatch} {...props}/> );
 		}
 		else {
 			setP2pForm( () => null );
 		}
-	}, [state.p2pFormState]);
+	}, [state.p2pFormState, props?.cpPos]);
 
 	useEffect(() => {
 		if( !state.menuState && state.p2pFormState ) dispatch({type: 'p2p'});

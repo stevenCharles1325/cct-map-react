@@ -11,6 +11,12 @@ import saveImg from '../../../images/admin/download.png';
 import importImg from '../../../images/admin/import.png';
 import prevImg from '../../../images/admin/preview.png';
 
+import gizmoViewHelper from '../../../images/admin/gizmoViewHelper.PNG';
+import leftPanel from '../../../images/admin/left-panel.PNG';
+import toolBox from '../../../images/admin/tool-box.PNG';
+import controlButtons from '../../../images/admin/control-buttons.PNG';
+import placeCpButton from '../../../images/admin/place-cp-button.PNG';
+
 import '../../../styles/admin/map-menu.css';
 
 
@@ -26,6 +32,7 @@ function MapMenu( props ){
     const [isOpen, setIsOpen] = useState( false ); // open and close state of menu
     const [importBox, setImpotBox] = useState( null ); // Sets up import box
     const [saving, setSaving] = useState( false ); 
+    const [isManual, setIsManual] = useState( false );
 
     // -----------------------------------------
     // 
@@ -65,14 +72,16 @@ function MapMenu( props ){
     }
 
     const openImportBox = () => {
-        setImpotBox(<ImportBox 
-                        onClose={closeImportBox}
-                        reqSubmit={props.reqSetUpload}
-                    />);
+        setImpotBox(
+            <ImportBox 
+                onClose={closeImportBox}
+                reqSubmit={props.reqSetUpload}
+            />
+        );
     }
 
     const manualHandler = () => {
-        console.log('clicked Manual button');
+        setIsManual(isManual => !isManual);    
     }
 
     // -----------------------------------------
@@ -111,8 +120,18 @@ function MapMenu( props ){
     }, []);
 
     useEffect(() => {
-        if( saving ) saveHandler();
+        if( saving ) setTimeout(() => saveHandler(), 1000);
     }, [saving]);
+
+
+    useEffect(() => {
+        if( isManual ){
+            props?.setManual?.(() => <Manual setIsManual={setIsManual}/>);
+        }
+        else{
+            props?.setManual?.(() => null);
+        }
+    }, [isManual]);
 
     return (
         <>
@@ -237,6 +256,224 @@ function ImportBox( props ){
                 <button type="submit" style={{color: 'rgba(0, 0, 0, 0.4)'}} className="btn btn-block btn-success">Upload this object</button>    
             </form>
         </div>
+    );
+}
+
+
+const Manual = ( props ) => {
+    const pStyle = {
+        textAlign: 'justify'
+    }
+
+    return(
+        <div 
+            style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '500px', 
+                height: '65%', 
+                backgroundColor: 'white',
+                transition: '0.5s ease-in-out'
+            }}
+
+            className="px-3 py-3 d-flex flex-column justify-content-around align-items-center"
+        >
+            <div style={{height: '10%'}} className="text-center">
+                <h1 style={{letterSpacing: '2px'}}>MANUAL</h1>
+            </div>
+            <div 
+                className="px-3 pt-5 rounded" 
+                style={{
+                    overflowY: 'auto', 
+                    height: '75%', 
+                    lineHeight: '2',
+                    backgroundColor: '#30336b',
+                    color: 'rgba(255, 255, 255, 0.6)'
+                }}
+            >   
+                <ManualContent 
+                    title="HOW TO USE❔"
+                    pStyle={pStyle}
+                >
+                    {
+                        `Welcome to the manual of the cct-map admin app.
+                        As an admin you are bound to manage the data 
+                        inside the cct-map application, thus we have 
+                        provided you some functionalities that are
+                        essential to provide a good map to our beneficiaries.`
+                    }
+                </ManualContent>
+                <p style={pStyle}>
+                    Before we start I would like to mention a very important
+                    matter in this application. We have formulated an idea
+                    of a checkpoint. A <u>Checkpoint</u> serves a node in a graph.
+                    Since this application is a dynamic one, and does not offer you
+                    to edit the mesh of each 3d object it is very inconvenient to
+                    switch application each time you need to put a navigation mesh
+                    for the path-finding algorithm, therefor we have thought of
+                    devising an idea that allows you to say that a certain point
+                    in this 3d world is searchable by the users. Checkpoint has
+                    few properties like name, and position. Checkpoint's name is
+                    very important, since checkpoint serves as the location of a
+                    certain room or any place inside the map, it is required that
+                    you think the name thoroughly. On top of that, there is a special
+                    case when naming a checkpoint. When you name a checkpoint you
+                    can use a keyword "<u>CONNECTOR</u>". A Connector links all
+                    regular checkpoints with each other. It is very important to name
+                    the CONNECTOR with a unique number at the end of it. For example: 
+                </p>
+                <div 
+                    style={{backgroundColor: 'rgba(0, 0, 0, 0.3)'}} 
+                    className="p-3 rounded d-flex flex-column justify-content-around align-items-center"
+                >
+                    <b style={{color: '#82ccdd'}}>CONNECTOR1</b>
+                    <b style={{color: '#82ccdd'}}>CONNECTOR2</b>
+                    <b style={{color: '#82ccdd'}}>CONNECTOR3</b>
+                    <b style={{color: '#82ccdd'}}>CONNECTOR4</b>    
+                </div>
+                <br/>
+                <p style={pStyle}>
+                    Each number attached to the connectors automatically links them to
+                    the preceding, and the next number, so CONNECTOR2 is linked with
+                    CONNECTOR1 and CONNECTOR3, but not CONNECTOR4.
+                </p>
+                <br/>
+                <div 
+                    style={{
+                        backgroundColor: '#ff7979', 
+                        width: '100%', 
+                        height: 'fit-content'
+                    }}
+
+                    className="py-2 px-3 rounded"
+                >
+                    <b style={{color: 'rgba(0, 0, 0, 0.9)'}}>NOTICE❗️</b>
+                    <p style={{color: 'rgba(0, 0, 0, 0.9)'}}>
+                        Please notice that all checkpoints are not visible in the user-side.
+                    </p>  
+                </div>
+                <br/>
+                <h3 className="pb-3" style={{color: '#dff9fb'}}>LET'S GET STARTED!</h3>
+                <br/>
+                <br/>
+                <ManualContent 
+                    image={gizmoViewHelper}
+                    title="GIZMO VIEW HELPER"
+                    pStyle={pStyle}
+                >
+                    {
+                        `The first thing that you should know is about the GIZMO VIEW HELPER.
+                        It shows the different axes of the plane or the land. It is also interactive
+                        so you can click each axis and it will rotate accordingly. The dots which have
+                        no labels are the negatives.`
+                    }
+                </ManualContent>
+
+                <ManualContent 
+                    image={leftPanel}
+                    title="LEFT PANEL"
+                    pStyle={pStyle}
+                >
+                    {
+                        `The left panel has 3 icon buttons, they are the save, import, and manual buttons.
+                        The save button allows you to save the scene. The import button allows you to import
+                        a 3D object, but please keep in mind that as of this moment this application only
+                        accepts files with .obj file extension. The last button on the left panel is the
+                        manual button which shows you the guide on how to use this side of the application.`
+                    }
+                </ManualContent>
+
+                <ManualContent 
+                    image={toolBox}
+                    title="TOOL BOX"
+                    pStyle={pStyle}
+                >
+                    {
+                        `The tool box shows 3 different tools. The first one is the measure-line. Measure-line
+                        measures the distance between 2 points, just click the first point and drag the cursor
+                        to the second point you wish to measure the distance with. The measure line also disables
+                        the control for a moment until you disable the measure-line itself. The second one is the
+                        Position-cursor. Position-cursor allows you to identify the exact coordinates of a point
+                        by just using the cursor. The last one is the Checkpoint-generator. Checkpoint-generator
+                        allows you to easily generate checkpoints by entering the starting point and the distance
+                        between the starting point and next point. Checkpoint-generator also includes automatic 
+                        room numbering, just type the base name and the room-number's starting and ending number.`
+                    }
+                </ManualContent>
+
+                <ManualContent 
+                    image={controlButtons}
+                    title="CONTROL SWITCH"
+                    pStyle={pStyle}
+                >
+                    {
+                        `The Control-switch makes it easy to switch between two controls. The left side says "FREE"
+                        which allows you to use the first-person-control, just like FPS games. The right side says
+                        "ORBIT" which allows you to use Orbit-control that lets you orbit the land.`
+                    }
+                </ManualContent>
+
+                <ManualContent 
+                    image={placeCpButton}
+                    title="PLACE CHECKPOINT"
+                    pStyle={pStyle}
+                >
+                    {
+                        `Place-checkpoint is a button that generates a single checkpoint. When you press this button
+                        a single checkpoint must follow your cursor, but only when the cursor is inside the land or
+                        the canvas.`
+                    }
+                </ManualContent>
+                <h3 style={{textAlign: 'center', color: '#dff9fb'}}>THANK YOU FOR READING! 🎉</h3>
+                <br/>
+            </div>
+            <div style={{height: '10%'}} className="d-flex justify-content-center align-items-center">
+                <button 
+                    onClick={() => props?.setIsManual( false )} 
+                    style={{color: 'black'}} 
+                    className="btn btn-dark"
+                >
+                    CLOSE
+                </button>
+            </div>
+        </div>
+    );
+}
+
+
+const ManualContent = ( props ) => {
+    return(
+        <>
+            <h5 style={{color: '#badc58'}}> { props.title } </h5>
+            <div 
+                style={{width: '100%'}}
+                className="d-flex justify-content-center align-items-center"
+            >
+                { 
+                    props.image 
+                        ? <img 
+                            style={{
+                                width: 'auto',
+                                height: 'auto',
+                                imageRendering: 'pixelated',
+                                backgroundSize: 'contain',
+                                borderRadius: '20px',
+                                border: '2px solid white'
+                            }} 
+                            src={props.image} 
+                            alt={props.title}
+                        /> 
+                        : null 
+                }
+            </div>
+            <p style={props.pStyle}>
+                { props.children }
+            </p>
+            <br/>
+            <br/>
+        </>
     );
 }
 
