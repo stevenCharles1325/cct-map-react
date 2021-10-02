@@ -2,15 +2,23 @@
 
 /**
  * Module dependencies.
- */
+*/
+
 var fs = require('fs');
+var os = require('os');
 var path = require('path');
+var cluster = require('cluster');
+var { createTerminus } = require('@godaddy/terminus');
+
 var app = require('../app');
 var auth = require('../auth');
-var debug = require('debug')('server:server');
+
 var http = require('http');
 var https = require('https');
 
+var debug = require('debug')('server:server');
+
+var cpuLenght = os.cpus().length;
 
 var options = {
   key: fs.readFileSync( path.join(__dirname, '/91517924_cct-map.key') ),
@@ -19,7 +27,7 @@ var options = {
 
 /**
  * Get port from environment and store in Express.
- */
+*/
 
 // Request port
 var port = normalizePort(process.env.PORT || '3500');
@@ -32,60 +40,158 @@ var authPort = normalizePort(process.env.PORT || '4000');
 auth.set('port', authPort);
 auth.set('secPort', 4444);
 
-/**
- * Create HTTP server.
- */
 
-var server = http.createServer(app);
-var authServer = http.createServer(auth);
+// Clustering
+if( cluster.isMaster ){
+  
+  for(var i = 0; i < cpuLenght; i++){
+    cluster.fork();
+  }
 
-var secureServer = https.createServer(options, app);
-var secureAuthServer = https.createServer(options, auth);
+  cluster.on('exit', (worker, code, signal) => {
+    if( signal ){
+      console.log(`Worker [${worker.process.pid}] killed by signal [${ signal }]`);
+    }
+    else if( code !== 0 ){
+      console.log(`Worker [${worker.process.pid}] exited with error code [${ code }]`);
+    }
+    else{
+      console.log(`Worker [${worker.process.pid}] died`);      
+    }
 
+    cluster.fork();
+  });
+}
+else{
+  var server = http.createServer(app);
+  var authServer = http.createServer(auth);
 
-/**
- * Listen on provided port, on all network interfaces.
- */
-
-// =========================== NOT SECURED ============================
-// MAIN: Request server
-server.listen(port, () => {
-  console.log(`listening on port: ${port}`);
-});
-server.on('error', onError);
-server.on('listening', onListening);
-
-
-// Authentication server
-authServer.listen(authPort, () => {
-  console.log(`listening on port: ${authPort}`);
-});
-authServer.on('error', onError);
-authServer.on('listening', onListening);
-
-// =====================================================================
+  var secureServer = https.createServer(options, app);
+  var secureAuthServer = https.createServer(options, auth);
 
 
-// ============================== SECURED ==============================
+  const terminusOption = {
+    healthChecks: {
+      '/healthCheck': healthCheck,
+      verbatim: true,
+      _ussafeExposeStackTraces: true
+    },
+    onSignal,
+    onShutdown
+  };
 
-// MAIN: Request server
-secureServer.listen(app.get('secPort'), () => {
-  console.log(`listening on port: ${ app.get('secPort') }`);
-});
-secureServer.on('error', onError);
-secureServer.on('listening', onListening);
+  createTerminus(server, terminusOption);
+  createTerminus(authServer, terminusOption);
 
-
-// Authentication server
-secureAuthServer.listen(auth.get('secPort'), () => {
-  console.log(`listening on port: ${ auth.get('secPort') }`);
-});
-secureAuthServer.on('error', onError);
-secureAuthServer.on('listening', onListening);
-
-// ======================================================================
+  createTerminus(secureServer, terminusOption);
+  createTerminus(secureAuthServer, terminusOption);
 
 
+  /**
+   * Listen on provided port, on all network interfaces.
+   */
+
+  // unsecure
+  authServer.listen(authPort, () => {
+    console.log(`listening on port: ${authPort}`);
+  });
+
+  server.listen(port, () => {
+    console.log(`listening on port: ${port}`);
+  });
+
+
+  // Secure
+  secureServer.listen(app.get('secPort'), () => {
+    console.log(`listening on port: ${ app.get('secPort') }`);
+  });
+ 
+  secureAuthServer.listen(auth.get('secPort'), () => {
+    console.log(`listening on port: ${ auth.get('secPort') }`);
+  });
+
+  // =========================== UNSECURED ============================
+  // MAIN: Request server
+  server.on('error', onError);
+  server.on('listening', onServerListening);
+
+
+  // Authentication server
+  authServer.on('error', onError);
+  authServer.on('listening', onAuthServerListening);
+
+  // =====================================================================
+
+
+  // ============================== SECURED ==============================
+
+  // MAIN: Request server
+  secureServer.on('error', onError);
+  secureServer.on('listening', onSecureServerListening);
+
+
+  // Authentication server
+  secureAuthServer.on('error', onError);
+  secureAuthServer.on('listening', onSecureAuthServerListening);
+
+  // ======================================================================
+
+  /**
+   * Event listener for HTTP server "listening" event.
+   */
+
+  function onServerListening(){
+    var addr = server.address();
+
+    var bind = typeof addr === 'string'
+      ? 'pipe ' + addr
+      : 'port ' + addr.port;
+    debug('Listening on ' + bind); 
+  }
+
+  function onAuthServerListening(){
+    var authAddr = authServer.address();
+
+    var bind = typeof authAddr === 'string'
+      ? 'pipe ' + authAddr
+      : 'port ' + authAddr.port;
+    debug('Listening on ' + bind); 
+  }
+
+  function onSecureServerListening(){
+    var secureAddr = secureServer.address();
+    
+    var bind = typeof secureAddr === 'string'
+      ? 'pipe ' + secureAddr
+      : 'port ' + secureAddr.port;
+    debug('Listening on ' + bind);
+  }
+
+  function onSecureAuthServerListening(){
+    var secureAuth = secureAuthServer.address();
+
+    var bind = typeof secureAuth === 'string'
+      ? 'pipe ' + secureAuth
+      : 'port ' + secureAuth.port;
+    debug('Listening on ' + bind);
+  }
+}
+
+
+
+function onSignal() {
+  console.log('Server is starting to clean up');
+}
+
+function onShutdown() {
+  console.log('Server is cleaned up, will now shutdown');
+}
+
+function healthCheck({ state }) {
+  if( state.isShuttingDown ){
+    console.log('Server is shutting down');
+  }
+}
 
 
 /**
@@ -136,14 +242,3 @@ function onError(error) {
   }
 }
 
-/**
- * Event listener for HTTP server "listening" event.
- */
-
-function onListening() {
-  var addr = server.address();
-  var bind = typeof addr === 'string'
-    ? 'pipe ' + addr
-    : 'port ' + addr.port;
-  debug('Listening on ' + bind);
-}

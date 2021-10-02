@@ -2,6 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const auth = express();
+const helmet = require('helmet');
 
 const jwt = require('jsonwebtoken');
 const path = require('path');
@@ -12,6 +13,7 @@ const tokens_path = path.join(__dirname, '/data/tokens.json');
 
 const cors = require('cors');
 
+auth.use(helmet());
 auth.use(express.json());
 auth.use(cors());
 

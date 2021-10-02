@@ -5,6 +5,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var fileUpload = require('express-fileupload');
 var logger = require('morgan');
+var helmet = require('helmet');
+var compression = require('compression');
 
 var cors = require('cors');
 
@@ -12,6 +14,8 @@ var indexRouter = require('./routes/route-admin');
 var usersRouter = require('./routes/route-users');
 
 var app = express();
+
+app.use(compression({ filter: shouldCompress }));
 
 app.all('*', async ( req, res, next ) => {
 	if( req.secure ){
@@ -26,6 +30,7 @@ app.all('*', async ( req, res, next ) => {
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
+app.use(helmet());
 app.use(cors());
 
 app.use(fileUpload());
@@ -39,6 +44,15 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/admin', indexRouter);
 app.use('/', usersRouter);
 
+
+
+function shouldCompress( req, res ){
+	if( req.headers['x-no-compression']){
+		return false;
+	}
+
+	return compression.filter(req, res);
+}
 // app.use((req, res, next) => { // previously on line 44
 //   res.setHeader('Access-Control-Allow-Origin', '*');
 //   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
@@ -70,7 +84,6 @@ app.use('/', usersRouter);
 //   });
 // }
 
-app.use(cors());
 
 // if (process.env.NODE_ENV === 'production') {
 //   // Serve any static files
@@ -82,11 +95,7 @@ app.use(cors());
 // }
 
 
-// app.use((req, res, next) => { // line 27
-//   res.setHeader('Access-Control-Allow-Origin', '*');
-//   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-//   next();
-// });
+
 
 
 // const whitelist = ['http://localhost:3000', 'http://localhost:443'] // line 31
