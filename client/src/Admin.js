@@ -59,37 +59,8 @@ export default function Admin(){
     	{ url: VIEWS[ 4 ], icon: settingsIcon, title:'Settings' }
 	];
 
-	const probeCookie = () => {
-		const cookie = Cookies.get('loggedIn');
 
-		if( cookie ){
-			return( path.isSignInPath() || path.isSignUpPath() || path.isRoot()
-					? <Redirect to={ path.home() } />
-					: <Redirect to={ path.pathname } />
-			);
-		}
-		else{
-			return( path.isSignInPath() 
-					? <Redirect to={ path.pathname } />
-					: <Redirect to={ VIEWS[ 2 ] } />
-			);	
-		}
-	}
-
-	const probeAdmin = async () => {
-		
-		return await axios.get('/admin/check')
-		.then( res => (
-			res.data
-				? probeCookie()
-				: <Redirect to={ VIEWS[ 3 ] } />
-		))
-		.catch( err => {
-			ErrorHandler.handle( err, probeAdmin, 1 );
-
-			return <ErrorPage />;
-		});
-	}
+	
 
 	const emitEvents = () => {
 		Event.on('enter', () => setView( () => <Redirect to={ path.home() }/> ));
@@ -97,11 +68,23 @@ export default function Admin(){
 			console.log('logging out');
 			return <Redirect to={ path.exit() }/>
 		}));
+
+		Event.on('unauthorized', () => setView( () => {
+			console.log('You are unauthorized');
+			return <Redirect to={ path.exit() }/>
+		}));
+
+		Event.on('forbidden', () => setView( () => {
+			console.log('You are forbidden');
+			return <Redirect to={ path.kick() }/>
+		}));
 	}
 
 	const load = async () => {
 		path.exist()
-			? setView( await probeAdmin() )
+			? path.isRoot()
+				? setView( <Redirect to={ path.home() }/>  )
+				: <Redirect to={ path.pathname }/>
 			: setView( path.notFound() );	
 	}
 
@@ -121,7 +104,8 @@ export default function Admin(){
 		<div className="admin">
 			<Suspense fallback={<Loading />}>	
 				{ bundle ? routeHandler( bundle ) : null }
-				{ view ?? null }
+				{ view }
+				{  }
 			</Suspense>
 		</div>
 	);
@@ -172,6 +156,12 @@ function Path( pathname ){
 
 	this.exit = () => {
 		this.pathname = VIEWS[ 2 ];
+
+		return this.pathname;
+	}
+
+	this.kick = () => {
+		this.pathname = VIEWS[ 3 ];
 
 		return this.pathname;
 	}

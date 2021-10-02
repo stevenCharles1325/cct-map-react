@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { Redirect } from 'react-router-dom';
 import { Line, Bar } from 'react-chartjs-2';
+import Cookies from 'js-cookie';
+import axios from 'axios';
+
 
 import ImageBall from '../../components/admin/image/image-ball';
 
@@ -17,12 +20,33 @@ export default function Dashboard( props ) {
 
     // Fetches the data from the server and sets the admin.
     const requestGraphData = async () => {
-        await axios.get('/admin/graph-data')
+        const token = Cookies.get('token');
+        const rtoken = Cookies.get('rtoken');
+
+        if( !token ){
+            return props?.Event?.emit?.('unauthorized');
+        }
+
+        await axios.get('https://localhost:4443/admin/graph-data', {
+            headers: {
+                'authentication': `Bearer ${token}`
+            }
+        })
         .then( res => {
             setGraphData( res.data );
         })
         .catch( err => {
             ErrorHandler.handle( err, requestGraphData, 2 );
+
+            if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
+                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                .then( res => {
+                    Cookies.set('token', res.data.accessToken)
+
+                    setTimeout(() => requestGraphData(), 1000);
+                })
+                .catch( err => props?.Event?.emit?.('unauthorized'));
+            }
         });
     }  
 

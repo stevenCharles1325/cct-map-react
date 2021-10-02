@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Cookies from 'js-cookie';
 import axios from 'axios';
 
 import '../../../styles/admin/image-ball.css';
@@ -16,12 +17,23 @@ const ImageBall = ( props ) => {
 	const handleMouseLeave = () => setIsVisible( false );
 
 	const handleChangePhoto = async (e) => {
+		const token = Cookies.get('token');
+        const rtoken = Cookies.get('rtoken');
+
+        if( !token ){
+        	return props?.Event?.emit?.('unauthorized');
+        }
+
 		const image = e.target.files[0];
 		const formData = new FormData();
 
 		formData.append('adminImg', image );
 
-		await axios.put('/admin/upload-picture', formData)
+		await axios.put('https://localhost:4443/admin/upload-picture', formData, {
+            headers: {
+                'authentication': `Bearer ${token}`
+            }
+        })
 		.then( res => {
 			setNewImage( () => res.data.path );
 
@@ -29,17 +41,48 @@ const ImageBall = ( props ) => {
 		})
 		.catch( err => {
 			ErrorHandler.handle( err, handleChangePhoto, 9, e );
+
+			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
+                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                .then( res => {
+                    Cookies.set('token', res.data.accessToken)
+
+                    setTimeout(() => handleChangePhoto(e), 1000);
+                })
+                .catch( err => props?.Event?.emit?.('unauthorized'));
+            }
 		});
 	}
 
 	const getPhoto = async () => {
-		await axios.get('/admin/picture')
+		const token = Cookies.get('token');
+        const rtoken = Cookies.get('rtoken');
+
+        if( !token ){
+            return props?.Event?.emit?.('unauthorized');
+        }
+
+		await axios.get('https://localhost:4443/admin/picture', {
+            headers: {
+                'authentication': `Bearer ${token}`
+            }
+        })
 		.then( res => {
 			setNewImage( () => res.data.path );			
 			console.log( res.data.message );
 		})
 		.catch( err => {
 			ErrorHandler.handle( err, getPhoto, 10 );
+
+			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
+                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                .then( res => {
+                    Cookies.set('token', res.data.accessToken)
+
+                    setTimeout(() => getPhoto(), 1000);
+                })
+                .catch( err => props?.Event?.emit?.('unauthorized'));
+            }
 		});
 	}
 

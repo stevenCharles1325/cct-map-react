@@ -1,5 +1,6 @@
 import React, {useState, useEffect} from 'react';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import { Link, BrowserRouter as Router, Redirect } from 'react-router-dom';
 import '../../styles/admin/sign-in.css';
 
@@ -17,36 +18,62 @@ export default function Signin( props ){
     const [password, setPassword] = useState( null );
     const [signIn, setSignIn] = useState( false );
 
-
     const size = {
             width: '85%'
         };
 
+    const checkAdminExistence = async () => {
+        const token = Cookies.get('token');
+        
+        if( token ){
+            axios.get('https://localhost:4443/admin/check-status', {
+                headers: {
+                    'authentication': `Bearer ${token}`
+                }
+            })
+            .then( res => {
+                return props?.Event?.emit?.('enter');
+            });    
+        }
+        
+        axios.get('https://localhost:4443/admin/check-existence')
+        .then( res => {
+            if( !res.data.adminExist ){
+                return props?.Event?.emit?.('forbidden');
+            }
+        })
+        .catch( err => {
+            ErrorHandler.handle( err, checkAdminExistence, 14 );        
+        });
+    }
 
     const reqSetAdminSignIn = async ( data ) => { 
-            await axios.put('/admin/sign-in', data)
-            .then( res => {
-                console.log( res.data.message );
-                props.Event.emit('enter');
-            })
-            .catch( err => {
-                if( err?.response?.data?.which ){
-                    switch( err.response.data.which ){
-                        case 'username':
-                            return displayMessage('Incorrect username', 'username');
+        await axios.post('https://localhost:4444/auth/sign-in', data)
+        .then( res => {
+            Cookies.set('token', res.data.accessToken);
+            Cookies.set('rtoken', res.data.refreshToken);
 
-                        case 'password':
-                            return displayMessage('Incorrect password', 'password');
+            console.log( res.data.message );
+            return props?.Event?.emit?.('enter');
+        })
+        .catch( err => {
+            if( err?.response?.data?.which ){
+                switch( err.response.data.which ){
+                    case 'username':
+                        return displayMessage('Incorrect username', 'username');
 
-                        default:
-                            throw new Error('Something is wrong please try again');
-                    }
+                    case 'password':
+                        return displayMessage('Incorrect password', 'password');
+
+                    default:
+                        throw new Error('Something is wrong please try again');
                 }
-                else{
-                    ErrorHandler.handle( err, reqSetAdminSignIn, 7, data );
-                }
-            });
-        }
+            }
+            else{
+                ErrorHandler.handle( err, reqSetAdminSignIn, 7, data );
+            }
+        });
+    }
 
 
     const requestSignIn = async () => {
@@ -65,6 +92,8 @@ export default function Signin( props ){
     const handlePassword = (e) => {
         setPassword( () => e.target.value );
     }
+
+    useEffect(() => checkAdminExistence(), []);
 
     useEffect(() => {
         if( signIn ) requestSignIn();

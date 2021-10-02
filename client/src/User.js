@@ -29,7 +29,7 @@ function User( props ){
 	const [mapData, setMapData] = useState( null );
 
 	const requestMapData = async () => {
-		await axios.get('/map-data')
+		await axios.get('https://localhost:4443/map-data')
 		.then( res => {
 			setMapData( res.data.data );
 			console.log( res.data.message );

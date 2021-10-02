@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 import Validator from '../../modules/validate-input';
 
 import { Input, displayMessage }from '../../components/admin/inputs/input';
@@ -73,10 +74,31 @@ export default function Settings( props ){
     }
 
     const requestSetAdmin = async ( data ) => { 
-        await axios.put('/admin/set-admin', data)
+        const token = Cookies.get('token');
+        const rtoken = Cookies.get('rtoken');
+
+        if( !token ){
+            return props?.Event?.emit?.('unauthorized');
+        }
+
+        await axios.put('https://localhost:4443/admin/set-admin', data, {
+            headers: {
+                'authentication': `Bearer ${token}`
+            }
+        })
         .then( res => console.log( res.data.message ))
         .catch( err => {
             ErrorHandler.handle( err, requestSetAdmin, 5, data );
+
+            if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
+                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                .then( res => {
+                    Cookies.set('token', res.data.accessToken)
+
+                    setTimeout(() => requestSetAdmin( data ), 1000);
+                })
+                .catch( err => props?.Event?.emit?.('unauthorized'));
+            } 
         });
     }
 
@@ -89,10 +111,31 @@ export default function Settings( props ){
     }
 
     const fetchAdminData = async () => {
-        axios.get('/admin')
+        const token = Cookies.get('token');
+        const rtoken = Cookies.get('rtoken');
+
+        if( !token ){
+            return props?.Event?.emit?.('unauthorized');
+        }
+
+        await axios.get('https://localhost:4443/admin', {
+            headers: {
+                'authentication': `Bearer ${token}`
+            }
+        })
         .then( res => setAdmin(() => res.data) )
         .catch( err => {
             ErrorHandler.handle( err, fetchAdminData, 6 );
+
+            if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
+                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                .then( res => {
+                    Cookies.set('token', res.data.accessToken)
+
+                    setTimeout(() => fetchAdminData(), 1000);
+                })
+                .catch( err => props?.Event?.emit?.('unauthorized'));
+            } 
         });
     }
 
