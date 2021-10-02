@@ -7,5 +7,5 @@
 
 
 # certificate and key
-bin/91517924_cct-map.cert
-bin/91517924_cct-map.key
+*.cert
+*.key
