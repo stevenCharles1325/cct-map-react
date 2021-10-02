@@ -1,1 +1,11 @@
+# dependencies
 /node_modules
+
+
+# Enviroment
+/.env
+
+
+# certificate and key
+bin/91517924_cct-map.cert
+bin/91517924_cct-map.key
