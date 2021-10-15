@@ -96,33 +96,33 @@ function Checkpoints ( props ){
 		props.click({ data: checkpoint });
 	}
 
-	const handleHover = () => {
-		props.setControls( Controls => {
-			const configuration = Controls.config;
-			configuration.enabled = false;
+	// const handleHover = () => {
+	// 	props.setControls( Controls => {
+	// 		const configuration = Controls.config;
+	// 		configuration.enabled = false;
 
-			return {
-				controls: Controls.controls,
-				config: configuration,
-				event: Controls.event	
-			}
-		});
-	}
+	// 		return {
+	// 			controls: Controls.controls,
+	// 			config: configuration,
+	// 			event: Controls.event	
+	// 		}
+	// 	});
+	// }
 
-	const handleHoverOut = () => {
-		props.setControls( Controls => {
-			const configuration = Controls.config;
-			configuration.enabled = !Controls.event
-				? true
-				: false;;
+	// const handleHoverOut = () => {
+	// 	props.setControls( Controls => {
+	// 		const configuration = Controls.config;
+	// 		configuration.enabled = !Controls.event
+	// 			? true
+	// 			: false;;
 
-			return {
-				controls: Controls.controls,
-				config: configuration,
-				event: Controls.event	
-			}
-		});
-	}
+	// 		return {
+	// 			controls: Controls.controls,
+	// 			config: configuration,
+	// 			event: Controls.event	
+	// 		}
+	// 	});
+	// }
 
 	return (
 		<mesh 
@@ -130,9 +130,9 @@ function Checkpoints ( props ){
 			geometry={defaultGeometry}
 			material={defaultMaterial}
 			onDoubleClick={handleClick}
-			onPointerLeave={ handleHoverOut }
+			// onPointerLeave={ handleHoverOut }
 			name={`checkpoint_${props.index}_`} 			
-			onPointerEnter={ isPlaced ? handleHover : null }
+			// onPointerEnter={ isPlaced ? handleHover : null }
 		>
 		</mesh>
 	);
@@ -152,34 +152,34 @@ function CheckpointGen ( props ){
 		props.click({ data: checkpoint });
 	}
 
-	const handleHover = () => {
-		props.setControls( Controls => {
-			const configuration = Controls.config;
-			configuration.enabled = false;
+	// const handleHover = () => {
+	// 	props.setControls( Controls => {
+	// 		const configuration = Controls.config;
+	// 		configuration.enabled = false;
 
-			return {
-				controls: Controls.controls,
-				config: configuration	
-			}
-		});
-	}
+	// 		return {
+	// 			controls: Controls.controls,
+	// 			config: configuration	
+	// 		}
+	// 	});
+	// }
 
-	const handleHoverOut = () => {
-		props.setControls( Controls => {
-			console.log(Controls.event);
+	// const handleHoverOut = () => {
+	// 	props.setControls( Controls => {
+	// 		console.log(Controls.event);
 
-			const configuration = Controls.config;
-			configuration.enabled = !Controls.event
-				? true
-				: false;;;
+	// 		const configuration = Controls.config;
+	// 		configuration.enabled = !Controls.event
+	// 			? true
+	// 			: false;;;
 
-			return {
-				controls: Controls.controls,
-				config: configuration,
-				event: Controls.event	
-			}
-		});
-	}
+	// 		return {
+	// 			controls: Controls.controls,
+	// 			config: configuration,
+	// 			event: Controls.event	
+	// 		}
+	// 	});
+	// }
 
 	return (
 		<mesh 
@@ -188,8 +188,8 @@ function CheckpointGen ( props ){
 			geometry={defaultGeometry}
 			material={defaultMaterial}
 			onDoubleClick={handleClick}
-			onPointerEnter={handleHover}
-			onPointerLeave={handleHoverOut}
+			// onPointerEnter={handleHover}
+			// onPointerLeave={handleHoverOut}
 			name={`checkpoint_${props.index}_${props.name}`} 
 		>
 		</mesh>

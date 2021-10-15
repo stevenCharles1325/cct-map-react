@@ -2,7 +2,7 @@
 import React, { Suspense, useEffect, useState } from 'react';
 
 import { Canvas } from '@react-three/fiber';
-import { Line } from '@react-three/drei';
+import { Line, Html } from '@react-three/drei';
 
 import * as THREE from 'three';
 
@@ -11,7 +11,7 @@ import FloatingButton from '../../components/user/button/floating-button';
 
 
 // Modules
-import { pathFind, createNodes } from '../../modules/path-finding';
+import { pathFind, createNodes } from '../../modules/path-finding-2';
 import * as MAP from '../../modules/cct-map';
 
 
@@ -28,7 +28,7 @@ const MapView = (props) => {
 	const [path, setPath] = useState( [] );
 	const [line, setLine] = useState( null );
 	const [mapMessage, setMapMessage] = useState( [] );
-
+	const [destinationLabel, setDestinationLabel] = useState( null );
 
 	useEffect( () => {
 		const sceneLoader = async () => {
@@ -56,23 +56,65 @@ const MapView = (props) => {
 	}, [props.mapData]);
 
 	useEffect(() => {
-		if( cpPos ) createNodes( cpPos );
+		if( cpPos ){ 
+			setMapMessage((mapMessage) => [...mapMessage, 'Creating nodes.']);
+			createNodes( cpPos );
+			setMapMessage((mapMessage) => [...mapMessage, 'Nodes have been created.']);
+		}
 	}, [cpPos]);
 
+
+	// ===== CHANGES HERE =======
 	useEffect(() => {
 		const runPathFind = async () => {
 			const shortestPath = await pathFind( destination );
+			setDestinationLabel(() => (
+				<>
+					<Html 
+						position={Object.values(destination.start.position)}
+						className="non-selectable container"
+						style={{
+							fontSize: '10px',
+							overflow: 'hidden',
+							width: 'fit-content',
+							height: '20px',
+							pointerEvent: 'none'
+						}}
+					> 
+						{ MAP.getRootName( destination.start.name ) } 
+					</Html>
 
-			if( !shortestPath ){
+					{
+						destination.start.name !== destination.end.name
+							? <Html 
+								position={Object.values(destination.end.position)}
+								className="non-selectable container"
+								style={{
+									fontSize: '10px',
+									overflow: 'hidden',
+									width: 'fit-content',
+									height: '20px',
+									pointerEvent: 'none'
+								}}
+							> 
+								{ MAP.getRootName( destination.end.name ) } 
+							</Html> 
+							: null
+					}
+				</>
+			));
+			
+			if( !shortestPath || !shortestPath.length ){
 				setMapMessage( mapMessage => [
 					...mapMessage,
 					'Unable to provide path'
 				]);
+				setPath(() => []);
 			}
 			else{
 				setMapMessage( mapMessage => [
 					...mapMessage,
-					'Displaying path'
+					'Constructing path'
 				]);
 
 				setPath(() => [...shortestPath]);
@@ -84,11 +126,11 @@ const MapView = (props) => {
 		if( destination && scene && cpPos ) runPathFind();
 
 	}, [destination, scene]);
-
+	//  ===============================
 
 
 	useEffect(() => {
-		if(destination && path.length ) {
+		if( destination && path.length ) {
 			const createLine = async () => {
 				setLine( null );
 				setTimeout(() => {
@@ -106,6 +148,9 @@ const MapView = (props) => {
 
 			createLine();
 		}
+		else if( destination && !path.length ){
+			setLine(() => null);
+		}
 		
 	}, [destination, path]);
 
@@ -115,6 +160,7 @@ const MapView = (props) => {
 			<Canvas mode="concurrent" frameloop="demand" shadows={true}>
 				<Suspense fallback={<MAP.Loader />}>
 					<MAP.MapCanvas type="user" setCam={setCamera} setScene={setScene}>
+						{ destinationLabel }
 						{ objects ?? <MAP.Loader /> }
 
 						<Suspense fallback={<MAP.Loader/>}>

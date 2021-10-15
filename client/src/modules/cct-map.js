@@ -11,7 +11,7 @@ import {
 	useHelper
 } from '@react-three/drei';
 
-
+import uniqid from 'uniqid';
 import { Canvas, useThree, useLoader } from '@react-three/fiber';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { TextureLoader } from 'three/src/loaders/TextureLoader';
@@ -61,9 +61,9 @@ const loadScene = async ({ userType, data, click, checkPointSaver, setControls }
 	const prevChild = [];
 	const memo = [];
 
-	const { geometries, object } = data ;
+	// const { geometries, object } = data ;
 
-	const children = object?.children;
+	// const children = object?.children;
 
 	const checkType = ( type ) => {
 		switch( type ){
@@ -83,35 +83,65 @@ const loadScene = async ({ userType, data, click, checkPointSaver, setControls }
 		 ( userType !== 'admin' && /connector/.test(object.name.toLowerCase()) );
 	}
 
-	if( children ){
-		for( let index in children ){
 
-			if (isNameInvalid( children[index] )) continue;
+	data.forEach( (object, index) => {
+		let key = null;
 
-			if( memo.indexOf(children[index].name) < 0 ){
-				memo.push( children[index].name )
+		if( isCheckpointObject(object.object.name) ){
+			key = `checkpoint_${index}`;
+		}
+		else{
+			key = `map_object_${index}`;
 
-				if( isCheckpointObject(children[index].name) ){
-					key = `checkpoint_${index}`;
-				}
-				else{
-					key = `map_object_${index}`;
-				}
-				prevChild.push(
-					<Build 
-						userType={userType}
-						index={index}
-						key={key}
-						geometry={geometries[index]}
-						data={object.children[index]}
-						click={checkType('click')}
-						saveCheckpoint={checkType('saver')}
-						setControls={ userType === 'admin' ? setControls : null }
-					/>
-				);
-			}
-		}	
-	}
+		}
+
+		// ======= changes here ==========
+		if( (userType === 'user' && !isCheckpointObject( object.object.name )) || userType === 'admin' ){
+			prevChild.push(
+				<Build 
+					userType={userType}
+					index={index}
+					key={key}
+					geometry={object.geometries?.[0] ?? object.geometries}
+					data={object.object}
+					click={checkType('click')}
+					saveCheckpoint={checkType('saver')}
+					setControls={ userType === 'admin' ? setControls : null }
+				/>
+			);
+		}
+	});
+
+	// if( children ){
+	// 	for( let index in children ){
+
+	// 		if (isNameInvalid( children[index] )) continue;
+
+	// 		if( memo.indexOf(children[index].name) < 0 ){
+	// 			memo.push( children[index].name )
+
+	// 			if( isCheckpointObject(children[index].name) ){
+	// 				key = `checkpoint_${index}`;
+	// 			}
+	// 			else{
+	// 				key = `map_object_${index}`;
+	// 			}
+	// 			prevChild.push(
+	// 				<Build 
+	// 					userType={userType}
+	// 					index={index}
+	// 					key={key}
+	// 					geometry={geometries[index]}
+	// 					data={object.children[index]}
+	// 					click={checkType('click')}
+	// 					saveCheckpoint={checkType('saver')}
+	// 					setControls={ userType === 'admin' ? setControls : null }
+	// 				/>
+	// 			);
+	// 		}
+	// 	}	
+	// }
+	
 	
 
 	return prevChild;
@@ -139,6 +169,7 @@ const Build = (props) => {
 					setControls={props?.setControls} 
 				/>
 			); 
+
 		case /map_object/.test(data.name):
 			return <ObjectBuilder
 						userType={props.userType}
@@ -226,37 +257,38 @@ function CheckpointBuilder( props ){
 		props?.click?.({ data: checkpoint });
 	}
 
-	const handleHover = () => {
-		props?.setControls?.( Controls => {
-			const configuration = Controls.config;
-			configuration.enabled = false;
+	// const handleHover = () => {
+	// 	props?.setControls?.( Controls => {
+	// 		const configuration = Controls.config;
+	// 		configuration.enabled = false;
 
-			return {
-				controls: Controls.controls,
-				config: configuration,
-				event: Controls.event
-			}
-		});
-	}
+	// 		return {
+	// 			controls: Controls.controls,
+	// 			config: configuration,
+	// 			event: Controls.event
+	// 		}
+	// 	});
+	// }
 	
-	const handleHoverOut = () => {
-		props?.setControls?.( Controls => {
-			console.log(Controls.event);
-			const configuration = Controls.config;
-			configuration.enabled = !Controls.event
-				? true
-				: false;;
+	// const handleHoverOut = () => {
+	// 	props?.setControls?.( Controls => {
+	// 		const configuration = Controls.config;
+	// 		configuration.enabled = !Controls.event
+	// 			? true
+	// 			: false;;
 
-			return {
-				controls: Controls.controls,
-				config: configuration,
-				event: Controls.event
-			}
-		});
-	}
+	// 		return {
+	// 			controls: Controls.controls,
+	// 			config: configuration,
+	// 			event: Controls.event
+	// 		}
+	// 	});
+	// }
 
 	const produceMaterial = () => {
-		return props.userType === 'admin' ? new THREE.MeshPhysicalMaterial( materialOptions ) : defaultMaterial;
+		return props.userType === 'admin' 
+			? new THREE.MeshPhysicalMaterial( materialOptions ) 
+			: defaultMaterial;
 	}
 
 	useEffect(() => {
@@ -271,8 +303,8 @@ function CheckpointBuilder( props ){
 			scale={[...Object.values(scale)]} 
 			position={position} 
 			onDoubleClick={handleClick}
-			onPointerEnter={handleHover}
-			onPointerLeave={handleHoverOut}
+			// onPointerEnter={handleHover}
+			// onPointerLeave={handleHoverOut}
 			material={produceMaterial()}
 			receiveShadow={true}
 			castShadow={true}
@@ -419,8 +451,9 @@ const Messenger = (props) => {
 
 const Loader = ( props ) => { 
 	const { progress } = useProgress();
+	const { prog, label } = props;
 
-	return <Html className="loader-progress" center> Loading: { progress }% </Html>
+	return <Html className="loader-progress" center> { label ?? "Loading" }: { prog ?? progress }% </Html>
 }
 
 
@@ -446,5 +479,5 @@ export {
 	isCheckpointObject,
 	getBaseName,
 	getRootName,
-	setEmtyNameCpSpotted,
+	setEmtyNameCpSpotted
 };

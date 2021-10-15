@@ -1,1 +1,956 @@
-[]
+[
+    {
+        "name": "checkpoint_1_REGISTRAR",
+        "position": {
+            "x": 202.25857470693632,
+            "y": 75.00000000000004,
+            "z": 3168.1294806674705,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_2_ACCTG OFFICE",
+        "position": {
+            "x": -426.3478313506655,
+            "y": 75,
+            "z": 3159.2324720572233,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_3_ANTHALL",
+        "position": {
+            "x": -445.8640659883605,
+            "y": 74.99999999999997,
+            "z": 931.2017892961017,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_4_SSA 1",
+        "position": {
+            "x": 208.7009001722131,
+            "y": 75,
+            "z": 934.0990840393933,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_5_SCS",
+        "position": {
+            "x": -432.5878559911748,
+            "y": 75.00000000000004,
+            "z": -441.8476819249472,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_6_SED2",
+        "position": {
+            "x": 186.07634654659682,
+            "y": 75,
+            "z": -458.02655943505124,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_7_SBM",
+        "position": {
+            "x": -433.82095278285396,
+            "y": 75,
+            "z": -2695.4634412876517,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_8_SED1",
+        "position": {
+            "x": 193.86453994843964,
+            "y": 74.99999999999996,
+            "z": -2717.4960243851315,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_9_CONNECTOR1-[2,11]",
+        "position": {
+            "x": -96.56142175266677,
+            "y": 75,
+            "z": 3172.5640652239317,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_10_CONNECTOR3-[4,1]",
+        "position": {
+            "x": -111.00050785760334,
+            "y": 75,
+            "z": 937.1902993078229,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_11_CONNECTOR4-[5]",
+        "position": {
+            "x": -119.55047764899712,
+            "y": 75,
+            "z": 300,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_12_CONNECTOR5-[6]",
+        "position": {
+            "x": -106.68492798230636,
+            "y": 74.99999999999991,
+            "z": -450,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_13_CONNECTOR6",
+        "position": {
+            "x": -102.80576652449815,
+            "y": 75,
+            "z": -2700.201298692826,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_14_CONNECTOR9-[50,51,4]",
+        "position": {
+            "x": -2204.2445109431105,
+            "y": 48.047697215317484,
+            "z": 288.7778090479286,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_15_CONNECTOR8-[7,50]",
+        "position": {
+            "x": -2109.881854108116,
+            "y": 40.069417043861534,
+            "z": -3358.0393201022275,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_16_CONNECTOR7-[6]",
+        "position": {
+            "x": -116.2942623322291,
+            "y": 75.00000000000017,
+            "z": -3339.272125750518,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_17_CONNECTOR10-[9,51]",
+        "position": {
+            "x": -1893.6998755364837,
+            "y": 34.41027161637983,
+            "z": 3537.3028062273706,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_18_CONNECTOR11-[10]",
+        "position": {
+            "x": -198.51159965413888,
+            "y": 74.99999999999991,
+            "z": 3663.1438888638495,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_19_GROUND",
+        "position": {
+            "x": -4067.1188823539906,
+            "y": 11.876299820625555,
+            "z": 236.5243274149061,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_20_CONNECTOR12-[7]",
+        "position": {
+            "x": 618.7249446011961,
+            "y": 325,
+            "z": -3384.3332994296034,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_21_CONNECTOR13-[12]",
+        "position": {
+            "x": 622.7627841107119,
+            "y": 324.9999999999999,
+            "z": -3074.6078283427805,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_22_CONNECTOR14-[13]",
+        "position": {
+            "x": -136.67156861132707,
+            "y": 625,
+            "z": -3033.980678983589,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_23_CONNECTOR15-[14]",
+        "position": {
+            "x": -154.51059980835282,
+            "y": 625,
+            "z": -2759.2673788131374,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_24_CONNECTOR16-[15]",
+        "position": {
+            "x": -127.12204022540595,
+            "y": 625,
+            "z": -1696.7339964374735,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_25_CONNECTOR17-[16]",
+        "position": {
+            "x": -130.34869235355245,
+            "y": 625,
+            "z": -642,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_26_CONNECTOR18-[17]",
+        "position": {
+            "x": -121.84429800473993,
+            "y": 625,
+            "z": 418.2880021461374,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_27_CONNECTOR19-[18]",
+        "position": {
+            "x": -125.78953099120122,
+            "y": 625,
+            "z": 1437,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_28_CONNECTOR20-[19]",
+        "position": {
+            "x": -111.80053796459686,
+            "y": 625,
+            "z": 2486.9472867737695,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_29_CONNECTOR21-[20]",
+        "position": {
+            "x": -99.30404707515561,
+            "y": 625,
+            "z": 3502.5497511394387,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_30_CONNECTOR25-[11,24]",
+        "position": {
+            "x": 1050,
+            "y": 81,
+            "z": 3465,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_31_CONNECTOR22-[21,26]",
+        "position": {
+            "x": 887.3121880173514,
+            "y": 625,
+            "z": 3474.712719218257,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_32_CONNECTOR24-[23]",
+        "position": {
+            "x": 1063.8383965002777,
+            "y": 375.00000000000006,
+            "z": 3872.9281297322004,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_33_CONNECTOR23-[22]",
+        "position": {
+            "x": 872.6720170558106,
+            "y": 375,
+            "z": 3882.5119659626534,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_34_SATELLITE OFFICE",
+        "position": {
+            "x": 221.28720814642975,
+            "y": 625,
+            "z": -2716.365113727462,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_35_ROOM203",
+        "position": {
+            "x": 200.42430259653497,
+            "y": 625,
+            "z": -1680.9694538884078,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_36_ROOM205",
+        "position": {
+            "x": 214.87904321780093,
+            "y": 625,
+            "z": -630.0694998752792,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_37_ROOM207",
+        "position": {
+            "x": 204.07965961405534,
+            "y": 625,
+            "z": 382.9410301726034,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_38_ROOM209",
+        "position": {
+            "x": 201.70839502854778,
+            "y": 625,
+            "z": 1438,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_39_ROOM211",
+        "position": {
+            "x": 212.72415686556496,
+            "y": 625,
+            "z": 2452.732477992684,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_40_ADMIN OFFICE",
+        "position": {
+            "x": -421.23768544274253,
+            "y": 625,
+            "z": -2011.7797305704769,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_41_ROOM202",
+        "position": {
+            "x": -434.7075461985561,
+            "y": 625,
+            "z": -1689.086057329124,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_42_ROOM204",
+        "position": {
+            "x": -435.797861453338,
+            "y": 625,
+            "z": -637.6138053018758,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_43_ROOM206",
+        "position": {
+            "x": -450,
+            "y": 623.0210942395481,
+            "z": 343.58807949918264,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_44_ROOM208",
+        "position": {
+            "x": -422.4206371908665,
+            "y": 625,
+            "z": 1443.2776616960327,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_45_ROOM210",
+        "position": {
+            "x": -424.5358924185268,
+            "y": 625,
+            "z": 2480.898773701202,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_46_CONNECTOR30-[14]",
+        "position": {
+            "x": -102.07334843904312,
+            "y": 625,
+            "z": -3429.8958266481905,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_47_CONNECTOR31-[30]",
+        "position": {
+            "x": 653.7165784835327,
+            "y": 875,
+            "z": -3279.1526792161835,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_48_CONNECTOR32-[31]",
+        "position": {
+            "x": 655.1707079475573,
+            "y": 875,
+            "z": -3069.025283599003,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_49_CONNECTOR33-[32]",
+        "position": {
+            "x": -116.10368064962836,
+            "y": 1175,
+            "z": -3093.1142796748363,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_50_CONNECTOR34-[33]",
+        "position": {
+            "x": -123.92589608491903,
+            "y": 1175,
+            "z": -1712.1140631510305,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_51_ROOM303",
+        "position": {
+            "x": 208.7872455529066,
+            "y": 1175,
+            "z": -1667.818325305354,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_52_ROOM302",
+        "position": {
+            "x": -434.18468417654026,
+            "y": 1175,
+            "z": -1683.2225971365908,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_53_ROOM305",
+        "position": {
+            "x": 211.7443885006387,
+            "y": 1175,
+            "z": -624.121874507634,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_54_ROOM304",
+        "position": {
+            "x": -437.20209840743973,
+            "y": 1175,
+            "z": -638.459160102545,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_55_CONNECTOR35-[34]",
+        "position": {
+            "x": -131.33925253661084,
+            "y": 1175,
+            "z": -632.8081941109353,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_62_ROOM307",
+        "position": {
+            "x": 194.2048349246238,
+            "y": 1175,
+            "z": 362.14108919979026,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_6_ROOM309",
+        "position": {
+            "x": 198.54489043016633,
+            "y": 1175,
+            "z": 1446.2220269604659,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_64_ROOM311",
+        "position": {
+            "x": 202.25109450712398,
+            "y": 1175,
+            "z": 2481.761189600663,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_65_ROOM306",
+        "position": {
+            "x": -422.96122119262714,
+            "y": 1175,
+            "z": 339.9990365318163,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_66_ROOM308",
+        "position": {
+            "x": -441.1200496359511,
+            "y": 1175,
+            "z": 1442.5707845982315,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_68_ROOM310",
+        "position": {
+            "x": -437.31201861818704,
+            "y": 1175,
+            "z": 2481.414114649553,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_69_CONNECTOR36-[35]",
+        "position": {
+            "x": -117.9609637808154,
+            "y": 1175,
+            "z": 333.83782719979627,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_70_CONNECTOR37-[36]",
+        "position": {
+            "x": -119.64055766769229,
+            "y": 1175,
+            "z": 1435.662325758236,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_71_CONNECTOR38-[37]",
+        "position": {
+            "x": -125.52512205947664,
+            "y": 1175,
+            "z": 2485.5862253527857,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_72_CONNECTOR39-[38,29]",
+        "position": {
+            "x": -110.88345483085186,
+            "y": 1175,
+            "z": 3489.1606488591806,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_73_CONNECTOR26",
+        "position": {
+            "x": 1061.7987230125705,
+            "y": 625.0000000000001,
+            "z": 3474,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_74_CONNECTOR27-[26]",
+        "position": {
+            "x": 1066.5083704530857,
+            "y": 925,
+            "z": 3884.7879138398866,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_75_CONNECTOR28-[27]",
+        "position": {
+            "x": 882.7949842807118,
+            "y": 925,
+            "z": 3883.7385947145776,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_76_CONNECTOR29-[28]",
+        "position": {
+            "x": 891.1188638490205,
+            "y": 1175,
+            "z": 3517.377707312555,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_77_CONNECTOR40-[33]",
+        "position": {
+            "x": -119.54500983168157,
+            "y": 1175,
+            "z": -3431.0797162946747,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_78_CONNECTOR41-[40]",
+        "position": {
+            "x": 675.0197761059262,
+            "y": 1425,
+            "z": -3297.9967136630175,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_79_CONNECTOR42-[41]",
+        "position": {
+            "x": 646.3970616704564,
+            "y": 1425,
+            "z": -3059.6916108732075,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_80_CONNECTOR43-[42]",
+        "position": {
+            "x": -112.91188867463507,
+            "y": 1725,
+            "z": -3086.3006765408704,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_81_SCSFACULTY",
+        "position": {
+            "x": -428.4874853994048,
+            "y": 1725,
+            "z": -3422.7394868257106,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_82_TECH ROOM",
+        "position": {
+            "x": 192.2143421763576,
+            "y": 1725,
+            "z": -1974.4928870024164,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_83_ROOM403",
+        "position": {
+            "x": 191.40989217582114,
+            "y": 1725,
+            "z": -1695.5532260169725,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_84_ROOM405",
+        "position": {
+            "x": 188.8180199696028,
+            "y": 1725,
+            "z": -621.3860361257198,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_85_ROOM407",
+        "position": {
+            "x": 196.58648167159276,
+            "y": 1725,
+            "z": 390,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_86_ROOM409",
+        "position": {
+            "x": 207.34169300066333,
+            "y": 1725,
+            "z": 1435.5987105804825,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_87_ROOM411",
+        "position": {
+            "x": 201.51142439076875,
+            "y": 1725,
+            "z": 2473.146747528279,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_88_ROOM410",
+        "position": {
+            "x": -417.9623154960814,
+            "y": 1725,
+            "z": 2484.325511243298,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_89_CONNECTOR44-[43]",
+        "position": {
+            "x": -118.24343231823309,
+            "y": 1725,
+            "z": -1861,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_90_CONNECTOR45-[44]",
+        "position": {
+            "x": -104.04519448407007,
+            "y": 1725,
+            "z": -633.0732721507329,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_91_CONNECTOR46-[45]",
+        "position": {
+            "x": -102.65142991399364,
+            "y": 1725,
+            "z": 385.5785021302959,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_92_CONNECTOR47-[46]",
+        "position": {
+            "x": -114.53982825129674,
+            "y": 1725,
+            "z": 1435.3865035336594,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_93_CONNECTOR48-[47]",
+        "position": {
+            "x": -107.47793140850297,
+            "y": 1725,
+            "z": 2482.452679357949,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_94_CONNECTOR49-[48,103]",
+        "position": {
+            "x": -109.5694752821222,
+            "y": 1725,
+            "z": 3494.960597121906,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_95_CONNECTOR101-[29]",
+        "position": {
+            "x": 1061.3030605278304,
+            "y": 1175,
+            "z": 3509.7659621366556,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_96_CONNECTOR102-[101]",
+        "position": {
+            "x": 836.705546985047,
+            "y": 1425,
+            "z": 3891.457186268468,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_97_CONNECTOR102-[100]",
+        "position": {
+            "x": 1062.110792267028,
+            "y": 1425,
+            "z": 3907.287310485981,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_98_CONNECTOR103-[102]",
+        "position": {
+            "x": 890.2011124024373,
+            "y": 1725,
+            "z": 3488.2061080292933,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_100_CONNECTOR104-[43]",
+        "position": {
+            "x": -108.84937495192321,
+            "y": 1725,
+            "z": -3381.779773768929,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_101_CONNECTOR105-[104]",
+        "position": {
+            "x": 660.5967770087229,
+            "y": 1975,
+            "z": -3317.2943854797195,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_102_CONNECTOR105-[104]",
+        "position": {
+            "x": 667.0388820061594,
+            "y": 1975,
+            "z": -3106.0609011618008,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_103_GYM1",
+        "position": {
+            "x": -107.50747648668653,
+            "y": 2275,
+            "z": -2904,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_104_CONNECTOR106-[103]",
+        "position": {
+            "x": 1051.13445104531,
+            "y": 1725,
+            "z": 3476.2247352098457,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_105_CONNECTOR107-[106]",
+        "position": {
+            "x": 1053.646059231543,
+            "y": 1975,
+            "z": 3920,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_106_CONNECTOR108-[107]",
+        "position": {
+            "x": 878.8131975922947,
+            "y": 1975,
+            "z": 3944,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_107_CONNECTOR109-[108]",
+        "position": {
+            "x": 884.7892778804073,
+            "y": 2275,
+            "z": 3492.110474600493,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_108_PEDEPARTMENT",
+        "position": {
+            "x": 208.63768785189336,
+            "y": 2275,
+            "z": 3489.887035589122,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_109_GYM 2",
+        "position": {
+            "x": 378.4304119091453,
+            "y": 2275,
+            "z": 3310.1124951219026,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_110_CONNECTOR110-[109]",
+        "position": {
+            "x": 374.95687329419,
+            "y": 2275,
+            "z": 3464.757056175352,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_111_CONNECTOR111-[105]",
+        "position": {
+            "x": -107.9927259914889,
+            "y": 2275,
+            "z": -3094.340538086387,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_112_LOBBY",
+        "position": {
+            "x": -1002.430036671044,
+            "y": 75,
+            "z": 298.2852322094477,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_113_CONNECTOR50",
+        "position": {
+            "x": -2128.8568231201552,
+            "y": 34.75185103730077,
+            "z": -1611.460455705613,
+            "isVector3": true
+        }
+    },
+    {
+        "name": "checkpoint_114_CONNECTOR51",
+        "position": {
+            "x": -2019.6119742349274,
+            "y": 28.62450331239289,
+            "z": 1859.278925146301,
+            "isVector3": true
+        }
+    }
+]

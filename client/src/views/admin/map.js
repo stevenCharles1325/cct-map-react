@@ -24,11 +24,12 @@ import {
 	useLoader, 
 } from '@react-three/fiber';
 
-
+import BSON from 'bson';
 import axios from 'axios';
 import uniqid from 'uniqid';
 import * as THREE from 'three';
 import Cookies from 'js-cookie';
+import Chunker from '../../modules/chunker';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
 // Components
@@ -67,13 +68,15 @@ const materialOptions = {
 }
 
 const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
-
+const chunker = new Chunker();
 
 const MapView = (props) => {
 	const { ErrorHandler } = props;
 
 	const land = useRef();
 	const line = useRef();
+
+	const [loadCapsule, setLoadCapsule] = useState( null );
 
 	const [mapMessage, setMapMessage] = useState( [] );
 	const [enableMenu, setEnableMenu] = useState( true );
@@ -138,6 +141,7 @@ const MapView = (props) => {
 	const [propBoxCont, setPropBoxCont] = useState( null );
 	const [propBox, setPropBox] = useState( null );
 	const selectHandler = ( state, action ) => {
+
 		if( action.reset ){
 			if( state.selected ){
 				glassify( state?.selected?.current?.material, true );
@@ -349,8 +353,10 @@ const MapView = (props) => {
 
 
 	// Requests to save map
-	const requestSaveMapData = async (scene) => {	
-		if( !scene ) return;
+	const requestSaveMapData = async ( bundle ) => {	
+		if( !bundle ) return;
+
+		console.log( bundle );
 
 		const token = Cookies.get('token');
 		const rtoken = Cookies.get('rtoken');
@@ -359,7 +365,7 @@ const MapView = (props) => {
             return props.Event.emit('unauthorized');
         }
 
-		return await axios.post('https://localhost:4443/admin/update-map', scene, {
+		return await axios.post('https://localhost:4443/admin/update-map', bundle, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -372,14 +378,14 @@ const MapView = (props) => {
 			};
 		})
 		.catch( err => {
-			ErrorHandler.handle( err, requestSaveMapData, 4, scene );
+			ErrorHandler.handle( err, requestSaveMapData, 4, bundle );
 
 			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
                 return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
 
-                    setTimeout(() => requestSaveMapData(scene), 1000);
+                    setTimeout(() => requestSaveMapData(bundle), 1000);
                 })
                 .catch( err => props?.Event?.emit?.('unauthorized'));
             }
@@ -422,8 +428,12 @@ const MapView = (props) => {
 			setIsCheckPoint( false );
 		}
 		else if( deleteObj ){
+			// console.log( deleteObj );
+
 			let newCpList = removeByName( checkPoints, deleteObj );			
 			let newObjList = removeByKey( objList, deleteObj );
+
+			console.log( newCpList, newObjList );
 
 			setCheckPoints(() => [...newCpList]);
 			setObjList(() => [...newObjList]);	
@@ -522,7 +532,7 @@ const MapView = (props) => {
 
 	useEffect(() => {
 		const sceneLoader = async () => {
-			if( !objList?.length ){
+			if( !objList?.length && mapData ){
 				
 				const params = {
 					userType	: 'admin',
@@ -558,13 +568,23 @@ const MapView = (props) => {
 
 	const requestSaveMap = async () => {
 		if( scene ){
-			const prevSceneState = JSON.stringify( scene.toJSON() );
+			const objects = [];
+
+			scene.children.forEach( child => {
+				if( /map_object/.test(child.name) || /checkpoint/.test(child.name) ){
+					objects.push({
+						geometries: child.toJSON().geometries,
+						object: child.toJSON().object
+					});
+				}
+			});
 
 			const mapBundle = {
-				scene: JSON.parse( prevSceneState ), 
-				cpPosition: checkPoints.map(elem => ({
-					name: elem.name, position: elem.position
-				}))
+				scene: BSON.serialize(objects), 
+				cpPos: BSON.serialize(checkPoints.map(elem => ({
+					name: elem.name, 
+					position: elem.position
+				})))
 			}
 
 			const message = await requestSaveMapData( mapBundle );
@@ -586,6 +606,7 @@ const MapView = (props) => {
 			    />
 			    	<MAP.Messenger message={mapMessage} messenger={setMapMessage}/>
 					<Canvas mode="concurrent" shadows={true}>
+						{ loadCapsule && <MAP.Loader label="Saving" prog={loadCapsule}/> }
 					    <Suspense fallback={<MAP.Loader />}>
 						    <MAP.MapCanvas 
 						    	type="admin"

@@ -4,12 +4,15 @@ var router = express.Router();
 var fs = require('fs');
 var path = require('path');
 var jwt = require('jsonwebtoken');
+var BSON = require('bson');
 
 // Paths
-const tokens_path = path.join(__dirname, '../data/tokens.json');
+
+const temp_path = path.join(__dirname, '../data/temp.json');
 const data_path = path.join(__dirname, '../data/admin.json');
-const graph_path = path.join(__dirname, '../data/records.json');
 const scene_path = path.join(__dirname, '../data/scene.json');
+const tokens_path = path.join(__dirname, '../data/tokens.json');
+const graph_path = path.join(__dirname, '../data/records.json');
 const cpPos_path = path.join(__dirname, '../data/cp-position.json');
 const models_path = path.join(__dirname, `../client/public/models`);
 const admin_profile_path = path.join(__dirname, '../client/public/images/admin/profile-pics');
@@ -46,8 +49,6 @@ router.get('/check-status', authentication, async (req, res, next) => {
 // ADMIN-DATA route. 
 router.get('/', authentication, async (req, res, next) => {
   const admin_data = JSON.parse(fs.readFileSync( data_path ));
-
-
 
   return res.status( 200 ).json( admin_data );  
 });
@@ -105,6 +106,7 @@ router.get('/map-data', authentication, async (req, res, next) => {
 // UPLOAD-3D route.
 router.post('/obj-upload', authentication, async (req, res, next) => {
   // clear all files in Models folder
+
   fs.readdir(models_path, (err, files) => {
     if( err ){
       console.log( err );
@@ -196,26 +198,33 @@ router.put('/upload-picture', authentication, async (req, res, next) => {
 });
 
 
-///////////////////// UPDATE MAP DATA  ////////////////////////
-router.post('/update-map', authentication, async (req, res, next) => {
-  const { scene, cpPosition } = req.body;
+router.put('/clear-temp', async (req, res, next) => {
+  fs.writeFile( temp_path, JSON.stringify([]), err => {
+    if( err ) return res.status( 503 );
 
-  
-
-  fs.writeFile(scene_path, JSON.stringify(scene, null, 4), (err) => {
-    if( err ) return res.status(503).json({message: `Couldn't fulfill the request to save data`});
-
-    fs.writeFile(cpPos_path, JSON.stringify(cpPosition, null, 4), (err) => {
-      if( err ) return res.status(503).json({message: `Couldn't fulfill the request to save data`});
-
-      return res.status(200).json({message: 'Map\'s been saved'});
-    });
+    return res.sendStatus( 200 );
   });
 });
 
 
 
+///////////////////// UPDATE MAP DATA  ////////////////////////
+router.post('/update-map', authentication, async (req, res, next) => {
+  const { scene, cpPos } = req.body;
 
+  let desScene = Object.values( BSON.deserialize( new Uint8Array(scene.data) ));
+  let desCpos = Object.values( BSON.deserialize( new Uint8Array(cpPos.data) ));
+
+  fs.writeFile( scene_path, JSON.stringify(desScene, null, 4), err => {
+    if( err ) return res.status( 503 );
+
+    fs.writeFile( cpPos_path, JSON.stringify(desCpos, null, 4), err => {
+      if( err ) return res.status( 503 );
+
+      return res.sendStatus( 200 );  
+    });
+  });
+});
 
 
 ///////////////////// SIGN-IN  &  SIGN-UP ////////////////////////////
