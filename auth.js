@@ -17,14 +17,14 @@ auth.use(helmet());
 auth.use(express.json());
 auth.use(cors());
 
-auth.all('*', async ( req, res, next ) => {
-	if( req.secure ){
-		return next();
-	}
-	else{
-		return res.redirect(307, `https://${ req.hostname }:${ auth.get('secPort') }/${ req.url }`);
-	}
-});
+// auth.all('*', async ( req, res, next ) => {
+// 	if( req.secure ){
+// 		return next();
+// 	}
+// 	else{
+// 		return res.redirect(307, `https://${ req.hostname }:${ auth.get('secPort') }${ req.url }`);
+// 	}
+// });
 	
 const requestAccessToken = ( user ) => {
 	return jwt.sign( user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '24h' } );

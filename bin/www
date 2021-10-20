@@ -8,13 +8,16 @@ var fs = require('fs');
 var os = require('os');
 var path = require('path');
 var cluster = require('cluster');
+var mongoose = require('mongoose');
 var { createTerminus } = require('@godaddy/terminus');
+
+// const DBURI = 'mongodb://localhost:27017/cct-map';
 
 var app = require('../app');
 var auth = require('../auth');
 
 var http = require('http');
-var https = require('https');
+// var https = require('https');
 
 var debug = require('debug')('server:server');
 
@@ -25,6 +28,15 @@ var options = {
   cert: fs.readFileSync( path.join(__dirname, '/.cert') )
 };
 
+
+const dbOptions = {
+  maxPoolSize: 10, // Maintain up to 10 socket connections
+  serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
+  socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+  family: 4 // Use IPv4, skip trying IPv6
+};
+
+
 /**
  * Get port from environment and store in Express.
 */
@@ -32,13 +44,13 @@ var options = {
 // Request port
 var port = normalizePort(process.env.PORT || '3500');
 app.set('port', port);
-app.set('secPort', 4443);
+// app.set('secPort', 4443);
 
 
 // Authentication port
 var authPort = normalizePort(process.env.PORT || '4000');
 auth.set('port', authPort);
-auth.set('secPort', 4444);
+// auth.set('secPort', 4444);
 
 
 // Clustering
@@ -66,8 +78,8 @@ else{
   var server = http.createServer(app);
   var authServer = http.createServer(auth);
 
-  var secureServer = https.createServer(options, app);
-  var secureAuthServer = https.createServer(options, auth);
+  // var secureServer = https.createServer(options, app);
+  // var secureAuthServer = https.createServer(options, auth);
 
 
   const terminusOption = {
@@ -83,8 +95,8 @@ else{
   createTerminus(server, terminusOption);
   createTerminus(authServer, terminusOption);
 
-  createTerminus(secureServer, terminusOption);
-  createTerminus(secureAuthServer, terminusOption);
+  // createTerminus(secureServer, terminusOption);
+  // createTerminus(secureAuthServer, terminusOption);
 
 
   /**
@@ -102,13 +114,13 @@ else{
 
 
   // Secure
-  secureServer.listen(app.get('secPort'), () => {
-    console.log(`listening on port: ${ app.get('secPort') }`);
-  });
+  // secureServer.listen(app.get('secPort'), () => {
+  //   console.log(`listening on port: ${ app.get('secPort') }`);
+  // });
  
-  secureAuthServer.listen(auth.get('secPort'), () => {
-    console.log(`listening on port: ${ auth.get('secPort') }`);
-  });
+  // secureAuthServer.listen(auth.get('secPort'), () => {
+  //   console.log(`listening on port: ${ auth.get('secPort') }`);
+  // });
 
   // =========================== UNSECURED ============================
   // MAIN: Request server
@@ -126,13 +138,13 @@ else{
   // ============================== SECURED ==============================
 
   // MAIN: Request server
-  secureServer.on('error', onError);
-  secureServer.on('listening', onSecureServerListening);
+  // secureServer.on('error', onError);
+  // secureServer.on('listening', onSecureServerListening);
 
 
-  // Authentication server
-  secureAuthServer.on('error', onError);
-  secureAuthServer.on('listening', onSecureAuthServerListening);
+  // // Authentication server
+  // secureAuthServer.on('error', onError);
+  // secureAuthServer.on('listening', onSecureAuthServerListening);
 
   // ======================================================================
 
@@ -158,23 +170,23 @@ else{
     debug('Listening on ' + bind); 
   }
 
-  function onSecureServerListening(){
-    var secureAddr = secureServer.address();
+  // function onSecureServerListening(){
+  //   var secureAddr = secureServer.address();
     
-    var bind = typeof secureAddr === 'string'
-      ? 'pipe ' + secureAddr
-      : 'port ' + secureAddr.port;
-    debug('Listening on ' + bind);
-  }
+  //   var bind = typeof secureAddr === 'string'
+  //     ? 'pipe ' + secureAddr
+  //     : 'port ' + secureAddr.port;
+  //   debug('Listening on ' + bind);
+  // }
 
-  function onSecureAuthServerListening(){
-    var secureAuth = secureAuthServer.address();
+  // function onSecureAuthServerListening(){
+  //   var secureAuth = secureAuthServer.address();
 
-    var bind = typeof secureAuth === 'string'
-      ? 'pipe ' + secureAuth
-      : 'port ' + secureAuth.port;
-    debug('Listening on ' + bind);
-  }
+  //   var bind = typeof secureAuth === 'string'
+  //     ? 'pipe ' + secureAuth
+  //     : 'port ' + secureAuth.port;
+  //   debug('Listening on ' + bind);
+  // }
 }
 
 

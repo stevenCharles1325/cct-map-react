@@ -7,7 +7,6 @@ var jwt = require('jsonwebtoken');
 var BSON = require('bson');
 
 // Paths
-
 const temp_path = path.join(__dirname, '../data/temp.json');
 const data_path = path.join(__dirname, '../data/admin.json');
 const scene_path = path.join(__dirname, '../data/scene.json');
@@ -45,7 +44,6 @@ router.get('/check-status', authentication, async (req, res, next) => {
 
 
 ///////////////////// ADMIN-DATA  &  GRAPH-DATA ////////////////////////
-
 // ADMIN-DATA route. 
 router.get('/', authentication, async (req, res, next) => {
   const admin_data = JSON.parse(fs.readFileSync( data_path ));
@@ -90,12 +88,16 @@ router.get('/graph-data', authentication, async (req, res, next) => {
 });
 
 
+
 // MAP-DATA route.
 router.get('/map-data', authentication, async (req, res, next) => {
+  // Changes hereee
+  fs.readFile( scene_path, ( err, data ) => {
+    if( err ) return res.sendStatus( 503 );
 
-  const map_data = JSON.parse(fs.readFileSync( scene_path ));
-
-  return res.status( 200 ).json( map_data );  
+    const map_data = JSON.parse( data );
+    return res.status( 200 ).json( map_data );  
+  });
 });
 
 
@@ -138,9 +140,6 @@ router.post('/obj-upload', authentication, async (req, res, next) => {
     res.status( 200 ).json({ fileName: object_name, filePath: `/models/${object_name}`});
   });
 });
-
-
-
 
 
 ///////////////////// GET ADMIN PICTURE  ////////////////////////
@@ -198,82 +197,28 @@ router.put('/upload-picture', authentication, async (req, res, next) => {
 });
 
 
-router.put('/clear-temp', async (req, res, next) => {
-  fs.writeFile( temp_path, JSON.stringify([]), err => {
-    if( err ) return res.status( 503 );
-
-    return res.sendStatus( 200 );
-  });
-});
-
-
 
 ///////////////////// UPDATE MAP DATA  ////////////////////////
-router.post('/update-map', authentication, async (req, res, next) => {
-  const { scene, cpPos } = req.body;
+router.post('/update-map', authentication, async (req, res, next) => {  
+  let { scene, cpPos } = req.body;
 
-  let desScene = Object.values( BSON.deserialize( new Uint8Array(scene.data) ));
-  let desCpos = Object.values( BSON.deserialize( new Uint8Array(cpPos.data) ));
+  scene = Object.values(BSON.deserialize( new Uint8Array( scene.data ) ));
+  cpPos = Object.values(BSON.deserialize( new Uint8Array( cpPos.data ) ));
 
-  fs.writeFile( scene_path, JSON.stringify(desScene, null, 4), err => {
-    if( err ) return res.status( 503 );
+  fs.writeFile(scene_path, JSON.stringify(scene, null, 4), (err) => {
+    if( err ) return res.status(503).json({message: `Couldn't fulfill the request to save data`});
 
-    fs.writeFile( cpPos_path, JSON.stringify(desCpos, null, 4), err => {
-      if( err ) return res.status( 503 );
+    fs.writeFile(cpPos_path, JSON.stringify(cpPos, null, 4), (err) => {
+      if( err ) return res.status(503).json({message: `Couldn't fulfill the request to save data`});
 
-      return res.sendStatus( 200 );  
+      return res.status(200).json({message: 'Map\'s been saved'});
     });
   });
 });
 
 
-///////////////////// SIGN-IN  &  SIGN-UP ////////////////////////////
-
-// SIGN-IN route.
-// router.put('/sign-in', async (req, res, next) => {
-//   const { username, password } = req.body;
-//   const admin_data = JSON.parse(fs.readFileSync( data_path ));
-  
-//   if(  username === admin_data.username ){
-//     if( password === admin_data.password ){
-//       res.cookie('loggedIn', '1', { signed: true });
-//       return res.status( 200 ).json({ message: 'signed-in' });
-//     }
-//     else{
-//       return res.status( 401 ).json({ which: 'password' });
-//     }
-//   }
-//   else{
-//     return res.status( 401 ).json({ which: 'username' });
-//   }
-
-// });
-
-
-
-// SIGN-UP route.
-// router.post('/sign-up', async(req, res, next) => {
-//   const { username, password, email, number } = req.body;
-//   const data = {
-//     exist: true,
-//     username : username,
-//     password : password,
-//     email : email,
-//     number : number
-//   };
-
-//   fs.writeFile( data_path, JSON.stringify(data, null, 4), err => {
-//     if( err ) return res.status(503).json({message: `Couldn't fulfill the request to save data`});
-    
-//     // res.cookie('loggedIn', '1', { signed: true });  
-//     return res.status(201).json({ message: "signed-up" });
-//   });
-
-// });
-
 
 ///////////////////// CHANGE-ADMIN-DATA  &  SET-ADMIN-STATUS ( ONLINE and OFFLINE )  ////////////////////////
-
 // SET-ADMIN route.
 router.put('/set-admin', authentication, async(req, res, next) => {
   const { username, password, email, number } = req.body;

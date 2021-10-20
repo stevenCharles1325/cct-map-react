@@ -29,7 +29,7 @@ const ImageBall = ( props ) => {
 
 		formData.append('adminImg', image );
 
-		await axios.put('https://localhost:4443/admin/upload-picture', formData, {
+		await axios.put('http://localhost:3500/admin/upload-picture', formData, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -43,7 +43,7 @@ const ImageBall = ( props ) => {
 			ErrorHandler.handle( err, handleChangePhoto, 9, e );
 
 			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                return axios.post('http://localhost:4000/auth/refresh-token', { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
 
@@ -62,7 +62,7 @@ const ImageBall = ( props ) => {
             return props?.Event?.emit?.('unauthorized');
         }
 
-		await axios.get('https://localhost:4443/admin/picture', {
+		await axios.get('http://localhost:3500/admin/picture', {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -75,7 +75,7 @@ const ImageBall = ( props ) => {
 			ErrorHandler.handle( err, getPhoto, 10 );
 
 			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                return axios.post('http://localhost:4000/auth/refresh-token', { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
 

@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var fs = require('fs');
 var path = require('path');
+var BSON = require('bson');
 
 const rec_path = path.join(__dirname, '../data/records.json');
 const scene_path = path.join(__dirname, '../data/scene.json');
@@ -16,7 +17,13 @@ router.get('/map-data', async (req, res, next) => {
     fs.readFile(cpPos_path, ( err, cpPos ) => {
       if( err ) return res.status( 400 ).json({ message: 'Resources not found' });
 
-      return res.status( 200 ).json({ data: { scene: JSON.parse(scene), cpPos: JSON.parse(cpPos) }, message: 'Data have been fetched successfully' });
+      return res.status( 200 ).json({ 
+        data: { 
+          scene: JSON.parse(scene), 
+          cpPos: JSON.parse(cpPos) 
+        }, 
+        message: 'Data have been fetched successfully' 
+      });
     });
   });
 });
@@ -43,7 +50,6 @@ router.get('/update-records', async (req, res) => {
         convertedRecords.currRate[ numberTime - 12 + 5 ] += 1;
       }
     }
-
 
     fs.writeFile(rec_path, JSON.stringify( convertedRecords, null, 4 ), async (err) => {
         if( err ) console.log( err );

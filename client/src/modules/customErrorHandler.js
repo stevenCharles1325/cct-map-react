@@ -51,15 +51,11 @@ export default class CustomErrorHandler{
 					case 500:
 						console.log(`[500 - SERVER ERROR]: ${ message ?? '' }`);
 						console.warn('ErrorHandler will now try to recover.');
-
-						setTimeout(() => self(data), this.delay);			
 						break;
 
 					case 503:
 						console.log(`[503 - SERVICE UNAVAILABLE]: ${ message ?? '' }`);
 						console.warn('ErrorHandler will now try to recover.');
-
-						setTimeout(() => self(data), this.delay);			
 						break;
 
 					default:
@@ -68,5 +64,6 @@ export default class CustomErrorHandler{
 				}
 			}
 		}
+		setTimeout(() => self(data), this.delay);					
 	}
 }

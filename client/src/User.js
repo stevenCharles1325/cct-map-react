@@ -29,14 +29,14 @@ function User( props ){
 	const [mapData, setMapData] = useState( null );
 
 	const requestUpdateRecords = async () => {
-		await axios.get('https://localhost:4443/update-records')
+		await axios.get('http://localhost:3500/update-records')
 		.catch( err => {
 			ErrorHandler.handle( err, requestMapData, 1 );
 		});
 	}
 
 	const requestMapData = async () => {
-		await axios.get('https://localhost:4443/map-data')
+		await axios.get('http://localhost:3500/map-data')
 		.then( res => {
 			setMapData( res.data.data );
 			console.log( res.data.message );

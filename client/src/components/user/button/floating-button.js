@@ -1,6 +1,10 @@
 import React, { useState, useReducer, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+import TextField from '@mui/material/TextField';
+import Autocomplete from '@mui/material/Autocomplete';
+import Box from '@mui/material/Box';
+
 
 // Style
 import '../../../styles/user/floating-btn.css';
@@ -17,10 +21,16 @@ const FloatingButton = (props) => {
 	const opener = (state, action) => {
 		switch( action.type ){
 			case "menu":
-				return { menuState: !state.menuState, p2pFormState: state.p2pFormState };
+				return { 
+					menuState: !state.menuState, 
+					p2pFormState: state.p2pFormState 
+				};
 
 			case "p2p":
-				return { menuState: state.menuState, p2pFormState: !state.p2pFormState };
+				return { 
+					menuState: state.menuState, 
+					p2pFormState: !state.p2pFormState 
+				};
 
 			default:
 				throw new Error(`${action.type} is unknown`);	
@@ -45,9 +55,9 @@ const FloatingButton = (props) => {
 		}
 	}, [state.p2pFormState, props?.cpPos]);
 
-	useEffect(() => {
-		if( !state.menuState && state.p2pFormState ) dispatch({type: 'p2p'});
-	}, [state.menuState, state.p2pFormState]);
+	// useEffect(() => {
+	// 	if( !state.menuState && state.p2pFormState ) dispatch({type: 'p2p'});
+	// }, [state.menuState, state.p2pFormState]);
 
 	useEffect(() => {
 		window.addEventListener('keydown', escapeListener);
@@ -57,8 +67,13 @@ const FloatingButton = (props) => {
 
 	return (
 		<>
-			<div className="floating-container d-flex flex-column justify-content-center align-items-center">
-				<div style={{height: state.menuState ? '200px' : '0px'}} className="floating-opt d-flex flex-column justify-content-around align-items-center">
+			<div 
+				className="floating-container d-flex flex-column justify-content-center align-items-center"
+			>
+				<div 
+					style={{height: state.menuState ? '200px' : '0px'}} 
+					className="floating-opt d-flex flex-column justify-content-around align-items-center"
+				>
 					<button className="floating-btn-opt-btn" onClick={() => dispatch({type: 'p2p'})}>P2P</button>
 					<Link to="/about">
 						<button className="floating-btn-opt-btn">About</button>
@@ -81,57 +96,58 @@ const FloatingButton = (props) => {
 const P2pForm = (props) => {
 	const { cpPos } = props;
 
-	let newSet = cpPos.filter( elem => !/connector/.test(elem.name.toLowerCase()) )
-	
-	// Example: Checkpoint_room123 becomes -> room123
     const getRootName = (name) => name?.replace?.(/checkpoint_([0-9]+)_/, '');
-    const options = [];
 
-	newSet?.forEach?.( item => {
-		options.push(
-			<option 
-	    		key={item.name} 
-	    		value={item.name}
-		    > 
-	    		{getRootName(item.name)} 
-	    	</option>
-	    );
-    });
+	let newSet = cpPos.filter( elem => !/connector/.test(elem.name.toLowerCase()) )
+	let labels = cpPos
+		.filter( elem => !/connector/.test(elem.name.toLowerCase()) )
+		.map(elem => getRootName(elem.name));
 
     const [destination, setDestination] = useState({
-	    start: newSet?.[0], 
-	    end: newSet?.[0] 
+	    start: null, 
+	    end: null 
  	});
 
- 	const locatePosition = ( name ) => {
+ 	const [isRunAlgo, setIsRunAlgo] = useState( false );
+ 	const [btnReady, setBtnReady] = useState( false );
+
+ 	const locatePosition = ( val ) => {
+ 		if( !val?.length || !val ) return null;
+
  		let position = null;
+ 		let name = null;
 
  		newSet.forEach( cp => {
- 			if( cp.name.indexOf(name) > -1 ){
+ 			if( cp.name.includes(val) ){
+ 				name = cp.name;
  				position = cp.position;
  			}
  		});
 
- 		return position;
+ 		return name && position ? [name, position] : null;
  	}
 
-    const reqSetLocation = (e) => {
+    const reqSetLocation = (e, value) => {
     	setDestination({ 
-    		start: {
-    			name: e.target.value,
-    			position: locatePosition( e.target.value )
-    		}, 
+    		start: value 
+    			? {
+	    			name: locatePosition( value )?.[0],
+	    			position: locatePosition( value )?.[1] 			
+	    		}
+	    		: null, 
     		end: destination.end
 		});
     }
 
-	const reqSetDestination = (e) => {
+	const reqSetDestination = (e, value) => {
     	setDestination({ 
     		start: destination.start, 
-    		end: {
-    			name: e.target.value,
-    			position: locatePosition( e.target.value )    			
-    		}
+    		end: value 
+    			? {
+	    			name: locatePosition( value )?.[0],
+	    			position: locatePosition( value )?.[1] 			
+	    		}
+	    		: null
     	});
     }
 
@@ -139,6 +155,27 @@ const P2pForm = (props) => {
 		props.setDestination( destination );
 		props.dispatch({type: 'p2p'}); // Closes p2p form
     }
+
+    useEffect(() => {
+    	if( isRunAlgo ){
+    		if( destination.start && destination.end ){
+    			reqRunP2PAlgo();
+    		}
+			setIsRunAlgo(() => false);
+    	}
+    	else{
+			setIsRunAlgo(() => false);
+    	}
+    }, [isRunAlgo, destination]);
+
+    useEffect(() => {
+		if( destination.start && destination.end ){
+			setBtnReady(() => true);
+		}
+    	else{
+			setBtnReady(() => false);
+    	}
+    }, [destination, btnReady]);
     
 	return (
 		<div className="p2p-frame d-flex flex-column justify-content-center align-items-center">
@@ -146,21 +183,54 @@ const P2pForm = (props) => {
 				<h5>Point to Point</h5>
 			</div>
 			<div className="p2p-frame-form d-flex flex-column justify-content-around align-items-center">
-				<div className="p2p-inp d-flex justify-content-center align-items-center">
+				<div className="p2p-inp d-flex justify-content-between align-items-center">
 					<label htmlFor="point-a">Point A: </label>
-					<select className="p2p-select" name="point-a" onChange={reqSetLocation}>
-						{ options }
-					</select>
+					<Autocomplete
+						sx={{width: 150}}
+						options={labels}
+						onChange={reqSetLocation}
+						onInputChange={reqSetLocation}
+						renderInput={(params) => (
+							<TextField 
+								{...params} 
+								variant="filled" 
+								label="Choose point A"
+							/>
+						)}
+					/>
 				</div>
 				
-				<div className="p2p-inp d-flex justify-content-center align-items-center">
+				<div className="p2p-inp d-flex justify-content-between align-items-center">
 					<label htmlFor="point-b">Point B: </label>
-					<select className="p2p-select" name="point-b" onChange={reqSetDestination}>
-						{ options }
-					</select>
+					<Autocomplete
+						sx={{width: 150}}
+						disablePortal
+						options={labels}
+						onChange={reqSetDestination}
+						onInputChange={reqSetDestination}
+						renderInput={(params) => (
+							<TextField 
+								{...params} 
+								variant="filled" 
+								label="Choose point B"
+							/>
+						)}
+					/>
 				</div>
 
-				<button style={{color: 'white'}} className="btn btn-dark" onClick={reqRunP2PAlgo}>locate</button>
+				<button 
+					style={{
+						color: 'white', 
+						background: btnReady 
+							? 'rgba(0, 0, 0, 0.8)' 
+							: 'rgba(200, 10, 10, 0.7)',
+						transition: '.2s ease-in-out'
+					}} 
+					className="btn" 
+					onClick={() => setIsRunAlgo(true)}
+				>
+					locate
+				</button>
 			</div>
 		</div>
 	);

@@ -42,16 +42,6 @@ const materialOptions = {
 
 const defaultMaterial = new THREE.MeshPhysicalMaterial( materialOptions );
 
-
-// Checker variable
-var EMPTY_NAME_CP_SPOTTED = false;
-
-
-const setEmtyNameCpSpotted = ( value ) => {
-	EMPTY_NAME_CP_SPOTTED = value;	
-} 
-
-
 // Scene loader
 const loadScene = async ({ userType, data, click, checkPointSaver, setControls }) => {
 	if( !data || !userType ) return;
@@ -60,10 +50,6 @@ const loadScene = async ({ userType, data, click, checkPointSaver, setControls }
 
 	const prevChild = [];
 	const memo = [];
-
-	// const { geometries, object } = data ;
-
-	// const children = object?.children;
 
 	const checkType = ( type ) => {
 		switch( type ){
@@ -475,9 +461,7 @@ export {
 	Atmosphere,
 	ObjectBuilder,
 	CheckpointBuilder,
-	EMPTY_NAME_CP_SPOTTED,
 	isCheckpointObject,
 	getBaseName,
-	getRootName,
-	setEmtyNameCpSpotted
+	getRootName
 };

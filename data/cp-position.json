@@ -495,7 +495,7 @@
         }
     },
     {
-        "name": "checkpoint_62_ROOM307",
+        "name": "checkpoint_56_ROOM307",
         "position": {
             "x": 194.2048349246238,
             "y": 1175,
@@ -504,7 +504,7 @@
         }
     },
     {
-        "name": "checkpoint_6_ROOM309",
+        "name": "checkpoint_57_ROOM309",
         "position": {
             "x": 198.54489043016633,
             "y": 1175,
@@ -513,7 +513,7 @@
         }
     },
     {
-        "name": "checkpoint_64_ROOM311",
+        "name": "checkpoint_58_ROOM311",
         "position": {
             "x": 202.25109450712398,
             "y": 1175,
@@ -522,7 +522,7 @@
         }
     },
     {
-        "name": "checkpoint_65_ROOM306",
+        "name": "checkpoint_59_ROOM306",
         "position": {
             "x": -422.96122119262714,
             "y": 1175,
@@ -531,7 +531,7 @@
         }
     },
     {
-        "name": "checkpoint_66_ROOM308",
+        "name": "checkpoint_60_ROOM308",
         "position": {
             "x": -441.1200496359511,
             "y": 1175,
@@ -540,7 +540,7 @@
         }
     },
     {
-        "name": "checkpoint_68_ROOM310",
+        "name": "checkpoint_61_ROOM310",
         "position": {
             "x": -437.31201861818704,
             "y": 1175,
@@ -549,7 +549,7 @@
         }
     },
     {
-        "name": "checkpoint_69_CONNECTOR36-[35]",
+        "name": "checkpoint_62_CONNECTOR36-[35]",
         "position": {
             "x": -117.9609637808154,
             "y": 1175,
@@ -558,7 +558,7 @@
         }
     },
     {
-        "name": "checkpoint_70_CONNECTOR37-[36]",
+        "name": "checkpoint_63_CONNECTOR37-[36]",
         "position": {
             "x": -119.64055766769229,
             "y": 1175,
@@ -567,7 +567,7 @@
         }
     },
     {
-        "name": "checkpoint_71_CONNECTOR38-[37]",
+        "name": "checkpoint_64_CONNECTOR38-[37]",
         "position": {
             "x": -125.52512205947664,
             "y": 1175,
@@ -576,7 +576,7 @@
         }
     },
     {
-        "name": "checkpoint_72_CONNECTOR39-[38,29]",
+        "name": "checkpoint_65_CONNECTOR39-[38,29]",
         "position": {
             "x": -110.88345483085186,
             "y": 1175,
@@ -585,7 +585,7 @@
         }
     },
     {
-        "name": "checkpoint_73_CONNECTOR26",
+        "name": "checkpoint_66_CONNECTOR26",
         "position": {
             "x": 1061.7987230125705,
             "y": 625.0000000000001,
@@ -594,7 +594,7 @@
         }
     },
     {
-        "name": "checkpoint_74_CONNECTOR27-[26]",
+        "name": "checkpoint_67_CONNECTOR27-[26]",
         "position": {
             "x": 1066.5083704530857,
             "y": 925,
@@ -603,7 +603,7 @@
         }
     },
     {
-        "name": "checkpoint_75_CONNECTOR28-[27]",
+        "name": "checkpoint_68_CONNECTOR28-[27]",
         "position": {
             "x": 882.7949842807118,
             "y": 925,
@@ -612,7 +612,7 @@
         }
     },
     {
-        "name": "checkpoint_76_CONNECTOR29-[28]",
+        "name": "checkpoint_69_CONNECTOR29-[28]",
         "position": {
             "x": 891.1188638490205,
             "y": 1175,
@@ -621,7 +621,7 @@
         }
     },
     {
-        "name": "checkpoint_77_CONNECTOR40-[33]",
+        "name": "checkpoint_70_CONNECTOR40-[33]",
         "position": {
             "x": -119.54500983168157,
             "y": 1175,
@@ -630,7 +630,7 @@
         }
     },
     {
-        "name": "checkpoint_78_CONNECTOR41-[40]",
+        "name": "checkpoint_71_CONNECTOR41-[40]",
         "position": {
             "x": 675.0197761059262,
             "y": 1425,
@@ -639,7 +639,7 @@
         }
     },
     {
-        "name": "checkpoint_79_CONNECTOR42-[41]",
+        "name": "checkpoint_72_CONNECTOR42-[41]",
         "position": {
             "x": 646.3970616704564,
             "y": 1425,
@@ -648,7 +648,7 @@
         }
     },
     {
-        "name": "checkpoint_80_CONNECTOR43-[42]",
+        "name": "checkpoint_73_CONNECTOR43-[42]",
         "position": {
             "x": -112.91188867463507,
             "y": 1725,
@@ -657,7 +657,7 @@
         }
     },
     {
-        "name": "checkpoint_81_SCSFACULTY",
+        "name": "checkpoint_74_SCSFACULTY",
         "position": {
             "x": -428.4874853994048,
             "y": 1725,
@@ -666,7 +666,7 @@
         }
     },
     {
-        "name": "checkpoint_82_TECH ROOM",
+        "name": "checkpoint_75_TECH ROOM",
         "position": {
             "x": 192.2143421763576,
             "y": 1725,
@@ -675,7 +675,7 @@
         }
     },
     {
-        "name": "checkpoint_83_ROOM403",
+        "name": "checkpoint_76_ROOM403",
         "position": {
             "x": 191.40989217582114,
             "y": 1725,
@@ -684,7 +684,7 @@
         }
     },
     {
-        "name": "checkpoint_84_ROOM405",
+        "name": "checkpoint_77_ROOM405",
         "position": {
             "x": 188.8180199696028,
             "y": 1725,
@@ -693,7 +693,7 @@
         }
     },
     {
-        "name": "checkpoint_85_ROOM407",
+        "name": "checkpoint_78_ROOM407",
         "position": {
             "x": 196.58648167159276,
             "y": 1725,
@@ -702,7 +702,7 @@
         }
     },
     {
-        "name": "checkpoint_86_ROOM409",
+        "name": "checkpoint_79_ROOM409",
         "position": {
             "x": 207.34169300066333,
             "y": 1725,
@@ -711,7 +711,7 @@
         }
     },
     {
-        "name": "checkpoint_87_ROOM411",
+        "name": "checkpoint_80_ROOM411",
         "position": {
             "x": 201.51142439076875,
             "y": 1725,
@@ -720,7 +720,7 @@
         }
     },
     {
-        "name": "checkpoint_88_ROOM410",
+        "name": "checkpoint_81_ROOM410",
         "position": {
             "x": -417.9623154960814,
             "y": 1725,
@@ -729,7 +729,7 @@
         }
     },
     {
-        "name": "checkpoint_89_CONNECTOR44-[43]",
+        "name": "checkpoint_82_CONNECTOR44-[43]",
         "position": {
             "x": -118.24343231823309,
             "y": 1725,
@@ -738,7 +738,7 @@
         }
     },
     {
-        "name": "checkpoint_90_CONNECTOR45-[44]",
+        "name": "checkpoint_83_CONNECTOR45-[44]",
         "position": {
             "x": -104.04519448407007,
             "y": 1725,
@@ -747,7 +747,7 @@
         }
     },
     {
-        "name": "checkpoint_91_CONNECTOR46-[45]",
+        "name": "checkpoint_84_CONNECTOR46-[45]",
         "position": {
             "x": -102.65142991399364,
             "y": 1725,
@@ -756,7 +756,7 @@
         }
     },
     {
-        "name": "checkpoint_92_CONNECTOR47-[46]",
+        "name": "checkpoint_85_CONNECTOR47-[46]",
         "position": {
             "x": -114.53982825129674,
             "y": 1725,
@@ -765,7 +765,7 @@
         }
     },
     {
-        "name": "checkpoint_93_CONNECTOR48-[47]",
+        "name": "checkpoint_86_CONNECTOR48-[47]",
         "position": {
             "x": -107.47793140850297,
             "y": 1725,
@@ -774,7 +774,7 @@
         }
     },
     {
-        "name": "checkpoint_94_CONNECTOR49-[48,103]",
+        "name": "checkpoint_87_CONNECTOR49-[48,103]",
         "position": {
             "x": -109.5694752821222,
             "y": 1725,
@@ -783,7 +783,7 @@
         }
     },
     {
-        "name": "checkpoint_95_CONNECTOR101-[29]",
+        "name": "checkpoint_88_CONNECTOR101-[29]",
         "position": {
             "x": 1061.3030605278304,
             "y": 1175,
@@ -792,7 +792,7 @@
         }
     },
     {
-        "name": "checkpoint_96_CONNECTOR102-[101]",
+        "name": "checkpoint_89_CONNECTOR102-[101]",
         "position": {
             "x": 836.705546985047,
             "y": 1425,
@@ -801,7 +801,7 @@
         }
     },
     {
-        "name": "checkpoint_97_CONNECTOR102-[100]",
+        "name": "checkpoint_90_CONNECTOR102-[100]",
         "position": {
             "x": 1062.110792267028,
             "y": 1425,
@@ -810,7 +810,7 @@
         }
     },
     {
-        "name": "checkpoint_98_CONNECTOR103-[102]",
+        "name": "checkpoint_91_CONNECTOR103-[102]",
         "position": {
             "x": 890.2011124024373,
             "y": 1725,
@@ -819,7 +819,7 @@
         }
     },
     {
-        "name": "checkpoint_100_CONNECTOR104-[43]",
+        "name": "checkpoint_92_CONNECTOR104-[43]",
         "position": {
             "x": -108.84937495192321,
             "y": 1725,
@@ -828,7 +828,7 @@
         }
     },
     {
-        "name": "checkpoint_101_CONNECTOR105-[104]",
+        "name": "checkpoint_93_CONNECTOR105-[104]",
         "position": {
             "x": 660.5967770087229,
             "y": 1975,
@@ -837,7 +837,7 @@
         }
     },
     {
-        "name": "checkpoint_102_CONNECTOR105-[104]",
+        "name": "checkpoint_94_CONNECTOR105-[104]",
         "position": {
             "x": 667.0388820061594,
             "y": 1975,
@@ -846,7 +846,7 @@
         }
     },
     {
-        "name": "checkpoint_103_GYM1",
+        "name": "checkpoint_95_GYM1",
         "position": {
             "x": -107.50747648668653,
             "y": 2275,
@@ -855,7 +855,7 @@
         }
     },
     {
-        "name": "checkpoint_104_CONNECTOR106-[103]",
+        "name": "checkpoint_96_CONNECTOR106-[103]",
         "position": {
             "x": 1051.13445104531,
             "y": 1725,
@@ -864,7 +864,7 @@
         }
     },
     {
-        "name": "checkpoint_105_CONNECTOR107-[106]",
+        "name": "checkpoint_97_CONNECTOR107-[106]",
         "position": {
             "x": 1053.646059231543,
             "y": 1975,
@@ -873,7 +873,7 @@
         }
     },
     {
-        "name": "checkpoint_106_CONNECTOR108-[107]",
+        "name": "checkpoint_98_CONNECTOR108-[107]",
         "position": {
             "x": 878.8131975922947,
             "y": 1975,
@@ -882,7 +882,7 @@
         }
     },
     {
-        "name": "checkpoint_107_CONNECTOR109-[108]",
+        "name": "checkpoint_99_CONNECTOR109-[108]",
         "position": {
             "x": 884.7892778804073,
             "y": 2275,
@@ -891,7 +891,7 @@
         }
     },
     {
-        "name": "checkpoint_108_PEDEPARTMENT",
+        "name": "checkpoint_100_PEDEPARTMENT",
         "position": {
             "x": 208.63768785189336,
             "y": 2275,
@@ -900,7 +900,7 @@
         }
     },
     {
-        "name": "checkpoint_109_GYM 2",
+        "name": "checkpoint_101_GYM 2",
         "position": {
             "x": 378.4304119091453,
             "y": 2275,
@@ -909,7 +909,7 @@
         }
     },
     {
-        "name": "checkpoint_110_CONNECTOR110-[109]",
+        "name": "checkpoint_102_CONNECTOR110-[109]",
         "position": {
             "x": 374.95687329419,
             "y": 2275,
@@ -918,7 +918,7 @@
         }
     },
     {
-        "name": "checkpoint_111_CONNECTOR111-[105]",
+        "name": "checkpoint_103_CONNECTOR111-[105]",
         "position": {
             "x": -107.9927259914889,
             "y": 2275,
@@ -927,7 +927,7 @@
         }
     },
     {
-        "name": "checkpoint_112_LOBBY",
+        "name": "checkpoint_104_LOBBY",
         "position": {
             "x": -1002.430036671044,
             "y": 75,
@@ -936,7 +936,7 @@
         }
     },
     {
-        "name": "checkpoint_113_CONNECTOR50",
+        "name": "checkpoint_105_CONNECTOR50",
         "position": {
             "x": -2128.8568231201552,
             "y": 34.75185103730077,
@@ -945,7 +945,7 @@
         }
     },
     {
-        "name": "checkpoint_114_CONNECTOR51",
+        "name": "checkpoint_106_CONNECTOR51",
         "position": {
             "x": -2019.6119742349274,
             "y": 28.62450331239289,

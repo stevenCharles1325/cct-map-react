@@ -29,7 +29,6 @@ import axios from 'axios';
 import uniqid from 'uniqid';
 import * as THREE from 'three';
 import Cookies from 'js-cookie';
-import Chunker from '../../modules/chunker';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 
 // Components
@@ -68,15 +67,12 @@ const materialOptions = {
 }
 
 const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
-const chunker = new Chunker();
 
 const MapView = (props) => {
 	const { ErrorHandler } = props;
 
 	const land = useRef();
 	const line = useRef();
-
-	const [loadCapsule, setLoadCapsule] = useState( null );
 
 	const [mapMessage, setMapMessage] = useState( [] );
 	const [enableMenu, setEnableMenu] = useState( true );
@@ -97,6 +93,7 @@ const MapView = (props) => {
 		event: null
 	});
 
+	const [isSaving, setIsSaving] = useState( false );
 	const [persCam, setPersCam] = useState( null );
 	const [scene, setScene] = useState( null );
 
@@ -140,8 +137,8 @@ const MapView = (props) => {
 
 	const [propBoxCont, setPropBoxCont] = useState( null );
 	const [propBox, setPropBox] = useState( null );
-	const selectHandler = ( state, action ) => {
 
+	const selectHandler = ( state, action ) => {
 		if( action.reset ){
 			if( state.selected ){
 				glassify( state?.selected?.current?.material, true );
@@ -328,7 +325,7 @@ const MapView = (props) => {
             return props.Event.emit('unauthorized');
         }
 
-		axios.get('https://localhost:4443/admin/map-data', {
+		axios.get('http://localhost:3500/admin/map-data', {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -340,7 +337,7 @@ const MapView = (props) => {
 			ErrorHandler.handle( err, requestMapData, 3 );
 
 			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                return axios.post('http://localhost:4000/auth/refresh-token', { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
 
@@ -351,12 +348,10 @@ const MapView = (props) => {
 		});
 	}
 
-
+	// Changes hereee 
 	// Requests to save map
-	const requestSaveMapData = async ( bundle ) => {	
-		if( !bundle ) return;
-
-		console.log( bundle );
+	const requestSaveMapData = async (scene) => {	
+		if( !scene ) return;
 
 		const token = Cookies.get('token');
 		const rtoken = Cookies.get('rtoken');
@@ -365,32 +360,28 @@ const MapView = (props) => {
             return props.Event.emit('unauthorized');
         }
 
-		return await axios.post('https://localhost:4443/admin/update-map', bundle, {
+		await axios.post('http://localhost:3500/admin/update-map', scene, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
         })
 		.then( res => {
-			return { 
-				message : res 
-						? 'Map has been saved successfully' 
-						: 'Please try again!' 
-			};
+			setMapMessage( mapMessage => [...mapMessage, 'Map has been saved successfully']);
 		})
 		.catch( err => {
-			ErrorHandler.handle( err, requestSaveMapData, 4, bundle );
+			ErrorHandler.handle( err, requestSaveMapData, 4, scene );
 
 			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                return axios.post('http://localhost:4000/auth/refresh-token', { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
 
-                    setTimeout(() => requestSaveMapData(bundle), 1000);
+                    setTimeout(() => requestSaveMapData(scene), 1000);
                 })
                 .catch( err => props?.Event?.emit?.('unauthorized'));
             }
 
-			return { message : err };
+			setMapMessage( mapMessage => [...mapMessage, 'Please try again']);
 		});
 	}
 
@@ -428,16 +419,11 @@ const MapView = (props) => {
 			setIsCheckPoint( false );
 		}
 		else if( deleteObj ){
-			// console.log( deleteObj );
-
 			let newCpList = removeByName( checkPoints, deleteObj );			
 			let newObjList = removeByKey( objList, deleteObj );
 
-			console.log( newCpList, newObjList );
-
 			setCheckPoints(() => [...newCpList]);
 			setObjList(() => [...newObjList]);	
-
 
 			dispatch({ reset: true });
 		}
@@ -567,7 +553,64 @@ const MapView = (props) => {
 	}, [mapData]);
 
 	const requestSaveMap = async () => {
-		if( scene ){
+		let isError = false;
+
+		checkPoints.forEach(elem => {
+			if( isError ) return;
+
+			if( elem.name.includes('CONNECTOR') ){
+				if( !elem.name.length ){
+					isError = true;
+					return setMapMessage( mapMessage => [...mapMessage, 'Found a unnamed Checkpoint.']);
+				}
+				else{
+					if( MAP.getRootName( elem.name )?.split?.('-')?.length > 2 ){
+						isError = true;
+						return setMapMessage( mapMessage => [...mapMessage, 'Found an invalid Checkpoint name.']);
+					}
+
+					let id = Number(MAP.getRootName( elem.name ).split('-')[0].split('CONNECTOR')[1]);
+					let depList = MAP.getRootName( elem.name ).split('-')[1];
+
+					if( isNaN(id) ){ // Check if connector id is valid. CONNECTOR1 is valid but not CONNECTOR*
+						isError = true;
+						return setMapMessage( mapMessage => [...mapMessage, 'Found an invalid connector ID.']);
+					}
+					else{
+						if( depList ){
+							try{
+								depList = JSON.parse( depList );
+
+								depList?.forEach( elemID => {
+									if( isNaN(Number( elemID )) ){
+										isError = true;
+										return setMapMessage( mapMessage => [...mapMessage, 'Found an invalid connector ID.']);
+									}
+								});
+							}
+							catch( err ) {
+								isError = true;
+								console.error( err );
+
+								return setMapMessage( mapMessage => [...mapMessage, 'Found an invalid connector dependency list.']);
+							}
+						}
+					}
+				}
+			}
+		});
+
+		if( state?.selected?.current ){
+			isError = true;
+
+			setMapMessage( mapMessage => [...mapMessage, 'Unselect an object first']);
+		}
+
+		if( scene && !isSaving && !isError ){
+            setMapMessage( mapMessage => [...mapMessage, 'Saving Map, please wait...']);
+
+			setIsSaving( isSaving => !isSaving );
+
 			const objects = [];
 
 			scene.children.forEach( child => {
@@ -587,9 +630,8 @@ const MapView = (props) => {
 				})))
 			}
 
-			const message = await requestSaveMapData( mapBundle );
-
-			setMapMessage( (mapMessage) => [...mapMessage, message.message] );
+			await requestSaveMapData( mapBundle );
+			setIsSaving( isSaving => !isSaving );
 		}	
 	}
 
@@ -602,11 +644,9 @@ const MapView = (props) => {
 			    	reqSetUpload={setUpload} 			    	
 			    	messenger={setMapMessage}
 			    	reqSaveMap={() => requestSaveMap()} 
-			    	saveAllowed={MAP.EMPTY_NAME_CP_SPOTTED}
 			    />
 			    	<MAP.Messenger message={mapMessage} messenger={setMapMessage}/>
 					<Canvas mode="concurrent" shadows={true}>
-						{ loadCapsule && <MAP.Loader label="Saving" prog={loadCapsule}/> }
 					    <Suspense fallback={<MAP.Loader />}>
 						    <MAP.MapCanvas 
 						    	type="admin"
@@ -664,11 +704,17 @@ const BottomBar = (props) => {
 	const handleCreateCheckPoint = () => {
 		props.messenger( (mapMessage) => [...mapMessage, 'Please wait...'] );
 		props.setCheckpoint( true );
-		MAP.setEmtyNameCpSpotted( true );
 	}
 
-	const handleMeasureLine = () => setMeasuring( measuring => !measuring );
-	const handlePositionCursor = () => setPositionCursor( positionCursor => !positionCursor );
+	const handleMeasureLine = () => {
+		setMeasuring( measuring => !measuring );
+		setPositionCursor( positionCursor => !positionCursor );
+	};
+
+	const handlePositionCursor = () => {
+		setMeasuring( measuring => !measuring );
+		setPositionCursor( positionCursor => !positionCursor );
+	};
 
 	const handleFreeControl = () => {
 		if( switched === 'free' ) return;
@@ -704,23 +750,20 @@ const BottomBar = (props) => {
 	const handleCheckpointGenerator = () => setCheckpointGen( checkpointGen => !checkpointGen );
 
 	useEffect(() => {
-		props.messenger( mapMessage => [...mapMessage, `Measure-line ${measuring ? 'on' : 'off'}`] );
 		props.setIsMeasureLine( () => measuring );
 	}, [measuring]);
 
 	useEffect(() => {
-		props.messenger( mapMessage => [...mapMessage, `Position-cursor ${positionCursor ? 'on' : 'off'}`] );
 		props.setIsPositionCursor( () => positionCursor );
 	}, [positionCursor]);
 
-	useEffect(() => {
-		props.messenger( mapMessage => [...mapMessage, `Checkpoint-generator ${checkpointGen ? 'on' : 'off'}`] );
-		props.setIsCheckpointGen( () => checkpointGen );
-	}, [checkpointGen]);
+	// useEffect(() => {
+	// 	props.setIsCheckpointGen( () => checkpointGen );
+	// }, [checkpointGen]);
 
 	return(
 		<div className="map-btm-bar d-flex justify-content-around align-items-center">
-			<div 
+			{/*<div 
 				style={{
 					height: openToolBox 
 								? 'fit-content' 
@@ -759,7 +802,7 @@ const BottomBar = (props) => {
 	 				click={() => handleToolBox()}
 	 			/>
 	 		</div>					
-
+			*/}
 			<div className="col-4 map-view-switch d-flex justify-content-center align-items-center">
 				<Button 
 					className={`${switched === 'free' ? "map-view-selected" : ''} map-vs-btn map-view-fpc`}
@@ -850,7 +893,6 @@ const PropertyBox = (props) => {
 	const [name, setName] = useState( MAP.getRootName(properties.name).toLowerCase() );
 
     if( checkpointType ){
-    	MAP.setEmtyNameCpSpotted( setMonitor( properties.name ) );
 	    var baseName = MAP.getBaseName( properties.name );	  
     }
 
@@ -861,8 +903,6 @@ const PropertyBox = (props) => {
         setName( e.target.value.toLowerCase() );
         properties.name = `${baseName}${e.target.value.toUpperCase()}`;
     	meshData.name = properties.name;	    
-
-    	MAP.setEmtyNameCpSpotted( setMonitor( properties.name ) );
     }
 
 
@@ -940,12 +980,7 @@ const PropertyBox = (props) => {
             	<PropBoxInp id="posZ" size={inputSize}  value={properties.position.z} handleChange={reqEditPosZ} name="Position Z"/>             	
             </div>   
             <div style={{height: '10%', width: '100%'}} className="d-flex justify-content-center align-items-center">
-            	{[
-            		{
-            			name: 'delete',
-            			action: handleDelete
-            		}
-            	].map(ops => <Button key={ops.name} name={ops.name} click={ops.action}/>)}
+            	<Button key={'delete'} name={'delete'} click={handleDelete}/>
             </div>  
         </div>
     );

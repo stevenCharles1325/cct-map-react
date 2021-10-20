@@ -31,7 +31,7 @@ export default function Signup( props ){
         }
 
     const checkAdminExistence = async () =>{
-        axios.get('https://localhost:4443/admin/check-existence')
+        axios.get('http://localhost:3500/admin/check-existence')
         .then( res => {
             if( res.data.adminExist ){
                 return props?.Event?.emit?.('enter');
@@ -43,7 +43,7 @@ export default function Signup( props ){
     }    
 
     const requestSignUp = async ( data ) => {
-        await axios.post('httpss://localhost:4444/auth/sign-up', data)
+        await axios.post('httpss://localhost:4000/auth/sign-up', data)
         .then( res => {
             Cookies.set('token', res.data.accessToken);  
             Cookies.set('rtoken', res.data.refreshToken);

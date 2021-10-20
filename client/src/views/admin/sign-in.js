@@ -26,7 +26,7 @@ export default function Signin( props ){
         const token = Cookies.get('token');
         
         if( token ){
-            axios.get('https://localhost:4443/admin/check-status', {
+            axios.get('http://localhost:3500/admin/check-status', {
                 headers: {
                     'authentication': `Bearer ${token}`
                 }
@@ -36,7 +36,7 @@ export default function Signin( props ){
             });    
         }
         
-        axios.get('https://localhost:4443/admin/check-existence')
+        axios.get('http://localhost:3500/admin/check-existence')
         .then( res => {
             if( !res.data.adminExist ){
                 return props?.Event?.emit?.('forbidden');
@@ -48,7 +48,7 @@ export default function Signin( props ){
     }
 
     const reqSetAdminSignIn = async ( data ) => { 
-        await axios.post('https://localhost:4444/auth/sign-in', data)
+        await axios.post('http://localhost:4000/auth/sign-in', data)
         .then( res => {
             Cookies.set('token', res.data.accessToken);
             Cookies.set('rtoken', res.data.refreshToken);

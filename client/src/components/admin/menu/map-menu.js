@@ -39,13 +39,13 @@ function MapMenu( props ){
     //        Menu change opacity requests         
     // 
     // -----------------------------------------
-        const requestOpenMapMenu = () => {
-            setIsOpen( true );
-        }
+    const requestOpenMapMenu = () => {
+        setIsOpen( true );
+    }
 
-        const requestCloseMapMenu = () => {
-            setIsOpen( false );
-        }
+    const requestCloseMapMenu = () => {
+        setIsOpen( false );
+    }
     // -----------------------------------------
 
 
@@ -56,16 +56,7 @@ function MapMenu( props ){
     // ------------------------------------------
 
     // Main menu handlers 
-    const saveHandler = async () => {
-        if( props.saveAllowed ){ 
-            props.messenger((mapMessage) => [...mapMessage, 'A checkpoint with no name has been found']);
-        }
-        else{
-            props.messenger((mapMessage) => [...mapMessage, 'Saving Map, please wait...']);
-            props.reqSaveMap();            
-        }
-    }
-
+    const saveHandler = async () => props.reqSaveMap();
 
     const closeImportBox = () => {
         setImpotBox(null);
@@ -80,14 +71,11 @@ function MapMenu( props ){
         );
     }
 
-    const manualHandler = () => {
-        setIsManual(isManual => !isManual);    
-    }
-
+    const manualHandler = () => setIsManual(isManual => !isManual);    
+    
     // -----------------------------------------
 
     const saveShortcut = (e) => {
-
         if( e.ctrlKey ){
             e.preventDefault(); 
             
@@ -193,14 +181,16 @@ function createButton( id, tipMsg, icon, callback ){
 
 
 function ImportBox( props ){
-
     const [file, setFile] = useState( null );
     const [filename, setFilename] = useState('Click to upload 3D object!');
+    const [boxMessage, setBoxMessage] = useState('Select file first');
 
     const selectFileHandler = (e) => {
-            setFile(e.target.files[0]);
-            setFilename(e.target.files[0].name);
-        }
+        setBoxMessage(() => 'Upload this 3d object?');
+
+        setFile(() => e.target.files[0]);
+        setFilename(() => e.target.files[0].name);
+    }
 
 
     const uploadSubmitHandler = async (e) => {
@@ -215,9 +205,13 @@ function ImportBox( props ){
 
         const formData = new FormData();
 
+        if( !file ) return;
+        
+        setBoxMessage(() => 'Uploading 3d object');
+
         formData.append('object', file);
 
-        await axios.post('https://localhost:4443/admin/obj-upload', formData, {
+        await axios.post('http://localhost:3500/admin/obj-upload', formData, {
             headers: {
                 'Content-Type': 'text/plain',
                 'authentication': `Bearer ${token}`
@@ -225,6 +219,7 @@ function ImportBox( props ){
         })
         .then( res => {
             const { fileName, filePath } = res.data;
+
             props.reqSubmit( {fileName, filePath} );
             props.onClose();
         })
@@ -232,7 +227,7 @@ function ImportBox( props ){
             ErrorHandler.handle( err, uploadSubmitHandler, 13, e );
 
             if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post('https://localhost:4444/auth/refresh-token', { token: rtoken })
+                return axios.post('http://localhost:4000/auth/refresh-token', { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
                     setTimeout(() => uploadSubmitHandler(e), 1000);
@@ -253,7 +248,7 @@ function ImportBox( props ){
                     <input className="ib-input" type="file" accept=".obj" lang="es" onChange={ selectFileHandler } />
                     <label className="ib-label">{ filename }</label>
                 </div>
-                <button type="submit" style={{color: 'rgba(0, 0, 0, 0.4)'}} className="btn btn-block btn-success">Upload this object</button>    
+                <button type="submit" style={{color: 'rgba(0, 0, 0, 0.4)'}} className="btn btn-block btn-success"> { boxMessage } </button>    
             </form>
         </div>
     );
@@ -308,36 +303,41 @@ const Manual = ( props ) => {
                 <p style={pStyle}>
                     Before we start I would like to mention a very important
                     matter in this application. We have formulated an idea
-                    of a checkpoint. A <u>Checkpoint</u> serves a node in a graph.
-                    Since this application is a dynamic one, and does not offer you
-                    to edit the mesh of each 3d object it is very inconvenient to
+                    of a checkpoint. A <u>Checkpoint</u> serves as a node in a graph.
+                    Since this application is a dynamic one, but does not offer you
+                    to edit the mesh of each 3d object, it is very inconvenient to
                     switch application each time you need to put a navigation mesh
-                    for the path-finding algorithm, therefor we have thought of
-                    devising an idea that allows you to say that a certain point
+                    for the path-finding algorithm, therefore we have thought of
+                    devising an algorithm that allows you to say that a certain point
                     in this 3d world is searchable by the users. Checkpoint has
                     few properties like name, and position. Checkpoint's name is
                     very important, since checkpoint serves as the location of a
                     certain room or any place inside the map, it is required that
                     you think the name thoroughly. On top of that, there is a special
                     case when naming a checkpoint. When you name a checkpoint you
-                    can use a keyword "<u>CONNECTOR</u>". A Connector links all
-                    regular checkpoints with each other. It is very important to name
-                    the CONNECTOR with a unique number at the end of it. For example: 
+                    can use the keyword "<u>CONNECTOR</u>". A Connector can connect to
+                    another connector or a non-connector checkpoint, thus allows us
+                    to travel each node and its neighbors. A non-connector checkpoint
+                    is automatically connected to the nearest Connector. It is very 
+                    important to name the CONNECTOR with a unique number at the end of it. 
+                    For example: 
                 </p>
                 <div 
                     style={{backgroundColor: 'rgba(0, 0, 0, 0.3)'}} 
                     className="p-3 rounded d-flex flex-column justify-content-around align-items-center"
                 >
-                    <b style={{color: '#82ccdd'}}>CONNECTOR1</b>
+                    <b style={{color: '#82ccdd'}}>CONNECTOR1-[3]</b>
                     <b style={{color: '#82ccdd'}}>CONNECTOR2</b>
                     <b style={{color: '#82ccdd'}}>CONNECTOR3</b>
-                    <b style={{color: '#82ccdd'}}>CONNECTOR4</b>    
+                    <b style={{color: '#82ccdd'}}>CONNECTOR4-[2]</b>    
                 </div>
                 <br/>
                 <p style={pStyle}>
-                    Each number attached to the connectors automatically links them to
-                    the preceding, and the next number, so CONNECTOR2 is linked with
-                    CONNECTOR1 and CONNECTOR3, but not CONNECTOR4.
+                    As you can see, connectors have their unique identifier, but what is
+                    that "-[3]"? That is what we called connector-neighbor-dependency-list;
+                    This list connects the connector with another connector with the same
+                    identifier as what the list indicates, so connector1 is connected to 
+                    connector3, thus connector3 is automatically connected to connector1.
                 </p>
                 <br/>
                 <div 
@@ -351,7 +351,13 @@ const Manual = ( props ) => {
                 >
                     <b style={{color: 'rgba(0, 0, 0, 0.9)'}}>NOTICE❗️</b>
                     <p style={{color: 'rgba(0, 0, 0, 0.9)'}}>
-                        Please notice that all checkpoints are not visible in the user-side.
+                        Please keep in mind that all checkpoints are not visible in the user-side,
+                        connector only accepts number as an identifier, and dependency-list must
+                        only contains the number identifier of another connector.
+                        <br/>
+                        <br/>
+                        For naming a <b>CONNECTOR</b> please follow this format:
+                        <code> connectorID-[ID, ID, ...] </code> 
                     </p>  
                 </div>
                 <br/>
@@ -385,23 +391,20 @@ const Manual = ( props ) => {
                     }
                 </ManualContent>
 
-                <ManualContent 
+                {/*<ManualContent 
                     image={toolBox}
                     title="TOOL BOX"
                     pStyle={pStyle}
                 >
                     {
-                        `The tool box shows 3 different tools. The first one is the measure-line. Measure-line
+                        `The tool box shows 2 different tools. The first one is the measure-line. Measure-line
                         measures the distance between 2 points, just click the first point and drag the cursor
                         to the second point you wish to measure the distance with. The measure line also disables
-                        the control for a moment until you disable the measure-line itself. The second one is the
-                        Position-cursor. Position-cursor allows you to identify the exact coordinates of a point
-                        by just using the cursor. The last one is the Checkpoint-generator. Checkpoint-generator
-                        allows you to easily generate checkpoints by entering the starting point and the distance
-                        between the starting point and next point. Checkpoint-generator also includes automatic 
-                        room numbering, just type the base name and the room-number's starting and ending number.`
+                        the control for a moment until you disable the measure-line itself. The second and the last
+                        one is the Position-cursor. Position-cursor allows you to identify the exact coordinates of
+                        a point by just using the cursor.`
                     }
-                </ManualContent>
+                </ManualContent>*/}
 
                 <ManualContent 
                     image={controlButtons}
