@@ -3,10 +3,10 @@
 
 ### `TECH-STACK`
 
-- Mongo DB
 - Express
 - React JS
 - Node JS
+- Three JS
 
 
 ### `PURPOSE`
