@@ -41,7 +41,7 @@ naming it as a connector
 
 > Example: connector
 
-But a connector must always have a unique number by the end of it, and with no spaces.
+But a connector must always have a unique number with no spaces.
 
 > Example: connector1
 
