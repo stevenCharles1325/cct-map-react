@@ -45,9 +45,9 @@ But a connector must always have a unique number with no spaces.
 
 > Example: connector1
 
-And to tell a connector which to connect itself is by following the example below.
+And to tell a connector which to connect itself to is by following the example below.
 
-> Example: connector-\[2,3\]
+> Example: connector1-\[2,3\]
 
 The example above says that **CONNECTOR1** is connected to **CONNECTOR2**, and **CONNECTOR3**, thus
 **CONNECTOR2** and **CONNECTOR3** are connected to **CONNECTOR1**, but that does not mean **CONNECTOR2**
