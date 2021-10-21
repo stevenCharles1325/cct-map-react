@@ -11,7 +11,7 @@ import FloatingButton from '../../components/user/button/floating-button';
 
 
 // Modules
-import { pathFind, createNodes } from '../../modules/path-finding-2';
+import { pathFind, createNodes } from '../../modules/path-finding';
 import * as MAP from '../../modules/cct-map';
 
 

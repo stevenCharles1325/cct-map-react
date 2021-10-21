@@ -47,6 +47,8 @@ const ErrorPage = React.lazy(() => import('./views/admin/error'));
 const PageNotFound = React.lazy(() => import('./views/admin/pageNotFound'));
 
 
+
+
 export default function Admin(){
 	const [bundle, setBundle] = useState( null );
 	const [view, setView] = useState( null );
@@ -59,7 +61,6 @@ export default function Admin(){
     	{ url: VIEWS[ 1 ], icon: mapIcon, title:'Map' },
     	{ url: VIEWS[ 4 ], icon: settingsIcon, title:'Settings' }
 	];
-
 
 	const emitEvents = () => {
 		Event.on('enter', () => setView( () => <Redirect to={ path.home() }/> ));
@@ -147,7 +148,7 @@ function Unavailable(){
 		>	
 			<h1>WE'RE REALLY SORRY</h1>
 			<br/>
-			<h5>NOT AVAILABLE ON TABLET OR MOBILE PHONES</h5>
+			<h5>NOT AVAILABLE ON THIS SIZE</h5>
 			<br/>
 			<br/>
 			<p className="px-5">

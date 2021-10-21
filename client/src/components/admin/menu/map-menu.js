@@ -194,6 +194,8 @@ function ImportBox( props ){
 
 
     const uploadSubmitHandler = async (e) => {
+        if( boxMessage === 'Uploading 3d object') return;
+        
         const token = Cookies.get('token');
         const rtoken = Cookies.get('rtoken');
 
@@ -236,6 +238,7 @@ function ImportBox( props ){
             }
         });
     }
+
 
     return (
         <div className="import-box d-flex flex-column p-3 align-items-center justify-content-around">
