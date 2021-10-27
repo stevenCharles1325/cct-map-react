@@ -208,18 +208,29 @@ const ObjectBuilder = (props) => {
 	}
 
 	return(
-		<mesh
-			name={`map_object_${props.index}`}
-			ref={objRef}
-			onDoubleClick={handleClick}
-			receiveShadow
-			castShadow
-			scale={[...Object.values(scale)]}
-			geometry={parsedGeom}
-			position={[...Object.values(position)]}
-			material={produceMaterial()}
-		>	
-		</mesh>
+		<>
+			<Html
+				className="cntnr text-center"
+				style={{
+					width: '150px'
+				}}
+				position={[0, Object.values(position)[1] + 4000, 0]}
+			>
+				CCT BUILDING A
+			</Html>
+			<mesh
+				name={`map_object_${props.index}`}
+				ref={objRef}
+				onDoubleClick={handleClick}
+				receiveShadow
+				castShadow
+				scale={[...Object.values(scale)]}
+				geometry={parsedGeom}
+				position={[...Object.values(position)]}
+				material={produceMaterial()}
+			>	
+			</mesh>
+		</>
 	);
 }
 

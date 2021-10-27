@@ -1,10 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './styles/index.css';
 import Admin from './Admin';
 import User from './User';
-
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+
+import './fonts/Poppins/Poppins-SemiBold.ttf';
+import './styles/index.css';
+
+window.SERVER_PORT = '3500';
+window.AUTH_SERVER_PORT = '4000';
+window.SERVER_HOST = '192.168.43.227';
 
 ReactDOM.render(
   <React.StrictMode>
@@ -22,4 +27,3 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById('root')
 );
-

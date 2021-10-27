@@ -6,7 +6,6 @@ import { Redirect, Route, Switch, Link } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-
 // Navigation panel icons
 import mapIcon from './images/admin/map.png';
 import settingsIcon from './images/admin/equalizer.png';
@@ -20,6 +19,7 @@ import NavPanel from './components/admin/navigator/nav-panel';
 
 // Styles
 import './styles/admin/admin.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 
 // Modules

@@ -26,7 +26,7 @@ export default function NavPanel( props ){
             return props?.Event?.emit?.('unauthorized');
         }
 
-        await axios.delete('http://localhost:3500/admin/sign-out', {
+        await axios.delete(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/sign-out`, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -39,7 +39,7 @@ export default function NavPanel( props ){
             ErrorHandler.handle( err, requestSignOut, 11, data );  
 
             if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post('http://localhost:4000/auth/refresh-token', { token: rtoken })
+                return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
                     setTimeout(() => requestSignOut( data ), 1000);
@@ -62,7 +62,7 @@ export default function NavPanel( props ){
                 return props?.Event?.emit?.('unauthorized');
             }
 
-            axios.get('http://localhost:3500/admin', {
+            axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin`, {
                 headers: {
                     'authentication': `Bearer ${token}`
                 }
@@ -72,7 +72,7 @@ export default function NavPanel( props ){
                 ErrorHandler.handle( err, requestSignOut, 12 );  
                 
                 if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                    return axios.post('http://localhost:4000/auth/refresh-token', { token: rtoken })
+                    return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                     .then( res => {
                         Cookies.set('token', res.data.accessToken)
                         setTimeout(() => fetchAdminData(), 1000);

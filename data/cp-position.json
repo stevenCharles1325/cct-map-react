@@ -9,7 +9,7 @@
         }
     },
     {
-        "name": "checkpoint_2_ACCTG OFFICE",
+        "name": "checkpoint_2_ACCOUNTING OFFICE",
         "position": {
             "x": -426.3478313506655,
             "y": 75,
@@ -27,7 +27,7 @@
         }
     },
     {
-        "name": "checkpoint_4_SSA 1",
+        "name": "checkpoint_4_SCHOOL OF SCIENCE AND ARTS",
         "position": {
             "x": 208.7009001722131,
             "y": 75,
@@ -36,7 +36,7 @@
         }
     },
     {
-        "name": "checkpoint_5_SCS",
+        "name": "checkpoint_5_SCHOOL OF COMPUTER STUDIES",
         "position": {
             "x": -432.5878559911748,
             "y": 75.00000000000004,
@@ -45,7 +45,7 @@
         }
     },
     {
-        "name": "checkpoint_6_SED2",
+        "name": "checkpoint_6_SCHOOL OF EDUCATION 2",
         "position": {
             "x": 186.07634654659682,
             "y": 75,
@@ -54,7 +54,7 @@
         }
     },
     {
-        "name": "checkpoint_7_SBM",
+        "name": "checkpoint_7_SCHOOL OF BUSINESS MANAGEMENT",
         "position": {
             "x": -433.82095278285396,
             "y": 75,
@@ -63,7 +63,7 @@
         }
     },
     {
-        "name": "checkpoint_8_SED1",
+        "name": "checkpoint_8_SCHOOL OF EDUCATION 1",
         "position": {
             "x": 193.86453994843964,
             "y": 74.99999999999996,
@@ -297,7 +297,7 @@
         }
     },
     {
-        "name": "checkpoint_34_SATELLITE OFFICE",
+        "name": "checkpoint_34_SATELLITE LIBRARY OF SCHOOL OF BUSINESS MANAGEMENT",
         "position": {
             "x": 221.28720814642975,
             "y": 625,
@@ -396,7 +396,7 @@
         }
     },
     {
-        "name": "checkpoint_45_ROOM210",
+        "name": "checkpoint_45_SATELLITE LIBRARY OF SCHOOL OF EDUCATION",
         "position": {
             "x": -424.5358924185268,
             "y": 625,

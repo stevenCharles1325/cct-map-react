@@ -213,7 +213,7 @@ function ImportBox( props ){
 
         formData.append('object', file);
 
-        await axios.post('http://localhost:3500/admin/obj-upload', formData, {
+        await axios.post(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/obj-upload`, formData, {
             headers: {
                 'Content-Type': 'text/plain',
                 'authentication': `Bearer ${token}`
@@ -229,7 +229,7 @@ function ImportBox( props ){
             ErrorHandler.handle( err, uploadSubmitHandler, 13, e );
 
             if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post('http://localhost:4000/auth/refresh-token', { token: rtoken })
+                return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
                     setTimeout(() => uploadSubmitHandler(e), 1000);

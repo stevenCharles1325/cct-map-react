@@ -27,7 +27,7 @@ export default function Dashboard( props ) {
             return props?.Event?.emit?.('unauthorized');
         }
 
-        await axios.get('http://localhost:3500/admin/graph-data', {
+        await axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/graph-data`, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -39,7 +39,7 @@ export default function Dashboard( props ) {
             ErrorHandler.handle( err, requestGraphData, 2 );
 
             if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post('http://localhost:4000/auth/refresh-token', { token: rtoken })
+                return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
 

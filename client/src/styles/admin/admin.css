@@ -15,9 +15,10 @@
   transition: all 0.2s ease-in-out;
 }
 
-.container{
-  width: fit-content;
-  height: 30px;
+.container, .cntnr{
+  width: auto;
+  /*width: fit-content !important;*/
+  height: fit-content !important;
 
   background-color: rgba(0, 0, 0, 0.3);
   color:  white;
