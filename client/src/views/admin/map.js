@@ -14,7 +14,8 @@ import {
 	useProgress,
 	SpotLight,
 	GizmoHelper,
-	GizmoViewport
+	GizmoViewport,
+	softShadows
 } from '@react-three/drei';
 
 import { 
@@ -67,6 +68,8 @@ const materialOptions = {
 }
 
 const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
+
+softShadows();
 
 const MapView = (props) => {
 	const { ErrorHandler } = props;
@@ -218,7 +221,6 @@ const MapView = (props) => {
 				areaSize = areaSize.map( convertToNumber );
 				initPosition = initPosition.map( convertToNumber )
 				.map( (elem, index) => index === 1 ? elem + 50 : elem );
-
 				
 				let keyNumber = objectCount;
 				let roomNumber = Number( roomName[1] );
@@ -646,7 +648,7 @@ const MapView = (props) => {
 			    	reqSaveMap={() => requestSaveMap()} 
 			    />
 			    	<MAP.Messenger message={mapMessage} messenger={setMapMessage}/>
-					<Canvas mode="concurrent" shadows={true}>
+					<Canvas mode="concurrent" shadowMap colorManagement>
 					    <Suspense fallback={<MAP.Loader />}>
 						    <MAP.MapCanvas 
 						    	type="admin"

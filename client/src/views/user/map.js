@@ -29,6 +29,7 @@ const MapView = (props) => {
 	const [line, setLine] = useState( null );
 	const [mapMessage, setMapMessage] = useState( [] );
 	const [destinationLabel, setDestinationLabel] = useState( null );
+	const [searchForm, setSearchForm] = useState( null );
 
 	useEffect( () => {
 		const sceneLoader = async () => {
@@ -73,12 +74,13 @@ const MapView = (props) => {
 					<Html 
 						position={Object.values(destination.start.position)}
 						className="non-selectable container"
+						zIndexRange={[100, 40]}
 						style={{
 							fontSize: '10px',
 							overflow: 'hidden',
 							width: 'fit-content',
 							height: '20px',
-							pointerEvent: 'none'
+							pointerEvent: 'none',
 						}}
 					> 
 						{ MAP.getRootName( destination.start.name ) } 
@@ -89,12 +91,13 @@ const MapView = (props) => {
 							? <Html 
 								position={Object.values(destination.end.position)}
 								className="non-selectable container"
+								zIndexRange={[100, 40]}
 								style={{
 									fontSize: '10px',
 									overflow: 'hidden',
 									width: 'fit-content',
 									height: '20px',
-									pointerEvent: 'none'
+									pointerEvent: 'none',
 								}}
 							> 
 								{ MAP.getRootName( destination.end.name ) } 
@@ -157,7 +160,7 @@ const MapView = (props) => {
 	return(
 		<div className="map p-0 m-0">
 	    	<MAP.Messenger message={mapMessage} messenger={setMapMessage} />		
-			<Canvas mode="concurrent" frameloop="demand" shadows={true}>
+			<Canvas mode="concurrent" frameloop="demand" shadowMap>
 				<Suspense fallback={<MAP.Loader />}>
 					<MAP.MapCanvas type="user" setCam={setCamera} setScene={setScene}>
 						{ destinationLabel }
@@ -168,8 +171,9 @@ const MapView = (props) => {
 						</Suspense>
 					</MAP.MapCanvas>
 				</Suspense>
+				{ searchForm }
 			</Canvas>
-			<FloatingButton cpPos={cpPos} setDestination={setDestination}/>
+			<FloatingButton cpPos={cpPos} setSearchForm={setSearchForm} setDestination={setDestination}/>
 		</div>
 	);
 }

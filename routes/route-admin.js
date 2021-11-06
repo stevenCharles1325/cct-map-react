@@ -65,6 +65,12 @@ router.get('/graph-data', authentication, async (req, res, next) => {
 
     let convertedRecords = JSON.parse( records );
 
+    convertedRecords.currRate.forEach( (rate, index) => {
+      if( index > numberTime - 12 + 5 ){
+        convertedRecords.currRate[ index ] = 0;
+      }
+    }); 
+
     if( convertedRecords.year !== currentYear ){
       convertedRecords.year = currentYear;
 
@@ -78,6 +84,7 @@ router.get('/graph-data', authentication, async (req, res, next) => {
         convertedRecords.currRate[ index ] = 0;
       }); 
     }
+
 
     fs.writeFile(graph_path, JSON.stringify( convertedRecords, null, 4 ), async (err) => {
         if( err ) console.log( err );

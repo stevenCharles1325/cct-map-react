@@ -7,13 +7,17 @@ import {
 	Html,
 	useProgress,
 	SpotLight,
-	softShadows,
-	useHelper
+	useHelper,
+	useMatcapTexture,
+	Shadow,
+	Plane,
+	useTexture 
 } from '@react-three/drei';
 
 import uniqid from 'uniqid';
-import { Canvas, useThree, useLoader } from '@react-three/fiber';
+import { Canvas, useThree, useFrame, useLoader } from '@react-three/fiber';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
+import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader'
 import { TextureLoader } from 'three/src/loaders/TextureLoader';
 
 
@@ -28,7 +32,7 @@ const HEIGHT = window.innerHeight;
 
 const CAMERA = {
 	config: [75, WIDTH / HEIGHT, 100, 50000],
-	position: [0, 5000, 5000],
+	position: [0, 7000, 10000],
 	far: 50000
 };
 
@@ -36,11 +40,20 @@ const CAMERA = {
 // Default material
 const materialOptions = {
 	color: 0x3f4444,
-	roughness: 0.4,
+	roughness: 1,
 	metalness: 0
 }
 
-const defaultMaterial = new THREE.MeshPhysicalMaterial( materialOptions );
+const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
+
+/*
+	Shadow:
+	- enable shadow map
+	- select type of shadow 
+	- castShadow to lights
+	-
+*/
+
 
 // Scene loader
 const loadScene = async ({ userType, data, click, checkPointSaver, setControls }) => {
@@ -98,38 +111,6 @@ const loadScene = async ({ userType, data, click, checkPointSaver, setControls }
 		}
 	});
 
-	// if( children ){
-	// 	for( let index in children ){
-
-	// 		if (isNameInvalid( children[index] )) continue;
-
-	// 		if( memo.indexOf(children[index].name) < 0 ){
-	// 			memo.push( children[index].name )
-
-	// 			if( isCheckpointObject(children[index].name) ){
-	// 				key = `checkpoint_${index}`;
-	// 			}
-	// 			else{
-	// 				key = `map_object_${index}`;
-	// 			}
-	// 			prevChild.push(
-	// 				<Build 
-	// 					userType={userType}
-	// 					index={index}
-	// 					key={key}
-	// 					geometry={geometries[index]}
-	// 					data={object.children[index]}
-	// 					click={checkType('click')}
-	// 					saveCheckpoint={checkType('saver')}
-	// 					setControls={ userType === 'admin' ? setControls : null }
-	// 				/>
-	// 			);
-	// 		}
-	// 	}	
-	// }
-	
-	
-
 	return prevChild;
 }
 
@@ -175,7 +156,7 @@ const Build = (props) => {
 const ObjectBuilder = (props) => {
 	const { geometry, object } = props;
 	const objRef = useRef();
-
+	const shadow = useRef();
 
 	const matrix = new THREE.Matrix4();
 	matrix.set(...object.matrix);
@@ -203,7 +184,7 @@ const ObjectBuilder = (props) => {
 	
 	const produceMaterial = () => {
 		return props.userType === 'admin' 
-				? new THREE.MeshPhysicalMaterial( materialOptions ) 
+				? new THREE.MeshStandardMaterial( materialOptions ) 
 				: defaultMaterial;
 	}
 
@@ -214,6 +195,7 @@ const ObjectBuilder = (props) => {
 				style={{
 					width: '150px'
 				}}
+				zIndexRange={[100, 50]}
 				position={[0, Object.values(position)[1] + 4000, 0]}
 			>
 				CCT BUILDING A
@@ -222,8 +204,8 @@ const ObjectBuilder = (props) => {
 				name={`map_object_${props.index}`}
 				ref={objRef}
 				onDoubleClick={handleClick}
-				receiveShadow
 				castShadow
+				// receiveShadow
 				scale={[...Object.values(scale)]}
 				geometry={parsedGeom}
 				position={[...Object.values(position)]}
@@ -284,17 +266,19 @@ function CheckpointBuilder( props ){
 
 	const produceMaterial = () => {
 		return props.userType === 'admin' 
-			? new THREE.MeshPhysicalMaterial( materialOptions ) 
+			? new THREE.MeshStandardMaterial( materialOptions ) 
 			: defaultMaterial;
 	}
 
 	useEffect(() => {
-		if( checkpoint.current ) props?.saveCheckpoint?.( checkpoint.current );
+		if( checkpoint.current ){ 
+			props?.saveCheckpoint?.( checkpoint.current );
+		}
 	}, [checkpoint.current]);
 
 
 	return(
-		<mesh 
+		<mesh
 			name={`checkpoint_${props.index}_${props.name}`} 
 			ref={checkpoint} 
 			scale={[...Object.values(scale)]} 
@@ -303,8 +287,6 @@ function CheckpointBuilder( props ){
 			// onPointerEnter={handleHover}
 			// onPointerLeave={handleHoverOut}
 			material={produceMaterial()}
-			receiveShadow={true}
-			castShadow={true}
 		>
 			<sphereGeometry 
 				args={[
@@ -327,9 +309,11 @@ const MapCanvas = (props) => {
 
 	useEffect(() => {
 		set({camera: new THREE.PerspectiveCamera(...CAMERA.config)});
-		gl.shadowMap.enabled = true;
-		gl.shadowMap.type = THREE.PCFSoftShadowMap;
+		
+		// gl.shadowMap.enabled = true;
+		// gl.shadowMap.type = THREE.PCFSoftShadowMap;
 	}, []);
+
 
 	useEffect(() => {
 		camera.position.set( ...CAMERA.position );
@@ -345,16 +329,14 @@ const MapCanvas = (props) => {
 	}, [props?.deleteObj]);
 
 
-	// useEffect(() => props.setScene( () => scene ), [scene]);
-	props.setScene( () => scene );
-
+	useEffect(() => props.setScene( () => scene ), []);
 	return(
 		<>
 			<Atmosphere lightTarget={land} type={props.type} control={props.control} />
 			<Suspense fallback={<Loader />}>
 				{ props.children }
 			</Suspense>
-			<Land refer={land} size={LAND_SIZE}/>
+			<Land ref={land} size={LAND_SIZE}/>
 		</>
 	);		
 }
@@ -363,22 +345,67 @@ const MapCanvas = (props) => {
 
 // Atmosphere
 const Atmosphere = (props) => {
+	const { camera } = useThree();
+	
+	const cloudsRootPath = '/default_models/clouds/FBX Files/'
+	const cloud_names = ['Cloud_1.fbx', 'Cloud_2.fbx', 'Cloud_3.fbx', 'Cloud_4.fbx'];
+
+	const cloud1 = useLoader( FBXLoader, cloudsRootPath + cloud_names[ 0 ] );
+	const cloud2 = useLoader( FBXLoader, cloudsRootPath + cloud_names[ 1 ] );
+	const cloud3 = useLoader( FBXLoader, cloudsRootPath + cloud_names[ 2 ] );
+	const cloud4 = useLoader( FBXLoader, cloudsRootPath + cloud_names[ 3 ] );
+
+	const cloudTypes = [cloud1, cloud2, cloud3, cloud4];
+
+	const getRandomNumber = ( min = 0, max = 1 ) => {
+		return Math.floor( Math.random() * (max - min) + min )
+	}
+
+	const getRandomPosition = ( min = 0, max = 1 ) => [
+		getRandomNumber( min, max ),
+		getRandomNumber( 5000, 7000 ),
+		getRandomNumber( min, max )
+	];
+
+	const cloudRange = getRandomNumber( 10, 15 );
+	const clouds = [];
+
+	for( let range = 0; range < cloudRange; range++ ){
+		const size = getRandomNumber(4, 5);
+		clouds.push(
+			<primitive 
+				key={uniqid()}
+				scale={[ size, size, size + 1 ]}
+				rotation={[ 0, getRandomNumber(0, 40), 0 ]}
+				object={cloudTypes[  getRandomNumber(0, 3) ].clone()} 
+				position={getRandomPosition(-7000, 7000)}
+			/>
+		);
+	}
+
 	return (
 		<group name="Sky">
-			<Stars radius={LAND_SIZE[0]*0.5} count={LAND_SIZE[0]*2} fade />
+			<Stars radius={LAND_SIZE[0] * 2} count={LAND_SIZE[0] * 5} fade />
 			{ 
 				props?.type === 'user' ? <OrbitControls /> : <props.control.controls {...props?.control?.config}/>
 			}
-			<ambientLight intensity={0.5}/>
-			<spotLight
-				target={props?.lightTarget?.current}
-				castShadow={true}
-		        position={[-6000, 6000, 0]}
-		        intensity={1}
-		        shadow-mapSize-width={512}
-		        shadow-mapSize-height={512}
-		        shadow-camera-far={1000}
-		        shadow-camera-near={0.5}
+			{ clouds }
+			<pointLight castShadow position={[-5000, 4000, 20]} color="red" intensity={2} />
+			<pointLight castShadow position={[20, 4000, 5000]} color="yellow" intensity={2} />
+			<pointLight castShadow position={[3000, 4000, -6000]} color="white" intensity={1} />
+			<ambientLight intensity={0.4}/>
+			<ambientLight color="black" intensity={0.2}/>
+			<directionalLight
+				castShadow
+		        position={[-5000, 7000, 2000]}
+		        intensity={0.1}
+		        shadow-camera-far={5000}
+		        shadow-mapSize-width={1024}
+		        shadow-mapSize-height={1024}
+		        shadow-camera-left={-7000}
+		        shadow-camera-right={7000}
+		        shadow-camera-top={7000}
+		        shadow-camera-bottom={-7000}
 			/>
 		</group>
 	);
@@ -386,8 +413,8 @@ const Atmosphere = (props) => {
 
 
 const Land = React.forwardRef(( props, ref ) => {
-	const object_path = '../default_models/circular_grass/10438_Circular_Grass_Patch_v1_iterations-2.obj';
-	const texture_path = '../default_models/circular_grass/10438_Circular_Grass_Patch_v1_Diffuse.jpg';
+	const object_path = '/default_models/circular_grass/10438_Circular_Grass_Patch_v1_iterations-2.obj';
+	const texture_path = '/default_models/circular_grass/10438_Circular_Grass_Patch_v1_Diffuse.jpg';
 
 	const land = useLoader( OBJLoader, object_path );
 	const texture = useLoader( TextureLoader, texture_path );
@@ -407,13 +434,12 @@ const Land = React.forwardRef(( props, ref ) => {
 	return (
 		<mesh 
 			ref={ref}
-			receiveShadow={true}
 			geometry={geometry}
 			rotation={[-Math.PI / 2, 0, 0]}
 			scale={[50, 50, 10]}
 			position={[0, -100, 0]}
 		>
-			<meshPhysicalMaterial color={0x6ab04c}  map={texture}/>
+			<meshStandardMaterial roughness={1} color={0x6ab04c} map={texture}/>
 		</mesh>
 	);
 });

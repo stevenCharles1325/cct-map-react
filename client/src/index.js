@@ -9,7 +9,7 @@ import './styles/index.css';
 
 window.SERVER_PORT = '3500';
 window.AUTH_SERVER_PORT = '4000';
-window.SERVER_HOST = '192.168.43.227';
+window.SERVER_HOST = '192.168.248.167';
 
 ReactDOM.render(
   <React.StrictMode>

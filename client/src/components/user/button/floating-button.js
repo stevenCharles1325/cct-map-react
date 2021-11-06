@@ -1,10 +1,12 @@
 import React, { useState, useReducer, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
+import { Html } from '@react-three/drei';
+
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
-
+import Typography from '@mui/material/Typography';
 
 // Style
 import '../../../styles/user/floating-btn.css';
@@ -15,7 +17,7 @@ import CubeIcon from '../../../images/user/cube.png';
 const FloatingButton = (props) => {
 	const initState = {
 		menuState: false,
-		p2pFormState: false
+		searchFormState: false
 	}
 
 	const opener = (state, action) => {
@@ -23,13 +25,13 @@ const FloatingButton = (props) => {
 			case "menu":
 				return { 
 					menuState: !state.menuState, 
-					p2pFormState: state.p2pFormState 
+					searchFormState: state.searchFormState 
 				};
 
-			case "p2p":
+			case "search":
 				return { 
 					menuState: state.menuState, 
-					p2pFormState: !state.p2pFormState 
+					searchFormState: !state.searchFormState 
 				};
 
 			default:
@@ -38,7 +40,7 @@ const FloatingButton = (props) => {
 	}
 
 	const [state, dispatch] = useReducer( opener, initState );
-	const [p2pForm, setP2pForm] = useState( null );
+	// const [searchForm, setSearchForm] = useState( null );
 
 	const escapeListener = (e) => {
 		if( e.key === 'Escape' ){
@@ -47,17 +49,17 @@ const FloatingButton = (props) => {
 	}
 
 	useEffect(() => {
-		if( state.p2pFormState && props?.cpPos ){
-			setP2pForm( () => <P2pForm dispatch={dispatch} {...props}/> );
+		if( state.searchFormState && props?.cpPos ){
+			props.setSearchForm( () => <SearchForm dispatch={dispatch} {...props}/> );
 		}
 		else {
-			setP2pForm( () => null );
+			props.setSearchForm( () => null );
 		}
-	}, [state.p2pFormState, props?.cpPos]);
+	}, [state.searchFormState, props?.cpPos]);
 
 	// useEffect(() => {
-	// 	if( !state.menuState && state.p2pFormState ) dispatch({type: 'p2p'});
-	// }, [state.menuState, state.p2pFormState]);
+	// 	if( !state.menuState && state.searchFormState ) dispatch({type: 'search'});
+	// }, [state.menuState, state.searchFormState]);
 
 	useEffect(() => {
 		window.addEventListener('keydown', escapeListener);
@@ -74,7 +76,11 @@ const FloatingButton = (props) => {
 					style={{height: state.menuState ? '200px' : '0px'}} 
 					className="floating-opt d-flex flex-column justify-content-around align-items-center"
 				>
-					<button className="floating-btn-opt-btn" onClick={() => dispatch({type: 'p2p'})}>P2P</button>
+					<button className="floating-btn-opt-btn" onClick={() => dispatch({type: 'search'})}>
+						<p style={{ fontSize: '13px'}}>
+							SEARCH
+						</p>
+					</button>
 					<Link to="/about">
 						<button className="floating-btn-opt-btn">About</button>
 					</Link>
@@ -87,13 +93,12 @@ const FloatingButton = (props) => {
 					<img width="100%" height="100%" src={CubeIcon}/>
 				</div>
 			</div>
-			{ p2pForm }
 		</>
 	);
 }
 
 
-const P2pForm = (props) => {
+const SearchForm = (props) => {
 	const { cpPos } = props;
 
     const getRootName = (name) => name?.replace?.(/checkpoint_([0-9]+)_/, '');
@@ -153,7 +158,7 @@ const P2pForm = (props) => {
 
     const reqRunP2PAlgo = () => {
 		props.setDestination( destination );
-		props.dispatch({type: 'p2p'}); // Closes p2p form
+		props.dispatch({type: 'search'}); // Closes search form
     }
 
     useEffect(() => {
@@ -178,61 +183,63 @@ const P2pForm = (props) => {
     }, [destination, btnReady]);
     
 	return (
-		<div className="p2p-frame d-flex flex-column justify-content-center align-items-center">
-			<div className="p2p-frame-title text-center pt-2">
-				<h5>Point to Point</h5>
-			</div>
-			<div className="p2p-frame-form d-flex flex-column justify-content-around align-items-center">
-				<div className="p2p-inp d-flex justify-content-between align-items-center">
-					<label htmlFor="point-a">Point A: </label>
-					<Autocomplete
-						sx={{width: 150}}
-						options={labels}
-						onChange={reqSetLocation}
-						onInputChange={reqSetLocation}
-						renderInput={(params) => (
-							<TextField 
-								{...params} 
-								variant="filled" 
-								label="Choose point A"
-							/>
-						)}
-					/>
+		<Html zIndexRange={[100, 100]}>
+			<div className="search-frame d-flex flex-column justify-content-center align-items-center">
+				<div className="search-frame-title text-center pt-2">
+					<h5>Point to Point</h5>
 				</div>
-				
-				<div className="p2p-inp d-flex justify-content-between align-items-center">
-					<label htmlFor="point-b">Point B: </label>
-					<Autocomplete
-						sx={{width: 150}}
-						disablePortal
-						options={labels}
-						onChange={reqSetDestination}
-						onInputChange={reqSetDestination}
-						renderInput={(params) => (
-							<TextField 
-								{...params} 
-								variant="filled" 
-								label="Choose point B"
-							/>
-						)}
-					/>
-				</div>
+				<div className="search-frame-form d-flex flex-column justify-content-around align-items-center">
+					<div className="search-inp d-flex justify-content-between align-items-center">
+						<label htmlFor="point-a">Point A: </label>
+						<Autocomplete
+							sx={{width: 150}}
+							options={labels}
+							onChange={reqSetLocation}
+							onInputChange={reqSetLocation}
+							renderInput={(params) => (
+								<TextField 
+									{...params} 
+									variant="filled" 
+									label="Choose point A"
+								/>
+							)}
+						/>
+					</div>
+					
+					<div className="search-inp d-flex justify-content-between align-items-center">
+						<label htmlFor="point-b">Point B: </label>
+						<Autocomplete
+							sx={{width: 150}}
+							disablePortal
+							options={labels}
+							onChange={reqSetDestination}
+							onInputChange={reqSetDestination}
+							renderInput={(params) => (
+								<TextField 
+									{...params} 
+									variant="filled" 
+									label="Choose point B"
+								/>
+							)}
+						/>
+					</div>
 
-				<button 
-					style={{
-						color: 'white', 
-						background: btnReady 
-							? 'rgba(0, 0, 0, 0.8)' 
-							: 'rgba(200, 10, 10, 0.7)',
-						transition: '.2s ease-in-out'
-					}} 
-					className="btn" 
-					onClick={() => setIsRunAlgo(true)}
-				>
-					locate
-				</button>
+					<button 
+						style={{
+							color: 'white', 
+							background: btnReady 
+								? 'rgba(0, 0, 0, 0.8)' 
+								: 'rgba(200, 10, 10, 0.7)',
+							transition: '.2s ease-in-out'
+						}} 
+						className="btn" 
+						onClick={() => setIsRunAlgo(true)}
+					>
+						locate
+					</button>
+				</div>
 			</div>
-		</div>
+		</Html>
 	);
 }
 
