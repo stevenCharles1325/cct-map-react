@@ -27,6 +27,8 @@
     "uniqid": "^5.4.0"
   },
   "nodemonConfig": {
-    "ignore": ["data/*"]
+    "ignore": [
+      "data/*"
+    ]
   }
 }

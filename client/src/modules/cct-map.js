@@ -39,7 +39,7 @@ const CAMERA = {
 
 // Default material
 const materialOptions = {
-	color: 0x3f4444,
+	color: 0xf8c291,
 	roughness: 1,
 	metalness: 0
 }
@@ -368,32 +368,44 @@ const Atmosphere = (props) => {
 	];
 
 	const cloudRange = getRandomNumber( 10, 15 );
-	const clouds = [];
+	const [clouds, setClouds] = useState([]);
 
-	for( let range = 0; range < cloudRange; range++ ){
+	const addRandomClouds = () => {
 		const size = getRandomNumber(4, 5);
-		clouds.push(
-			<primitive 
-				key={uniqid()}
-				scale={[ size, size, size + 1 ]}
-				rotation={[ 0, getRandomNumber(0, 40), 0 ]}
-				object={cloudTypes[  getRandomNumber(0, 3) ].clone()} 
-				position={getRandomPosition(-7000, 7000)}
-			/>
+		setClouds( clouds => [
+				... clouds, 
+				<primitive 
+					key={uniqid()}
+					scale={[ size, size, size + 1 ]}
+					rotation={[ 0, getRandomNumber(0, 40), 0 ]}
+					object={cloudTypes[  getRandomNumber(0, 3) ].clone()} 
+					position={getRandomPosition(-7000, 7000)}
+				/>
+			]
 		);
 	}
 
+	useEffect(() => {
+		const asyncCloudings = async () => {
+			for( let range = 0; range < cloudRange; range++ ){
+				addRandomClouds();
+			}
+		}
+
+		asyncCloudings();
+	}, []);
+
 	return (
 		<group name="Sky">
-			<Stars radius={LAND_SIZE[0] * 2} count={LAND_SIZE[0] * 5} fade />
+			<Stars radius={LAND_SIZE[0] * 0.8} count={LAND_SIZE[0] * 5} fade />
 			{ 
 				props?.type === 'user' ? <OrbitControls /> : <props.control.controls {...props?.control?.config}/>
 			}
 			{ clouds }
-			<pointLight castShadow position={[-5000, 4000, 20]} color="red" intensity={2} />
-			<pointLight castShadow position={[20, 4000, 5000]} color="yellow" intensity={2} />
+			<pointLight castShadow position={[-5000, 4000, 20]} color="red" intensity={0.9} />
+			<pointLight castShadow position={[20, 4000, 5000]} color="yellow" intensity={0.9} />
 			<pointLight castShadow position={[3000, 4000, -6000]} color="white" intensity={1} />
-			<ambientLight intensity={0.4}/>
+			<ambientLight intensity={0.2}/>
 			<ambientLight color="black" intensity={0.2}/>
 			<directionalLight
 				castShadow
@@ -476,7 +488,7 @@ const Loader = ( props ) => {
 	const { progress } = useProgress();
 	const { prog, label } = props;
 
-	return <Html className="loader-progress" center> { label ?? "Loading" }: { prog ?? progress }% </Html>
+	return <Html className="loader-progress" center> { label ?? "Loading" }: { prog?.toFixed?.(0) ?? progress?.toFixed?.(0) }% </Html>
 }
 
 
