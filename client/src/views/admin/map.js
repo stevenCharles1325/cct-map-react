@@ -62,7 +62,7 @@ const width = window.innerWidth;
 const height = window.innerHeight;
 
 const materialOptions = {
-	color: 0x3f4444,
+	color: 0xf8c291,
 	roughness: 0.4,
 	metalness: 0
 }
