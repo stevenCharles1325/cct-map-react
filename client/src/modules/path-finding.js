@@ -125,6 +125,8 @@ function bfs( end, path = null ){
 function recurseParent( node, path = [] ){
 	if( !node.getParent() ) return path;
 
+	console.log( node.name );
+
 	path.push( node.vector.toArray() );
 	return recurseParent( node.getParent(), path );
 }

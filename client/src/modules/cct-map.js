@@ -332,7 +332,7 @@ const MapCanvas = (props) => {
 	useEffect(() => props.setScene( () => scene ), []);
 	return(
 		<>
-			<Atmosphere lightTarget={land} type={props.type} control={props.control} />
+			<Atmosphere lightTarget={land} type={props.type} control={props.control} controller={props.controller}/>
 			<Suspense fallback={<Loader />}>
 				{ props.children }
 			</Suspense>
@@ -398,8 +398,13 @@ const Atmosphere = (props) => {
 	return (
 		<group name="Sky">
 			<Stars radius={LAND_SIZE[0] * 0.8} count={LAND_SIZE[0] * 5} fade />
+			{ console.log( props.controller ) }
 			{ 
-				props?.type === 'user' ? <OrbitControls /> : <props.control.controls {...props?.control?.config}/>
+				props.controller
+				? props.controller
+				: props?.type === 'user' 
+					? <OrbitControls /> 
+					: <props.control.controls {...props?.control?.config}/>
 			}
 			{ clouds }
 			<pointLight castShadow position={[-5000, 4000, 20]} color="red" intensity={0.9} />

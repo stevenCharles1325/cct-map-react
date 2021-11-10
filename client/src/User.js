@@ -4,6 +4,8 @@ import { Switch, Route, Redirect, Link } from 'react-router-dom';
 
 // Module
 import CustomErrorHandler from './modules/customErrorHandler';
+import { useSnackbar } from 'notistack';
+
 
 // Loader
 import MainLoader from './components/user/loader/main-loader';
@@ -27,6 +29,7 @@ const VIEWS = [
 
 function User( props ){
 	const [mapData, setMapData] = useState( null );
+	const { enqueueSnackbar } = useSnackbar();
 
 	const requestUpdateRecords = async () => {
 		await axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/update-records`)
@@ -39,7 +42,7 @@ function User( props ){
 		await axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/map-data`)
 		.then( res => {
 			setMapData( res.data.data );
-			console.log( res.data.message );
+			enqueueSnackbar( res.data.message );
 			setTimeout(() => requestUpdateRecords(), 5000)
 		})
 		.catch( err => {
