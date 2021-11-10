@@ -188,8 +188,8 @@ function ImportBox( props ){
     const selectFileHandler = (e) => {
         setBoxMessage(() => 'Upload this 3d object?');
 
-        setFile(() => e.target.files[0]);
-        setFilename(() => e.target.files[0].name);
+        setFile(() => e.target?.files?.[0]);
+        setFilename(() => e.target?.files?.[0]?.name);
     }
 
 
@@ -239,6 +239,13 @@ function ImportBox( props ){
         });
     }
 
+    useEffect(() => {
+        if( !filename ) {
+            setFilename('Click to upload 3D object!');
+            setBoxMessage('Select file first');
+        }
+
+    }, [filename]);
 
     return (
         <div className="import-box d-flex flex-column p-3 align-items-center justify-content-around">

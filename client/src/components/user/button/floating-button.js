@@ -1,5 +1,5 @@
 import React, { useState, useReducer, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
 
 import { Html } from '@react-three/drei';
 
@@ -13,6 +13,19 @@ import '../../../styles/user/floating-btn.css';
 
 // Icon
 import CubeIcon from '../../../images/user/cube.png';
+
+import SearchIcon from '@mui/icons-material/Search';
+import InfoIcon from '@mui/icons-material/Info';
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+
+import SpeedDial from '@mui/material/SpeedDial';
+import SpeedDialIcon from '@mui/material/SpeedDialIcon';
+import SpeedDialAction from '@mui/material/SpeedDialAction';
+
+const actions = [
+	{ icon: <SearchIcon/>, name: 'Search your destination' },
+	{ icon: <InfoIcon/>, name: 'Go to About' }
+];
 
 const FloatingButton = (props) => {
 	const initState = {
@@ -40,6 +53,7 @@ const FloatingButton = (props) => {
 	}
 
 	const [state, dispatch] = useReducer( opener, initState );
+	const [redirect, setRedirect] = useState( null );
 	// const [searchForm, setSearchForm] = useState( null );
 
 	const escapeListener = (e) => {
@@ -68,36 +82,53 @@ const FloatingButton = (props) => {
 	}, []);
 
 	return (
-		<>
-			<div 
-				className="floating-container d-flex flex-column justify-content-center align-items-center"
-			>
-				<div 
-					style={{height: state.menuState ? '200px' : '0px'}} 
-					className="floating-opt d-flex flex-column justify-content-around align-items-center"
-				>
-					<button className="floating-btn-opt-btn" onClick={() => dispatch({type: 'search'})}>
-						<p style={{ fontSize: '13px'}}>
-							SEARCH
-						</p>
-					</button>
-					<Link to="/about">
-						<button className="floating-btn-opt-btn">About</button>
-					</Link>
-				</div>
-				<div 
-					style={{width: state.menuState ? '70px' : '75px', height: state.menuState ? '70px' : '75px'}} 
-					className="floating-btn p-3 d-flex justify-content-center align-items-center" 
-					onClick={() => dispatch({type: 'menu'})}
-				>
-					<img width="100%" height="100%" src={CubeIcon}/>
-				</div>
-			</div>
-		</>
+		<div>
+			<SpeedDial
+		        ariaLabel="speed dial"
+		        sx={{ position: 'absolute', bottom: 16, right: 30 }}
+		        icon={<CheckBoxOutlineBlankIcon />}
+		     >
+		        {
+		        	actions.map((action, index) => (
+			          <SpeedDialAction
+			            key={action.name}
+			            icon={action.icon}
+			            tooltipTitle={action.name}
+			            onClick={[() => dispatch({type: 'search'}), () => setRedirect(<Redirect to="/about"/>)][ index ]}
+			          />
+			        ))
+			    }
+		  	</SpeedDial>
+			{ redirect }
+		</div>
 	);
 }
 
 
+// <div 
+// 	className="floating-container d-flex flex-column justify-content-center align-items-center"
+// >
+// 	<div 
+// 		style={{height: state.menuState ? '200px' : '0px'}} 
+// 		className="floating-opt d-flex flex-column justify-content-around align-items-center"
+// 	>
+// 		<button className="floating-btn-opt-btn" onClick={() => dispatch({type: 'search'})}>
+// 			<p style={{ fontSize: '13px'}}>
+// 				SEARCH
+// 			</p>
+// 		</button>
+// 		<Link to="/about">
+// 			<button className="floating-btn-opt-btn">About</button>
+// 		</Link>
+// 	</div>
+// 	<div 
+// 		style={{width: state.menuState ? '70px' : '75px', height: state.menuState ? '70px' : '75px'}} 
+// 		className="floating-btn p-3 d-flex justify-content-center align-items-center" 
+// 		onClick={() => dispatch({type: 'menu'})}
+// 	>
+// 		<img width="100%" height="100%" src={CubeIcon}/>
+// 	</div>
+// </div>
 const SearchForm = (props) => {
 	const { cpPos } = props;
 
@@ -199,6 +230,7 @@ const SearchForm = (props) => {
 							renderInput={(params) => (
 								<TextField 
 									{...params} 
+									autoFocus
 									variant="filled" 
 									label="Choose point A"
 								/>
