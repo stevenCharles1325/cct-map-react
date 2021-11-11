@@ -7,13 +7,6 @@
 
     overflow: hidden;
 }
-  
-
-.non-selectable{
-  user-select: none;
-  pointer-events: none;
-  transition: all 0.2s ease-in-out;
-}
 
 .container, .cntnr{
   width: auto;

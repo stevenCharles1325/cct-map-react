@@ -56,7 +56,17 @@ const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
 
 
 // Scene loader
-const loadScene = async ({ userType, data, click, checkPointSaver, setControls }) => {
+const loadScene = async mapData => {
+	if( !mapData ) return;
+
+	const { 
+		data, 
+		click, 
+		userType, 
+		setControls,
+		checkPointSaver 
+	} = mapData;
+
 	if( !data || !userType ) return;
 
 	let key;
@@ -191,7 +201,7 @@ const ObjectBuilder = (props) => {
 	return(
 		<>
 			<Html
-				className="cntnr text-center"
+				className="cntnr text-center non-selectable"
 				style={{
 					width: '150px'
 				}}
@@ -330,6 +340,9 @@ const MapCanvas = (props) => {
 
 
 	useEffect(() => props.setScene( () => scene ), []);
+
+	useFrame(() => props.update());
+
 	return(
 		<>
 			<Atmosphere lightTarget={land} type={props.type} control={props.control} controller={props.controller}/>
@@ -398,7 +411,6 @@ const Atmosphere = (props) => {
 	return (
 		<group name="Sky">
 			<Stars radius={LAND_SIZE[0] * 0.8} count={LAND_SIZE[0] * 5} fade />
-			{ console.log( props.controller ) }
 			{ 
 				props.controller
 				? props.controller
@@ -517,5 +529,6 @@ export {
 	CheckpointBuilder,
 	isCheckpointObject,
 	getBaseName,
-	getRootName
+	getRootName,
+	CAMERA
 };

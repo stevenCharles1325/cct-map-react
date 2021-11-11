@@ -26,6 +26,12 @@ code {
   --title-color: rgb( 255, 255, 255 );
 }
 
+.non-selectable{
+  user-select: none;
+  pointer-events: none;
+  transition: all 0.2s ease-in-out;
+}
+
 .map-message{
   position: absolute;
   top: 5%;
