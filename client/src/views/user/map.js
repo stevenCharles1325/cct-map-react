@@ -55,6 +55,7 @@ const MapView = (props) => {
 	const [destinationLabel, setDestinationLabel] = useState( null );
 	const [searchForm, setSearchForm] = useState( null );
 	
+	const [facing, setFacing] = useState('forward');
 	const [disMovement, setDisMovement] = useState( true );
 	const [movementDirection, setMovementDirection] = useState('idle');
 	const [movementIndex, setMovementIndex] = useState( -1 );
@@ -219,6 +220,8 @@ const MapView = (props) => {
 
 
 	useEffect(() => {
+		console.log( movementIndex );
+
 		if( !path.length && movementDirection !== 'idle' ){
 			enqueueSnackbar('Movement is not allowed when there is no path', { variant: 'error' });
 		}
@@ -228,14 +231,19 @@ const MapView = (props) => {
 					if( movementIndex === -1 ) enqueueSnackbar('You are in your starting position.');
 					if( path.length && movementIndex === path.length - 1 ) enqueueSnackbar(`You've reached your destination.`);
 
-					// Do this...
+					setFacing('forward');
+
 					setFlight( false );
-					setMovementIndex( movementIndex => movementIndex + 1 );
+					setMovementIndex( movementIndex + 1 );
 					break;
 
 				case 'backward':
+					if( movementIndex <= 0 ) return;
+
+					setFacing('backward');
+
 					setFlight( false );
-					setMovementIndex( movementIndex => movementIndex - 1 );
+					setMovementIndex( movementIndex - 1 );
 
 					if( movementIndex === 0 ) enqueueSnackbar('You are in your starting position.');
 					break;
@@ -246,10 +254,11 @@ const MapView = (props) => {
 		}
 
 		setMovementDirection('idle');
+
 	}, [movementDirection, path, movementIndex]);
 
 	useEffect(() => {
-		if( path.length && movementIndex > -1 && movementIndex < path.length - 1 ){
+		if( path.length && (movementIndex > -1 && movementIndex < path.length - 1) ){
 			const [x, y, z] = path[ movementIndex ];
 
 			const cameraPosition = camera.position;
@@ -267,6 +276,14 @@ const MapView = (props) => {
 						cameraPosition.z + 0.01
 					);
 
+
+					if( facing === 'forward' || facing === 'backward' ){
+						const pathIndex = facing === 'forward'	
+							? movementIndex + 1
+							: movementIndex - 1;
+							
+						camera.lookAt( new THREE.Vector3( ...path[ pathIndex ] ));
+					}
 					camera.updateProjectionMatrix();
 				})
 				.start();
@@ -279,44 +296,41 @@ const MapView = (props) => {
 					: <PointerLockControls />
 			);
 
-			if( movementIndex < path.length - 1 ){
-				camera.lookAt( new THREE.Vector3( ...path[ movementIndex + 1 ] ) );
-			}
-			else if( movementIndex > 1 ){
-				camera.lookAt( new THREE.Vector3( ...path[ movementIndex - 1 ] ) );
-			}
 
 			camera.updateProjectionMatrix();
 		}
-	}, [movementIndex, movementDirection, path]); 
+	}, [movementIndex, facing, path]); 
 
 	useEffect(() => {
 
 		if( flight && camera ){
-			setController(() => null);
-			setMovementIndex(() => -1);
-			setMovementDirection(() => 'idle');
-
 			const cameraPosition = camera.position;
-			const cameraTween = new TWEEN.Tween( cameraPosition )
+			const cameraFlightMode = new TWEEN.Tween( cameraPosition )
 				.to({
-					x: MAP.CAMERA.position.x,
-					y: MAP.CAMERA.position.y,
-					z: MAP.CAMERA.position.z
-				}, 4000)
+					x: MAP.CAMERA.position[ 0 ],
+					y: MAP.CAMERA.position[ 1 ],
+					z: MAP.CAMERA.position[ 2 ]
+				}, 5000)
 				.easing( TWEEN.Easing.Quadratic.InOut )
 				.onUpdate(() => {
 					camera.position.set(
 						cameraPosition.x,
 						cameraPosition.y,
-						cameraPosition.z
+						cameraPosition.z,
 					);
+
+					camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
 
 					camera.updateProjectionMatrix();
 				})
-				.start();
+				.onComplete(() => {
+					setController(() => null);
+					setMovementIndex(() => -1);
+					setMovementDirection(() => 'idle');
 
-			setFlight(() => false);
+					setFlight(() => false);
+				})
+				.start();
 		}
 
 		if( clear ){
@@ -345,26 +359,26 @@ const MapView = (props) => {
 
 	}, [transparent, scene]);
 
-	const handleMoveForward = () => {
+	const handleMoveForward = async () => {
 		setMovementDirection(() => 'forward');
 	}
 
-	const handleMoveBackward = () => {
+	const handleMoveBackward = async () => {
 		setMovementDirection(() => 'backward');
 	}
 
-	const handleTransparency = () => {
+	const handleTransparency = async () => {
 		setTransparent( !transparent );
 	}
 
-	const handleClear = () => {
+	const handleClear = async () => {
 		if( !destinationLabel && !path.length && !line )
 			enqueueSnackbar('There is no path to clear', { variant: 'error' });
 
 		setClear(() => true);
 	}
 
-	const handleFlight = () => {
+	const handleFlight = async () => {
 		if( !controller ) return enqueueSnackbar('You are already in flight mode', { variant: 'error' });
 		setFlight(() => true);
 	}
@@ -373,8 +387,6 @@ const MapView = (props) => {
 		<div className="map p-0 m-0">
 	    	<MAP.Messenger message={mapMessage} messenger={setMapMessage} />		
 			<Canvas 
-				mode="concurrent" 
-				frameloop={ path.length ? "" : "demand"}
 				shadowMap
 			>
 				<Suspense fallback={<MAP.Loader />}>

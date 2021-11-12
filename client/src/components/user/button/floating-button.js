@@ -64,7 +64,7 @@ const FloatingButton = (props) => {
 
 	useEffect(() => {
 		if( state.searchFormState && props?.cpPos ){
-			props.setSearchForm( () => <SearchForm dispatch={dispatch} {...props}/> );
+			props.setSearchForm(() => <SearchForm dispatch={dispatch} {...props}/>);
 		}
 		else {
 			props.setSearchForm( () => null );
@@ -94,7 +94,7 @@ const FloatingButton = (props) => {
 			            key={action.name}
 			            icon={action.icon}
 			            tooltipTitle={action.name}
-			            onClick={[() => dispatch({type: 'search'}), () => setRedirect(<Redirect to="/about"/>)][ index ]}
+			            onClick={[async () => dispatch({type: 'search'}), () => setRedirect(<Redirect to="/about"/>)][ index ]}
 			          />
 			        ))
 			    }
@@ -187,7 +187,7 @@ const SearchForm = (props) => {
     	});
     }
 
-    const reqRunP2PAlgo = () => {
+    const reqRunP2PAlgo = async () => {
 		props.setDestination( destination );
 		props.dispatch({type: 'search'}); // Closes search form
     }
