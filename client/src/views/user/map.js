@@ -1,6 +1,5 @@
 // Libraries
 import React, { Suspense, useEffect, useState } from 'react';
-import debounce from 'lodash.debounce';
 import Cookie from 'js-cookie';
 import TWEEN from '@tweenjs/tween.js';
 
@@ -35,11 +34,8 @@ import Tooltip from '@mui/material/Tooltip';
 import { pathFind, createNodes } from '../../modules/path-finding';
 import * as MAP from '../../modules/cct-map';
 
-
-
 // Style
 import '../../styles/user/map.css';
-
 
 
 const MapView = (props) => {
@@ -54,7 +50,9 @@ const MapView = (props) => {
 	const [mapMessage, setMapMessage] = useState( [] );
 	const [destinationLabel, setDestinationLabel] = useState( null );
 	const [searchForm, setSearchForm] = useState( null );
-	
+
+	const [quality, setQuality] = useState('low');	
+	const [playerState, setPlayerState] = useState('idle');
 	const [facing, setFacing] = useState('forward');
 	const [disMovement, setDisMovement] = useState( true );
 	const [movementDirection, setMovementDirection] = useState('idle');
@@ -64,6 +62,12 @@ const MapView = (props) => {
 	const [flight, setFlight] = useState( true );
 
 	const { enqueueSnackbar } = useSnackbar();
+
+	useEffect(() => {
+		const qual = Cookie.get('quality');
+
+		if( qual ) setQuality( qual );
+	}, []);
 
 	useEffect( () => {
 		const sceneLoader = async () => {
@@ -220,8 +224,6 @@ const MapView = (props) => {
 
 
 	useEffect(() => {
-		console.log( movementIndex );
-
 		if( !path.length && movementDirection !== 'idle' ){
 			enqueueSnackbar('Movement is not allowed when there is no path', { variant: 'error' });
 		}
@@ -232,18 +234,20 @@ const MapView = (props) => {
 					if( path.length && movementIndex === path.length - 1 ) enqueueSnackbar(`You've reached your destination.`);
 
 					setFacing('forward');
+					setPlayerState('moving');
 
 					setFlight( false );
-					setMovementIndex( movementIndex + 1 );
+					setMovementIndex( movementIndex => movementIndex + 1 );
 					break;
 
 				case 'backward':
 					if( movementIndex <= 0 ) return;
 
 					setFacing('backward');
+					setPlayerState('moving');
 
 					setFlight( false );
-					setMovementIndex( movementIndex - 1 );
+					setMovementIndex( movementIndex => movementIndex - 1 );
 
 					if( movementIndex === 0 ) enqueueSnackbar('You are in your starting position.');
 					break;
@@ -258,37 +262,46 @@ const MapView = (props) => {
 	}, [movementDirection, path, movementIndex]);
 
 	useEffect(() => {
-		if( path.length && (movementIndex > -1 && movementIndex < path.length - 1) ){
+		if( path.length && (movementIndex > -1 && movementIndex < path.length - 1) && playerState === 'moving' ){
 			const [x, y, z] = path[ movementIndex ];
 
-			const cameraPosition = camera.position;
-			const cameraTween = new TWEEN.Tween( cameraPosition )
-				.to({
-					x: x,
-					y: y,
-					z: z
-				}, 4000)
-				.easing( TWEEN.Easing.Quadratic.InOut )
-				.onUpdate(() => {
-					camera.position.set(
-						cameraPosition.x,
-						cameraPosition.y + 250,
-						cameraPosition.z + 0.01
-					);
+			if( quality === 'high' ){
+				const cameraPosition = camera.position;
+				const cameraTween = new TWEEN.Tween( cameraPosition )
+					.to({
+						x: x,
+						y: y,
+						z: z
+					}, 4000)
+					.easing( TWEEN.Easing.Quadratic.InOut )
+					.onUpdate(() => {
+						camera.position.set(
+							cameraPosition.x,
+							cameraPosition.y + 250,
+							cameraPosition.z + 0.01
+						);
 
 
-					if( facing === 'forward' || facing === 'backward' ){
-						const pathIndex = facing === 'forward'	
-							? movementIndex + 1
-							: movementIndex - 1;
-							
-						camera.lookAt( new THREE.Vector3( ...path[ pathIndex ] ));
-					}
-					camera.updateProjectionMatrix();
-				})
-				.start();
-			
-			// debounce(() => camera.position.lerp( new THREE.Vector3(x, y + 250, z + 0.01), 1 ), 500)(); // No tweening
+						if( facing === 'forward' || facing === 'backward' ){
+							const pathIndex = facing === 'forward'	
+								? movementIndex + 1
+								: movementIndex - 1;
+
+							camera.lookAt( new THREE.Vector3( ...path[ pathIndex ] ));
+						}
+						camera.updateProjectionMatrix();
+					})
+					.start();
+			}
+			else{
+				camera.position.lerp( new THREE.Vector3(x, y + 250, z + 0.01), 1 ); // No tweening
+				const pathIndex = facing === 'forward'	
+								? movementIndex + 1
+								: movementIndex - 1;
+
+				camera.lookAt( new THREE.Vector3( ...path[ pathIndex ] ));
+				camera.updateProjectionMatrix();
+			}
 
 			setController( 
 				isMobile()
@@ -296,41 +309,52 @@ const MapView = (props) => {
 					: <PointerLockControls />
 			);
 
-
+			setPlayerState('idle');
 			camera.updateProjectionMatrix();
 		}
-	}, [movementIndex, facing, path]); 
+	}, [movementIndex, playerState, facing, path]); 
 
 	useEffect(() => {
 
 		if( flight && camera ){
-			const cameraPosition = camera.position;
-			const cameraFlightMode = new TWEEN.Tween( cameraPosition )
-				.to({
-					x: MAP.CAMERA.position[ 0 ],
-					y: MAP.CAMERA.position[ 1 ],
-					z: MAP.CAMERA.position[ 2 ]
-				}, 5000)
-				.easing( TWEEN.Easing.Quadratic.InOut )
-				.onUpdate(() => {
-					camera.position.set(
-						cameraPosition.x,
-						cameraPosition.y,
-						cameraPosition.z,
-					);
+			if( quality === 'high' ){
+				const cameraPosition = camera.position;
+				const cameraFlightMode = new TWEEN.Tween( cameraPosition )
+					.to({
+						x: MAP.CAMERA.position[ 0 ],
+						y: MAP.CAMERA.position[ 1 ],
+						z: MAP.CAMERA.position[ 2 ]
+					}, 5000)
+					.easing( TWEEN.Easing.Quadratic.InOut )
+					.onUpdate(() => {
+						camera.position.set(
+							cameraPosition.x,
+							cameraPosition.y,
+							cameraPosition.z,
+						);
 
-					camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
+						camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
 
-					camera.updateProjectionMatrix();
-				})
-				.onComplete(() => {
-					setController(() => null);
-					setMovementIndex(() => -1);
-					setMovementDirection(() => 'idle');
+						camera.updateProjectionMatrix();
+					})
+					.start();
+			}
+			else{
+				camera.position.set(
+					MAP.CAMERA.position[ 0 ],
+					MAP.CAMERA.position[ 1 ],
+					MAP.CAMERA.position[ 2 ]
+				);
 
-					setFlight(() => false);
-				})
-				.start();
+				camera.lookAt( new THREE.Vector3( 0, 0, 0 ) );
+				camera.updateProjectionMatrix();
+			}
+
+			setController(() => null);
+			setMovementIndex(() => -1);
+			setMovementDirection(() => 'idle');
+
+			setFlight(() => false);
 		}
 
 		if( clear ){
@@ -358,6 +382,47 @@ const MapView = (props) => {
 		}
 
 	}, [transparent, scene]);
+
+
+	useEffect(() => {
+		Cookie.set('quality', quality);
+
+		scene?.traverse?.( obj => {
+			if( obj instanceof THREE.Mesh ){
+				const color = obj.material.color;
+				const map = obj.material.map;
+				const name = obj.name.toLowerCase();
+
+				if( name.includes('map_object') || name.includes('land') || name.includes('cloud') ){
+					switch( quality ){
+						case 'low':
+							if( obj.material.type === 'MeshPhongMaterial' ) return;
+
+							obj.material = new THREE.MeshPhongMaterial({ color: color, map: map });
+							break;
+
+						case 'high':
+							if( obj.material.type === 'MeshStandardMaterial' ) return;
+
+							obj.material = new THREE.MeshStandardMaterial({ color: color, roughness: 1, metalness: 0.5, map: map });
+							break;
+
+						default:
+							if( obj.material.type === 'MeshPhongMaterial' ) return;
+
+							obj.material = new THREE.MeshPhongMaterial({ color: color, map: map });
+							break;
+					}
+
+					console.log(obj.material.type);
+				}
+			}
+		});
+	}, [quality, scene]);
+
+	const handleQualitySwitch = async () => {
+		setQuality( quality => quality === 'low' ? 'high' : 'low' );
+	}
 
 	const handleMoveForward = async () => {
 		setMovementDirection(() => 'forward');
@@ -415,7 +480,12 @@ const MapView = (props) => {
 				clear={handleClear}
 				disable={disMovement}
 			/>
-			<FloatingButton cpPos={cpPos} setSearchForm={setSearchForm} setDestination={setDestination}/>
+			<FloatingButton 
+				cpPos={cpPos} 
+				setQuality={handleQualitySwitch}
+				setSearchForm={setSearchForm} 
+				setDestination={setDestination}
+			/>
 		</div>
 	);
 }

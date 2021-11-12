@@ -22,9 +22,12 @@ import SpeedDial from '@mui/material/SpeedDial';
 import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 import SpeedDialAction from '@mui/material/SpeedDialAction';
 
+import BubbleChartIcon from '@mui/icons-material/BubbleChart';
+
 const actions = [
 	{ icon: <SearchIcon/>, name: 'Search your destination' },
-	{ icon: <InfoIcon/>, name: 'Go to About' }
+	{ icon: <InfoIcon/>, name: 'Go to About' },
+	{ icon: <BubbleChartIcon/>, name: 'Quality switch' }
 ];
 
 const FloatingButton = (props) => {
@@ -94,7 +97,11 @@ const FloatingButton = (props) => {
 			            key={action.name}
 			            icon={action.icon}
 			            tooltipTitle={action.name}
-			            onClick={[async () => dispatch({type: 'search'}), () => setRedirect(<Redirect to="/about"/>)][ index ]}
+			            onClick={[
+			            	async () => dispatch({type: 'search'}), 
+			            	() => setRedirect(<Redirect to="/about"/>),
+			            	props.setQuality
+			            ][ index ]}
 			          />
 			        ))
 			    }

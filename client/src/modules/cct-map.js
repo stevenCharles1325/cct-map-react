@@ -40,11 +40,12 @@ const CAMERA = {
 // Default material
 const materialOptions = {
 	color: 0xf8c291,
-	roughness: 1,
-	metalness: 0
+	// roughness: 1,
+	// metalness: 0
 }
 
-const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
+// const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
+const defaultMaterial = new THREE.MeshPhongMaterial( materialOptions );
 
 /*
 	Shadow:
@@ -388,7 +389,9 @@ const Atmosphere = (props) => {
 		setClouds( clouds => [
 				... clouds, 
 				<primitive 
+					name="cloud"
 					key={uniqid()}
+					material={ new THREE.MeshPhongMaterial({ color: 0xffffff }) }
 					scale={[ size, size, size + 1 ]}
 					rotation={[ 0, getRandomNumber(0, 40), 0 ]}
 					object={cloudTypes[  getRandomNumber(0, 3) ].clone()} 
@@ -462,13 +465,14 @@ const Land = React.forwardRef(( props, ref ) => {
 
 	return (
 		<mesh 
+			name="land"
 			ref={ref}
 			geometry={geometry}
 			rotation={[-Math.PI / 2, 0, 0]}
 			scale={[50, 50, 10]}
 			position={[0, -100, 0]}
 		>
-			<meshStandardMaterial roughness={1} color={0x6ab04c} map={texture}/>
+			<meshBasicMaterial color={0x6ab04c} map={texture}/>
 		</mesh>
 	);
 });
