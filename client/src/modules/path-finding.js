@@ -1,5 +1,6 @@
 import { Vector3 } from 'three';
 import { Queue } from '@datastructures-js/queue';
+import debounce from 'lodash.debounce';
 import Node from './nodes';
 import Paths from './paths';
 
@@ -73,6 +74,7 @@ function createNodes( checkpoints ){
 	}
 }
 
+
 async function pathFind( destination ){
 	if( !destination ) return [];
 
@@ -88,7 +90,6 @@ async function pathFind( destination ){
 	const shortestPath = bfs(NODES[destination.end.name.toLowerCase()]);
 
 	resetNodes();
-
 	return [...shortestPath, start.toArray()];
 }
 
@@ -124,8 +125,6 @@ function bfs( end, path = null ){
 
 function recurseParent( node, path = [] ){
 	if( !node.getParent() ) return path;
-
-	console.log( node.name );
 
 	path.push( node.vector.toArray() );
 	return recurseParent( node.getParent(), path );

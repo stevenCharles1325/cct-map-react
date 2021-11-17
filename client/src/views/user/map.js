@@ -108,6 +108,7 @@ const MapView = (props) => {
 		const runPathFind = async () => {
 			const shortestPath = await pathFind( destination );
 
+			console.log( shortestPath );
 			if( !shortestPath || !shortestPath.length ){
 				enqueueSnackbar('Unable to provide path');
 			}
@@ -281,11 +282,13 @@ const MapView = (props) => {
 							cameraPosition.z + 0.01
 						);
 
-
 						if( facing === 'forward' || facing === 'backward' ){
+
 							const pathIndex = facing === 'forward'	
 								? movementIndex + 1
-								: movementIndex - 1;
+								: movementIndex === 0 
+									? movementIndex
+									: movementIndex - 1;
 
 							camera.lookAt( new THREE.Vector3( ...path[ pathIndex ] ));
 						}
@@ -376,14 +379,30 @@ const MapView = (props) => {
 			scene.traverse( obj => {
 				if( obj instanceof THREE.Mesh && obj.name.includes('map_object') ){
 					obj.material.transparent = transparent;
-					obj.material.opacity = transparent ? 0.4 : 1;
+
+					if( quality === 'high' ){
+						const materialOpacity = obj.material;
+						const opacityTween = new TWEEN.Tween( materialOpacity )
+							.to({
+								opacity: transparent ? 0.4 : 1
+							}, 2000)
+							.easing( TWEEN.Easing.Quadratic.InOut )
+							.onUpdate(() => {
+								obj.material.opacity = materialOpacity.opacity;
+							})
+							.start();
+					}
+					else{
+						obj.material.opacity = transparent ? 0.4 : 1;
+					}
+
 				}
 			})
 		}
 
 	}, [transparent, scene]);
 
-
+	// concurrently "npm start" "cd client && npm start"
 	useEffect(() => {
 		Cookie.set('quality', quality);
 
@@ -452,6 +471,7 @@ const MapView = (props) => {
 		<div className="map p-0 m-0">
 	    	<MAP.Messenger message={mapMessage} messenger={setMapMessage} />		
 			<Canvas 
+				mode="concurrent"
 				shadowMap
 			>
 				<Suspense fallback={<MAP.Loader />}>
@@ -469,8 +489,8 @@ const MapView = (props) => {
 							{ line }
 						</Suspense>
 					</MAP.MapCanvas>
+					{ searchForm }
 				</Suspense>
-				{ searchForm }
 			</Canvas>
 			<Controller 
 				transparent={handleTransparency}

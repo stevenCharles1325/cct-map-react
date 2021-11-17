@@ -3,6 +3,8 @@ import { Link, Redirect } from 'react-router-dom';
 
 import { Html } from '@react-three/drei';
 
+import debounce from 'lodash.debounce';
+
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
@@ -67,10 +69,10 @@ const FloatingButton = (props) => {
 
 	useEffect(() => {
 		if( state.searchFormState && props?.cpPos ){
-			props.setSearchForm(() => <SearchForm dispatch={dispatch} {...props}/>);
+			debounce(() => props.setSearchForm( <SearchForm dispatch={dispatch} {...props}/> ), 1000)();
 		}
 		else {
-			props.setSearchForm( () => null );
+			debounce(() => props.setSearchForm( null ), 1000)();
 		}
 	}, [state.searchFormState, props?.cpPos]);
 
