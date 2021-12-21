@@ -10,7 +10,7 @@ import './styles/index.css';
 
 window.SERVER_PORT = '3500';
 window.AUTH_SERVER_PORT = '4000';
-window.SERVER_HOST = '192.168.1.13';
+window.SERVER_HOST = '192.168.1.3';
 
 const Main = () => {
   return(  

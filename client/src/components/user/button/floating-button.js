@@ -9,6 +9,10 @@ import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
+import Dialog from '@mui/material/Dialog';
+import DialogContent from '@mui/material/DialogContent';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme } from '@mui/material/styles';
 
 // Style
 import '../../../styles/user/floating-btn.css';
@@ -25,69 +29,83 @@ import SpeedDialIcon from '@mui/material/SpeedDialIcon';
 import SpeedDialAction from '@mui/material/SpeedDialAction';
 
 import BubbleChartIcon from '@mui/icons-material/BubbleChart';
+import MenuBookIcon from '@mui/icons-material/MenuBook'; // Manual
 
 const actions = [
 	{ icon: <SearchIcon/>, name: 'Search your destination' },
+	{ icon: <BubbleChartIcon/>, name: 'Quality switch' },
 	{ icon: <InfoIcon/>, name: 'Go to About' },
-	{ icon: <BubbleChartIcon/>, name: 'Quality switch' }
+	{ icon: <MenuBookIcon/>, name: 'Open Manual' },
+
 ];
 
 const FloatingButton = (props) => {
-	const initState = {
-		menuState: false,
-		searchFormState: false
-	}
+	const [searchForm, setSearchForm] = useState( false );
 
-	const opener = (state, action) => {
-		switch( action.type ){
-			case "menu":
-				return { 
-					menuState: !state.menuState, 
-					searchFormState: state.searchFormState 
-				};
+	// const initState = {
+	// 	menuState: false,
+	// 	searchFormState: false
+	// }
 
-			case "search":
-				return { 
-					menuState: state.menuState, 
-					searchFormState: !state.searchFormState 
-				};
+	// const opener = (state, action) => {
+	// 	switch( action.type ){
+	// 		case "menu":
+	// 			return { 
+	// 				menuState: !state.menuState, 
+	// 				searchFormState: state.searchFormState 
+	// 			};
 
-			default:
-				throw new Error(`${action.type} is unknown`);	
-		}
-	}
+	// 		case "search":
+	// 			return { 
+	// 				menuState: state.menuState, 
+	// 				searchFormState: !state.searchFormState 
+	// 			};
 
-	const [state, dispatch] = useReducer( opener, initState );
-	const [redirect, setRedirect] = useState( null );
+	// 		default:
+	// 			throw new Error(`${action.type} is unknown`);	
+	// 	}
+	// }
+
+	// const [state, dispatch] = useReducer( opener, initState );
 	// const [searchForm, setSearchForm] = useState( null );
 
-	const escapeListener = (e) => {
-		if( e.key === 'Escape' ){
-			return dispatch({type: 'menu'});
-		}
-	}
+	// const escapeListener = (e) => {
+	// 	if( e.key === 'Escape' ){
+	// 		return dispatch({type: 'menu'});
+	// 	}
+	// }
+
+	const [redirect, setRedirect] = useState( null );
 
 	useEffect(() => {
-		if( state.searchFormState && props?.cpPos ){
-			debounce(() => props.setSearchForm( <SearchForm dispatch={dispatch} {...props}/> ), 1000)();
+		if( searchForm ){
+			debounce(() => 
+				props.setSearchForm( 
+					<SearchForm 
+						isOpen={searchForm} 
+						setOpen={() => setSearchForm( false )}
+						{...props}
+					/>
+				)
+			, 1000)();
 		}
 		else {
 			debounce(() => props.setSearchForm( null ), 1000)();
 		}
-	}, [state.searchFormState, props?.cpPos]);
+	}, [searchForm]);
 
 	// useEffect(() => {
 	// 	if( !state.menuState && state.searchFormState ) dispatch({type: 'search'});
 	// }, [state.menuState, state.searchFormState]);
 
-	useEffect(() => {
-		window.addEventListener('keydown', escapeListener);
+	// useEffect(() => {
+	// 	window.addEventListener('keydown', escapeListener);
 
-		return () => window.removeEventListener('keydown', escapeListener);
-	}, []);
+	// 	return () => window.removeEventListener('keydown', escapeListener);
+	// }, []);
 
 	return (
-		<div>
+		<>
 			<SpeedDial
 		        ariaLabel="speed dial"
 		        sx={{ position: 'absolute', bottom: 16, right: 30 }}
@@ -100,16 +118,17 @@ const FloatingButton = (props) => {
 			            icon={action.icon}
 			            tooltipTitle={action.name}
 			            onClick={[
-			            	async () => dispatch({type: 'search'}), 
+			            	debounce(() => setSearchForm( true ), 100), 
+			            	props.setQuality,
 			            	() => setRedirect(<Redirect to="/about"/>),
-			            	props.setQuality
+			            	props.setManual,
 			            ][ index ]}
 			          />
 			        ))
 			    }
 		  	</SpeedDial>
 			{ redirect }
-		</div>
+		</>
 	);
 }
 
@@ -140,6 +159,9 @@ const FloatingButton = (props) => {
 // </div>
 const SearchForm = (props) => {
 	const { cpPos } = props;
+	
+	const theme = useTheme();
+	const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
 
     const getRootName = (name) => name?.replace?.(/checkpoint_([0-9]+)_/, '');
 
@@ -198,7 +220,7 @@ const SearchForm = (props) => {
 
     const reqRunP2PAlgo = async () => {
 		props.setDestination( destination );
-		props.dispatch({type: 'search'}); // Closes search form
+		props.setOpen(); // Closes search form
     }
 
     useEffect(() => {
@@ -224,62 +246,84 @@ const SearchForm = (props) => {
     
 	return (
 		<Html zIndexRange={[100, 100]}>
-			<div className="search-frame d-flex flex-column justify-content-center align-items-center">
-				<div className="search-frame-title text-center pt-2">
-					<h5>Point to Point</h5>
-				</div>
-				<div className="search-frame-form d-flex flex-column justify-content-around align-items-center">
-					<div className="search-inp d-flex justify-content-between align-items-center">
-						<label htmlFor="point-a">Point A: </label>
-						<Autocomplete
-							sx={{width: 150}}
-							options={labels}
-							onChange={reqSetLocation}
-							onInputChange={reqSetLocation}
-							renderInput={(params) => (
-								<TextField 
-									{...params} 
-									autoFocus
-									variant="filled" 
-									label="Choose point A"
+			<Dialog
+				maxWidth="md"
+				open={props.isOpen}
+				fullScreen={fullScreen}
+				onClose={props.setOpen}
+				sx={{ backgroundColor: 'transparent' }}
+			>
+				<DialogContent sx={{ width: '300px', height: '300px', backgroundColor: 'transparent' }}>
+					<div className="search-frame d-flex flex-column justify-content-center align-items-center">
+						<div className="col-12 search-frame-title text-center pt-2 d-flex justify-content-center align-items-center">
+							<h5>Point to Point</h5>
+						</div>
+						<div className="search-frame-form py-3 d-flex flex-column justify-content-around align-items-center">
+							<div className="search-inp d-flex justify-content-between align-items-center">
+								<label htmlFor="point-a">Point A: </label>
+								<Autocomplete
+									sx={{ width: '70%' }}
+									options={labels}
+									onChange={reqSetLocation}
+									onInputChange={reqSetLocation}
+									renderInput={(params) => (
+										<TextField 
+											{...params} 
+											autoFocus
+											variant="filled" 
+											label="Choose point A"
+										/>
+									)}
 								/>
-							)}
-						/>
-					</div>
-					
-					<div className="search-inp d-flex justify-content-between align-items-center">
-						<label htmlFor="point-b">Point B: </label>
-						<Autocomplete
-							sx={{width: 150}}
-							disablePortal
-							options={labels}
-							onChange={reqSetDestination}
-							onInputChange={reqSetDestination}
-							renderInput={(params) => (
-								<TextField 
-									{...params} 
-									variant="filled" 
-									label="Choose point B"
+							</div>
+							
+							<div className="search-inp d-flex justify-content-between align-items-center">
+								<label htmlFor="point-b">Point B: </label>
+								<Autocomplete
+									sx={{ width: '70%' }}
+									disablePortal
+									options={labels}
+									onChange={reqSetDestination}
+									onInputChange={reqSetDestination}
+									renderInput={(params) => (
+										<TextField 
+											{...params} 
+											variant="filled" 
+											label="Choose point B"
+										/>
+									)}
 								/>
-							)}
-						/>
+							</div>
+							<div className="col-12 d-flex justify-content-around align-items-center">
+								<button 
+									style={{
+										color: 'white', 
+										background: btnReady 
+											? 'rgba(0, 0, 0, 0.8)' 
+											: 'rgba(200, 10, 10, 0.7)',
+										transition: '.2s ease-in-out'
+									}} 
+									className="btn" 
+									onClick={() => setIsRunAlgo(true)}
+								>
+									locate
+								</button>
+								<button 
+									style={{
+										color: 'white', 
+										background: 'rgba(0, 0, 0, 0.6)',
+										transition: '.2s ease-in-out'
+									}} 
+									className="btn" 
+									onClick={props.setOpen}
+								>
+									disregard
+								</button>
+							</div>
+						</div>
 					</div>
-
-					<button 
-						style={{
-							color: 'white', 
-							background: btnReady 
-								? 'rgba(0, 0, 0, 0.8)' 
-								: 'rgba(200, 10, 10, 0.7)',
-							transition: '.2s ease-in-out'
-						}} 
-						className="btn" 
-						onClick={() => setIsRunAlgo(true)}
-					>
-						locate
-					</button>
-				</div>
-			</div>
+				</DialogContent>
+			</Dialog>
 		</Html>
 	);
 }

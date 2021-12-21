@@ -90,7 +90,13 @@ async function pathFind( destination ){
 	const shortestPath = bfs(NODES[destination.end.name.toLowerCase()]);
 
 	resetNodes();
-	return [...shortestPath, start.toArray()];
+
+	if( !shortestPath.map( p => p.toString() ).includes( start.toArray().toString() )){
+		return [...shortestPath, start.toArray()];
+	}
+	else{
+		return [ ...shortestPath ];
+	}
 }
 
 
@@ -126,7 +132,9 @@ function bfs( end, path = null ){
 function recurseParent( node, path = [] ){
 	if( !node.getParent() ) return path;
 
-	path.push( node.vector.toArray() );
+	if( !path.map( p => p.toString() ).includes( node.vector.toArray().toString() ))
+		path.push( node.vector.toArray() );
+
 	return recurseParent( node.getParent(), path );
 }
 

@@ -604,7 +604,7 @@ const MapView = (props) => {
 
 		if( state?.selected?.current ){
 			isError = true;
-
+			
 			setMapMessage( mapMessage => [...mapMessage, 'Unselect an object first']);
 		}
 
