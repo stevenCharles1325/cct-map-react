@@ -342,7 +342,7 @@ const MapCanvas = (props) => {
 
 	useEffect(() => props.setScene( () => scene ), []);
 
-	useFrame(() => props.update());
+	useFrame(() => props?.update?.());
 
 	return(
 		<>

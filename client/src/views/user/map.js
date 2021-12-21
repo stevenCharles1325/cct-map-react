@@ -2,6 +2,7 @@
 import React, { Suspense, useEffect, useState } from 'react';
 import Cookie from 'js-cookie';
 import TWEEN from '@tweenjs/tween.js';
+import debounce from 'lodash.debounce';
 
 import { Canvas } from '@react-three/fiber';
 import { 
@@ -18,8 +19,10 @@ import * as THREE from 'three';
 // Components
 import Stack from '@mui/material/Stack';
 import Divider from '@mui/material/Divider';
+import Skeleton from '@mui/material/Skeleton';
 import IconButton from '@mui/material/IconButton';
 import FloatingButton from '../../components/user/button/floating-button';
+import Chip from '@mui/material/Chip';
 import { useSnackbar } from 'notistack';
 
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
@@ -27,6 +30,7 @@ import ArrowDropUpIcon from '@mui/icons-material/ArrowDropUp';
 import OpacityIcon from '@mui/icons-material/Opacity';
 import FlightIcon from '@mui/icons-material/Flight';
 import ClearIcon from '@mui/icons-material/Clear';
+import BubbleChartIcon from '@mui/icons-material/BubbleChart';
 
 import Tooltip from '@mui/material/Tooltip';
 
@@ -37,6 +41,10 @@ import * as MAP from '../../modules/cct-map';
 // Style
 import '../../styles/user/map.css';
 
+import Manual from './manual';
+
+const _TRANSPARENT = 0.4;
+const _SOLID = 1;
 
 const MapView = (props) => {
 	const [controller, setController] = useState( null );
@@ -60,13 +68,20 @@ const MapView = (props) => {
 	const [transparent, setTransparent] = useState( false );
 	const [clear, setClear] = useState( false );
 	const [flight, setFlight] = useState( true );
+	const [manual, setManual] = useState( false );
 
 	const { enqueueSnackbar } = useSnackbar();
 
+
 	useEffect(() => {
 		const qual = Cookie.get('quality');
+		const visited = Cookie.get('visited');
 
 		if( qual ) setQuality( qual );
+		if( !visited ){
+			setManual( true );
+			Cookie.set('visited', new Date());
+		}
 	}, []);
 
 	useEffect( () => {
@@ -108,18 +123,28 @@ const MapView = (props) => {
 		const runPathFind = async () => {
 			const shortestPath = await pathFind( destination );
 
-			console.log( shortestPath );
 			if( !shortestPath || !shortestPath.length ){
 				enqueueSnackbar('Unable to provide path');
 			}
 			else{
 				enqueueSnackbar('Constructing path', { variant: 'info' });
 				const sPath = [...shortestPath.reverse()];
-				sPath.push([
-					destination.end.position.x,
-					destination.end.position.y,
-					destination.end.position.z,
-				]);
+
+				const isEndInSPath = shortestPath
+					.map( p => p.toString() )
+					.includes( [
+						destination.end.position.x,
+						destination.end.position.y,
+						destination.end.position.z,
+					].toString() );
+
+				if( !isEndInSPath ){
+					sPath.push([
+						destination.end.position.x,
+						destination.end.position.y,
+						destination.end.position.z,
+					]);
+				}
 
 				Cookie.set(`${destination.start.name}&${destination.end.name}`, JSON.stringify( sPath ));
 
@@ -223,17 +248,26 @@ const MapView = (props) => {
 		
 	}, [destination, path]);
 
+	useEffect(() => {
+		if( path.length && movementIndex === path.length - 1 ){
+			enqueueSnackbar(`Great! You've reached your destination! 🎉`, { variant: 'success' });
+		} 
+		else if( path.length && movementIndex === 0 ){
+			enqueueSnackbar(`You are in your starting position.`);
+		} 
+
+	}, [path, movementIndex]);
 
 	useEffect(() => {
 		if( !path.length && movementDirection !== 'idle' ){
 			enqueueSnackbar('Movement is not allowed when there is no path', { variant: 'error' });
 		}
-		else if( movementIndex >= -1 && movementIndex < path.length ){
+		else if( movementIndex >= -1 && movementIndex <= path.length ){
+
 			switch( movementDirection ){
 				case 'forward':
-					if( movementIndex === -1 ) enqueueSnackbar('You are in your starting position.');
-					if( path.length && movementIndex === path.length - 1 ) enqueueSnackbar(`You've reached your destination.`);
-
+					if( movementIndex === path.length - 1 ) return;
+					
 					setFacing('forward');
 					setPlayerState('moving');
 
@@ -243,14 +277,12 @@ const MapView = (props) => {
 
 				case 'backward':
 					if( movementIndex <= 0 ) return;
-
+					
 					setFacing('backward');
 					setPlayerState('moving');
 
 					setFlight( false );
 					setMovementIndex( movementIndex => movementIndex - 1 );
-
-					if( movementIndex === 0 ) enqueueSnackbar('You are in your starting position.');
 					break;
 
 				default:
@@ -263,7 +295,7 @@ const MapView = (props) => {
 	}, [movementDirection, path, movementIndex]);
 
 	useEffect(() => {
-		if( path.length && (movementIndex > -1 && movementIndex < path.length - 1) && playerState === 'moving' ){
+		if( path.length && (movementIndex > -1 && movementIndex < path.length) && playerState === 'moving' ){
 			const [x, y, z] = path[ movementIndex ];
 
 			if( quality === 'high' ){
@@ -271,23 +303,25 @@ const MapView = (props) => {
 				const cameraTween = new TWEEN.Tween( cameraPosition )
 					.to({
 						x: x,
-						y: y,
-						z: z
+						y: y + 250,
+						z: z + 0.01
 					}, 4000)
 					.easing( TWEEN.Easing.Quadratic.InOut )
 					.onUpdate(() => {
 						camera.position.set(
 							cameraPosition.x,
-							cameraPosition.y + 250,
-							cameraPosition.z + 0.01
+							cameraPosition.y,
+							cameraPosition.z
 						);
 
 						if( facing === 'forward' || facing === 'backward' ){
 
 							const pathIndex = facing === 'forward'	
-								? movementIndex + 1
+								? movementIndex + 1 > path.length - 1
+									? movementIndex - 1
+									: movementIndex + 1
 								: movementIndex === 0 
-									? movementIndex
+									? movementIndex + 1
 									: movementIndex - 1;
 
 							camera.lookAt( new THREE.Vector3( ...path[ pathIndex ] ));
@@ -381,10 +415,11 @@ const MapView = (props) => {
 					obj.material.transparent = transparent;
 
 					if( quality === 'high' ){
-						const materialOpacity = obj.material;
+						const materialOpacity = { ...obj.material };
+
 						const opacityTween = new TWEEN.Tween( materialOpacity )
 							.to({
-								opacity: transparent ? 0.4 : 1
+								opacity: transparent ? _TRANSPARENT : _SOLID
 							}, 2000)
 							.easing( TWEEN.Easing.Quadratic.InOut )
 							.onUpdate(() => {
@@ -393,7 +428,7 @@ const MapView = (props) => {
 							.start();
 					}
 					else{
-						obj.material.opacity = transparent ? 0.4 : 1;
+						obj.material.opacity = transparent ? _TRANSPARENT : _SOLID;
 					}
 
 				}
@@ -402,7 +437,6 @@ const MapView = (props) => {
 
 	}, [transparent, scene]);
 
-	// concurrently "npm start" "cd client && npm start"
 	useEffect(() => {
 		Cookie.set('quality', quality);
 
@@ -417,23 +451,21 @@ const MapView = (props) => {
 						case 'low':
 							if( obj.material.type === 'MeshPhongMaterial' ) return;
 
-							obj.material = new THREE.MeshPhongMaterial({ color: color, map: map });
+							obj.material = new THREE.MeshPhongMaterial({ color, map });
 							break;
 
 						case 'high':
 							if( obj.material.type === 'MeshStandardMaterial' ) return;
 
-							obj.material = new THREE.MeshStandardMaterial({ color: color, roughness: 1, metalness: 0.5, map: map });
+							obj.material = new THREE.MeshStandardMaterial({ color, roughness: 1, metalness: 0.5, map });
 							break;
 
 						default:
 							if( obj.material.type === 'MeshPhongMaterial' ) return;
 
-							obj.material = new THREE.MeshPhongMaterial({ color: color, map: map });
+							obj.material = new THREE.MeshPhongMaterial({ color, map });
 							break;
 					}
-
-					console.log(obj.material.type);
 				}
 			}
 		});
@@ -441,6 +473,7 @@ const MapView = (props) => {
 
 	const handleQualitySwitch = async () => {
 		setQuality( quality => quality === 'low' ? 'high' : 'low' );
+		setTransparent( false );
 	}
 
 	const handleMoveForward = async () => {
@@ -467,8 +500,38 @@ const MapView = (props) => {
 		setFlight(() => true);
 	}
 
+	const handleManual = () => {
+		setManual( true );
+	}
+
+	const debouncedQualitySwitch = debounce( handleQualitySwitch, 500 );
+	const debouncedMoveForward = debounce( handleMoveForward, 500 );
+	const debouncedMoveBackward = debounce( handleMoveBackward, 500 );
+	const debouncedTransparency = debounce( handleTransparency, 500 );
+	const debouncedClear = debounce( handleClear, 500 );
+	const debouncedFlight = debounce( handleFlight, 500 );
+	const debouncedManualOpener = debounce( handleManual, 500 );
+
 	return(
 		<div className="map p-0 m-0">
+			<div
+				style={{
+					position: 'absolute',
+					top: '3vh',
+					left: '50%',
+					transform: 'translate(-50%, 0%)',
+					width: 'fit-content',
+					height: 'fit-content',
+					zIndex: '50'
+				}}
+			>
+				<Chip 
+					icon={<BubbleChartIcon fontSize="small" sx={{ color: 'white' }}/>} 
+					label={`Quality: ${ quality }`} 
+					variant="outlined"
+					sx={{ color: 'white' }}
+				/>
+			</div>
 	    	<MAP.Messenger message={mapMessage} messenger={setMapMessage} />		
 			<Canvas 
 				mode="concurrent"
@@ -480,7 +543,7 @@ const MapView = (props) => {
 						update={TWEEN.update}
 						setCam={setCamera} 
 						setScene={setScene} 
-						controller={controller} 
+						controller={controller}
 					>
 						{ destinationLabel }
 						{ objects ?? <MAP.Loader /> }
@@ -492,19 +555,28 @@ const MapView = (props) => {
 					{ searchForm }
 				</Suspense>
 			</Canvas>
+			{
+				scene
+					? <Manual
+						open={manual}
+						setOpen={setManual}
+					/>
+					: null
+			}
 			<Controller 
-				transparent={handleTransparency}
-				backward={handleMoveBackward}
-				forward={handleMoveForward} 
-				flight={handleFlight}
-				clear={handleClear}
+				transparent={debouncedTransparency}
+				backward={debouncedMoveBackward}
+				forward={debouncedMoveForward} 
+				flight={debouncedFlight}
+				clear={debouncedClear}
 				disable={disMovement}
 			/>
-			<FloatingButton 
+			<FloatingButton
 				cpPos={cpPos} 
-				setQuality={handleQualitySwitch}
-				setSearchForm={setSearchForm} 
-				setDestination={setDestination}
+				setQuality={debouncedQualitySwitch}
+				setManual={debouncedManualOpener}
+				setSearchForm={val => debounce(() => setSearchForm( val ), 100)()} 
+				setDestination={val => debounce(() => setDestination( val ), 100)()}
 			/>
 		</div>
 	);
