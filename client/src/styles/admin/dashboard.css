@@ -5,7 +5,7 @@
     padding: 0px;
     margin: 0px;
 
-    background: linear-gradient(358.39deg, rgba(210, 49, 49, 0.7) 1.31%, rgba(255, 229, 90, 0.6) 147.17%);
+    background-image: radial-gradient( circle farthest-corner at 10% 20%,  rgba(14,174,87,1) 0%, rgba(12,116,117,1) 90% );
 }
 
 .dash-header{
@@ -30,7 +30,9 @@
 
 .top-chart-box{
     height: 60%;
-    background-color: rgba(204, 204, 204, .85);
+    background-image: linear-gradient( 179.4deg,  rgba(33,150,243,1) 1.8%, rgba(22,255,245,0.60) 97.1% );
+    /*background-image: linear-gradient( 109.9deg,  rgba(251,189,100,1) 1.8%, rgba(255,207,139,1) 95.4% );*/
+    /*background-color: rgba(204, 204, 204, .85);*/
 }
 
 .bot-chart-box{
@@ -43,8 +45,9 @@
 
 .left-graph-box{
     color: white;
-    width: 54.8% ;
+    width: 49.8% ;
     height: 100%;
+    padding: 10px;
     background-color: rgba(198, 115, 115, 0.5);
 }
 
@@ -55,8 +58,9 @@
 
 .right-graph-box{
     color: white;
-    width: 45% ;
+    width: 50% ;
     height: 100% ;
+    padding: 30px;
     background-color: rgba(198, 115, 115, 0.5);
 }
 

@@ -4,6 +4,8 @@ import axios from 'axios';
 
 import ImageBall from '../image/image-ball';
 import ButtonLink from '../buttons/button-link';
+import Avatar from '@mui/material/Avatar';
+import Button from '@mui/material/Button';
 
 import '../../../styles/admin/nav-panel.css';
 import menuImg from '../../../images/admin/menu.png';
@@ -16,7 +18,6 @@ const ErrorHandler = new CustomErrorHandler( 5, 5000 );
 export default function NavPanel( props ){
     const [admin, setAdmin] = useState( null );
     const [navSwitch, setNavSwitch] = useState( false );
-
 
     const requestSignOut = async ( data ) => {
         const token = Cookies.get('token');
@@ -105,15 +106,18 @@ export default function NavPanel( props ){
 
 
     return (
-        <div className={navSwitch ? "nav-panel p-0 d-flex flex-row" : "nav-panel p-0 "} style={{width: navSwitch ? '400px' : '50px', marginRight: navSwitch ? '0px' : '3%'}}>
+        <div
+            className={navSwitch ? "nav-panel p-0 d-flex flex-row" : "nav-panel p-0 "} 
+            style={{width: navSwitch ? '400px' : '50px', marginRight: navSwitch ? '0px' : '3%'}}
+        >
             <div className="np-menu-bar p-3 mt-3 d-flex justify-content-center">
                 <img style={{width: '41px', height: '43px', transform: navSwitch ? 'rotate(0deg)' : 'rotate(-90deg)'}} id="menu-btn" src={menuImg}/>
             </div>
-            <div style={{width: navSwitch ? '100%' : '0%'}} className="np-content p-0 py-5">
+            <div style={{width: navSwitch ? '100%' : '0%', boxShadow: '-5px 0px 10px rgba(0, 0, 0, 0.3)'}} className="np-content p-0 py-5">
                 {/* Profile box */}
                 <div className="np-profile-box d-flex mx-5 flex-row justify-content-start align-items-center">
                     <div style={{width: '64px', height: '64px'}} className="col-3 d-flex justify-content-end align-items-start">
-                        <div className="col-3 np-img-container" style={{width: navSwitch ? '64px' : '15px', height: navSwitch ? '64px' : '15px'}}>
+                        <div className="col-3 np-img-container d-flex justify-content-center align-items-center" style={{width: navSwitch ? '64px' : '15px', height: navSwitch ? '64px' : '15px', backgroundColor: 'transparent'}}>
                             <ImageBall Event={props.Event}/>
                         </div>
                     </div>
@@ -137,8 +141,12 @@ export default function NavPanel( props ){
                 <div className="np-logout-box mx-5 d-flex justify-content-center align-items-center">
                     <div className="np-logout-container d-flex flex-row">
                         {/* Insert leave icon here */}
-                        <button className="np-logout-btn" 
-                        onClick={ requestSignOut }>Log out</button>
+                        <Button 
+                            onClick={ requestSignOut }
+                            variant="outlined"
+                        >
+                            Log out
+                        </Button>
                     </div>
                 </div>
             </div>

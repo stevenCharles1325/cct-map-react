@@ -7,7 +7,8 @@
     height: 100vh;
 
     z-index: 2;
-    background-color: rgba(171, 78, 78, 0.85);
+    background-image: radial-gradient( circle farthest-corner at 11.4% 27.8%,  rgba(248,227,194,1) 24.3%, rgba(253,214,168,1) 99.8% );
+    box-shadow: 5px 0px 10px rgba( 0, 0, 0, 0.3 );  
 
     border-top-right-radius: 5px;
     border-bottom-right-radius: 5px;
@@ -40,8 +41,8 @@
 }
 
 .mm-btn-icon:hover{
-    --webkit-filter: invert(1);
-    filter: invert(1);
+    --webkit-filter: invert(54);
+    filter: invert(54);
 }
 
 

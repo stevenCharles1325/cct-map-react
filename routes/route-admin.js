@@ -172,33 +172,28 @@ router.put('/upload-picture', authentication, async (req, res, next) => {
   fs.readdir( admin_profile_path, (err, files) => {
     if( err ) return res.status( 503 ).json({message: `[READDIR]: Something went wrong, please try again`});
 
-    files.forEach( async (file) => {
-      await fs.unlink( path.join(admin_profile_path, `/${file}`), (err) => {
-        if( err ) return res.status( 503 ).json({message: `[UNLINK]: Something went wrong, please try again`});
+    fs.unlink( path.join(admin_profile_path, `/${files[0]}`), (err) => {
+      if( err ) return res.status( 503 ).json({message: `[UNLINK]: Something went wrong, please try again`});
+
+      const image_name = `admin-pic-${new Date().getTime()}.png`
+      const destination_path = path.join( admin_profile_path, image_name );
+
+      image.mv( destination_path, err => {
+        if( err ) return res.status( 503 ).json({message: `[MOVING]: Something went wrong, please try again`});
+
+        fs.readFile( data_path, (err, data) => {
+          if( err ) return res.status( 503 ).json({message: `[READFILE]: Something went wrong, please try again`});
+
+          const parsedData = JSON.parse( data );
+          parsedData.image = `/images/admin/profile-pics/${image_name}`;
+
+          fs.writeFile( data_path, JSON.stringify( parsedData, null, 4 ), (err) => {
+            if( err ) return res.status( 503 ).json({message: `[WRITEFILE]: Something went wrong, please try again`});
+
+            return res.status( 200 ).json({path: parsedData.image, message: 'Uploaded successfully!' });
+          });
+        });
       });
-    });
-
-  });
-
-  const image_name = `admin-pic-${new Date().getMilliseconds()}.png`
-  const destination_path = path.join( admin_profile_path, image_name );
-
-  image.mv( destination_path, async (err) => {
-    if( err ) return res.status( 503 ).json({message: `[MOVING]: Something went wrong, please try again`});
-
-    fs.readFile( data_path, async (err, data) => {
-      if( err ) return res.status( 503 ).json({message: `[READFILE]: Something went wrong, please try again`});
-
-      const parsedData = JSON.parse( data );
-      parsedData.image = `/images/admin/profile-pics/${image_name}`;
-
-
-      await fs.writeFile( data_path, JSON.stringify( parsedData, null, 4 ), (err) => {
-        if( err ) return res.status( 503 ).json({message: `[WRITEFILE]: Something went wrong, please try again`});
-
-      });
-
-      return res.status( 200 ).json({path: parsedData.image, message: 'Uploaded successfully!' });
     });
   });
 });

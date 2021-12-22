@@ -5,6 +5,7 @@ import Cookies from 'js-cookie';
 import axios from 'axios';
 
 
+import Avatar from '@mui/material/Avatar';
 import ImageBall from '../../components/admin/image/image-ball';
 
 import userFace from '../../images/admin/happy.png';
@@ -102,9 +103,8 @@ export default function Dashboard( props ) {
     return(
         <div className="dashboard">
             <DashboardHeader title="Dashboard"/>
-            <div className="dash-chart-box d-flex flex-column">
-                <div className="top-chart-box d-flex justify-content-between">
-
+            <div className="dash-chart-box d-flex flex-column p-2">
+                <div className="top-chart-box d-flex justify-content-between" style={{ border: '2px solid rgba(0, 0, 0, 0.8)'}}>
                     {
                         graphData
                             ? (() => (
@@ -143,15 +143,14 @@ export default function Dashboard( props ) {
                                 ))()
                             : null
                     }
-
                 </div>
                 
-                <div className="bot-chart-box"> 
+                <div className="bot-chart-box my-2 p-2" style={{ border: '2px solid rgba(0, 0, 0, 0.8)'}}> 
                     {/* BOTTOM-RIGHT-GRAPH: Memory Consumption Graph*/}
                     <Graph 
                         type="Bar"
                         width="100%"
-                        height="14%"
+                        height="10px"
                         classList={{
                             outer: "bot-graph-box d-flex flex-column align-items-center", 
                             inner: "bot-graph"
@@ -163,7 +162,6 @@ export default function Dashboard( props ) {
                         options={ bottomGraphOption }
                     />
                 </div>
-                
             </div>            
         </div>
     );
@@ -182,7 +180,9 @@ function DashboardHeader( props ){
 
            <div className="col-8 d-flex justify-content-end align-items-center">
              <div className="dash-profile-container d-flex justify-content-center align-items-center">
-                <ImageBall />
+                <div style={{ width: '56px', height: '56px' }}>
+                    <ImageBall/>
+                </div>
              </div>    
            </div>
        </div>

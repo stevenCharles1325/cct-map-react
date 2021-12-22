@@ -472,7 +472,7 @@ const Land = React.forwardRef(( props, ref ) => {
 			scale={[50, 50, 10]}
 			position={[0, -100, 0]}
 		>
-			<meshBasicMaterial color={0x6ab04c} map={texture}/>
+			<meshStandardMaterial color={0x6ab04c} map={texture}/>
 		</mesh>
 	);
 });

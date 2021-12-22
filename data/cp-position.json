@@ -952,5 +952,14 @@
             "z": 1859.278925146301,
             "isVector3": true
         }
+    },
+    {
+        "name": "checkpoint_107_",
+        "position": {
+            "x": 0,
+            "y": 0,
+            "z": 0,
+            "isVector3": true
+        }
     }
 ]

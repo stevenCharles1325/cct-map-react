@@ -1,7 +1,8 @@
 .sign-in-frame{
     width: 100%;
     height: 100%;
-    background: linear-gradient(114.95deg, rgba(210, 49, 49, 0.8) 9.87%, rgba(255, 229, 90, 0.5) 141.93%);
+    background-image: radial-gradient( circle farthest-corner at 10% 20%,  rgba(14,174,87,1) 0%, rgba(12,116,117,1) 90% );
+    /*background: linear-gradient(114.95deg, rgba(210, 49, 49, 0.8) 9.87%, rgba(255, 229, 90, 0.5) 141.93%);*/
 }
 
 .sign-in-form-box{

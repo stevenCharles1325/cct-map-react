@@ -7,6 +7,8 @@ import React, {
 	useCallback
 } from 'react';
 
+import Draggable from 'react-draggable';
+
 import {
 	OrbitControls,
 	Stars,
@@ -40,6 +42,7 @@ import {
 import Button from '../../components/admin/buttons/button';
 import MapMenu from '../../components/admin/menu/map-menu';
 import { Input } from '../../components/admin/inputs/input';
+import Alert from '@mui/material/Alert';
 
 
 // Style(s)
@@ -55,6 +58,7 @@ import CheckpointGenerator from '../../modules/checkpoint-generator';
 
 
 // Loading components
+import CircularProgress from '@mui/material/CircularProgress';
 import CircStyleLoad from '../../components/admin/load-bar/circ-load';
 import InfiniteStyleLoad from '../../components/admin/load-bar/inf-load';
 
@@ -68,6 +72,7 @@ const materialOptions = {
 }
 
 const defaultMaterial = new THREE.MeshStandardMaterial( materialOptions );
+var restrictedCheckpointNames = [];
 
 softShadows();
 
@@ -128,8 +133,8 @@ const MapView = (props) => {
 
 	const reqSetCheckPoints = ( newCheckpoint ) => {
 		setCheckPoints((checkPoints) => {
-			if( checkPoints.map( cp => cp.name ).indexOf( newCheckpoint.name ) > - 1 ){
-
+			if( restrictedCheckpointNames.includes(MAP.getRootName( newCheckpoint.name ).toLowerCase())){
+				setMapMessage( mapMessage => [...mapMessage, 'Checkpoint name exists!']);
 				return [...checkPoints];
 			}
 			else{
@@ -358,6 +363,8 @@ const MapView = (props) => {
 		const token = Cookies.get('token');
 		const rtoken = Cookies.get('rtoken');
 
+		let returnValue = null;
+
         if( !token ){
             return props.Event.emit('unauthorized');
         }
@@ -368,6 +375,7 @@ const MapView = (props) => {
             }
         })
 		.then( res => {
+			returnValue = true;
 			setMapMessage( mapMessage => [...mapMessage, 'Map has been saved successfully']);
 		})
 		.catch( err => {
@@ -383,8 +391,11 @@ const MapView = (props) => {
                 .catch( err => props?.Event?.emit?.('unauthorized'));
             }
 
+			returnValue = false;
 			setMapMessage( mapMessage => [...mapMessage, 'Please try again']);
 		});
+
+		return returnValue;
 	}
 
 	useEffect(() => requestMapData(), []);
@@ -402,7 +413,7 @@ const MapView = (props) => {
 					key={`map_object_${objectCount}`} 
 				/>
 			]);
-			setMapMessage((mapMessage) => [...mapMessage, '3D object had been uploaded successfully']);			
+			setMapMessage((mapMessage) => [...mapMessage, '3D object has been uploaded successfully']);			
 			setUpload( null );
 		}
 		else if( isCheckPoint ){
@@ -431,6 +442,10 @@ const MapView = (props) => {
 		}
 		
 	},  [upload, deleteObj, isCheckPoint, checkPoints, objList, objectCount]);
+
+	useEffect(() => {
+		restrictedCheckpointNames = [ ...checkPoints.map( cp => excludeDepList(MAP.getRootName( cp.name )).toLowerCase()) ];
+	}, [checkPoints]);
 
 	useEffect(() => {
 		if( propBoxCont ){
@@ -632,15 +647,22 @@ const MapView = (props) => {
 				})))
 			}
 
-			await requestSaveMapData( mapBundle );
+			let returnValue = await requestSaveMapData( mapBundle );
 			setIsSaving( isSaving => !isSaving );
+
+			return returnValue;
 		}	
 	}
 
 	return(
 		<div className="map">
+			{
+                isSaving
+                    ? <CustomAlert isLoading={true} message="Saving map..." variant="info"/>
+                    : null
+            }
 		    <Suspense fallback={<MAP.Loader />}>
-			    <MapMenu 
+			    <MapMenu
 			    	switch={enableMenu} 
 			    	setManual={setManual}
 			    	reqSetUpload={setUpload} 			    	
@@ -679,9 +701,9 @@ const MapView = (props) => {
 						    </MAP.MapCanvas>
 					    </Suspense>
 					</Canvas>
-						{ manual }
-				    	{ checkpointGen }		
-				    	{ state.selected ? propBox : null }
+					{ manual }
+			    	{ checkpointGen }		
+			    	{ state.selected ? propBox : null }
 			    <BottomBar 
 			    	control={ setControls } 
 		    		messenger={ setMapMessage }
@@ -693,6 +715,34 @@ const MapView = (props) => {
 		    </Suspense>
 		</div>
  	);
+}
+
+const CustomAlert = props => {
+	return(
+		<div 
+		    style={{
+		        position: 'absolute',
+		        left: '50%',
+		        top: '3vh',
+		        transform: 'translate(-50%, 0%)'
+		    }}
+		>
+		    <Alert icon={false} variant="outlined" severity={props.variant}>
+		    	<div className={`row d-flex ${ props.isLoading ? 'justify-content-between' : 'justify-content-center' } align-items-center`}>
+		    		{
+		    			props.isLoading
+		    				? <div className="col-md-3">
+					            	<CircularProgress/>
+					        	</div>
+					        : null
+		    		}
+		        	<div className="col-md-9 text-center d-flex justify-content-center align-items-center">
+		        		<b><h5 style={{ color: 'rgba(25, 25, 255)' }} className="p-0 m-0 text-uppercase">{ props.message }</h5></b>
+		        	</div>
+		    	</div>
+		    </Alert>
+		</div>
+	)
 }
 
 
@@ -893,18 +943,25 @@ const PropertyBox = (props) => {
     const setMonitor = (name) => !MAP.getRootName( properties.name ) ? true : false;  
 
 	const [name, setName] = useState( MAP.getRootName(properties.name).toLowerCase() );
+	const [isNameError, setIsNameError] = useState( false );
 
     if( checkpointType ){
 	    var baseName = MAP.getBaseName( properties.name );	  
     }
 
-
     // Object name
     const reqEditName = (e) => {
-    	const meshData = scene.getObjectById( properties.id );
-        setName( e.target.value.toLowerCase() );
-        properties.name = `${baseName}${e.target.value.toUpperCase()}`;
-    	meshData.name = properties.name;	    
+
+    	if( excludeDepList( e.target.value ).toLowerCase() !== excludeDepList(MAP.getRootName( properties.name )).toLowerCase() ){
+	    	if( restrictedCheckpointNames.includes( excludeDepList(e.target.value).toLowerCase()) ){
+	    		setIsNameError( true );
+	    	}
+	    	else{
+	    		setIsNameError( false );
+	    	}	    
+    	}
+
+    	setName( e.target.value );
     }
 
 
@@ -949,55 +1006,65 @@ const PropertyBox = (props) => {
         properties.rotation.z = parseInt(e.target.value);
     }   
 
-
     const handleDelete = () => {
     	props.remove( () => properties );
     }
 
-	return(
-        <div className="obj-prop-box d-flex flex-column justify-content-around align-items-center p-3">
-            <div style={{height: '8%'}} className="container-fluid d-flex flex-row-reverse pr-2 mb-2">
-                <Button listenTo='Enter' name="close" click={props.close}/>
-            </div>
-            <div  style={{height: '10%'}} style={{height: '50px'}}  className="text-center">
-                <h2>Properties</h2>
-            </div>
-            <div  style={{height: '72%'}} className="obj-props d-flex flex-column justify-content-between align-items-center">
-            	{ 
-            		checkpointType  ? 
-            			<PropBoxInp id="name" size={inputSize} type="text" value={name} placeholder="No name" handleChange={reqEditName} name="Room Name"/> 
-            			: null 
-            	}
+    const handleClose = () => {
+    	if( !isNameError ){
+    		const meshData = scene.getObjectById( properties.id );
+	        properties.name = `${baseName}${name.toUpperCase()}`;
+	    	meshData.name = properties.name;
+    	}
 
-            	<PropBoxInp id="scaleX" size={inputSize}  value={properties.scale.x} handleChange={reqEditScaleX} name="Scale X"/>
-            	
-            	<PropBoxInp id="scaleY" size={inputSize}  value={properties.scale.y} handleChange={reqEditScaleY} name="Scale Y"/> 
-            	
-            	<PropBoxInp id="scaleZ" size={inputSize}  value={properties.scale.z} handleChange={reqEditScaleZ} name="Scale Z"/> 
-            	
-            	<PropBoxInp id="posX" size={inputSize}  value={properties.position.x} handleChange={reqEditPosX} name="Position X"/> 
-            	
-            	<PropBoxInp id="posY" size={inputSize}  value={properties.position.y} handleChange={reqEditPosY} name="Position Y"/> 
-            	
-            	<PropBoxInp id="posZ" size={inputSize}  value={properties.position.z} handleChange={reqEditPosZ} name="Position Z"/>             	
-            </div>   
-            <div style={{height: '10%', width: '100%'}} className="d-flex justify-content-center align-items-center">
-            	<Button key={'delete'} name={'delete'} click={handleDelete}/>
-            </div>  
-        </div>
+    	props.close();
+    }
+	return(
+		<Draggable>
+	        <div className="obj-prop-box d-flex flex-column justify-content-around align-items-center p-3">
+	            <div style={{height: '8%'}} className="container-fluid d-flex flex-row-reverse pr-2 mb-2">
+	                <Button listenTo='Enter' name="close" click={handleClose}/>
+	            </div>
+	            <div  style={{height: '10%'}} style={{height: '50px'}}  className="text-center">
+	                <h2>Properties</h2>
+	            </div>
+	            <div  style={{height: '72%'}} className="obj-props d-flex flex-column justify-content-between align-items-center">
+	            	{ 
+	            		checkpointType  ? 
+	            			<PropBoxInp isError={isNameError} id="name"  size={inputSize} type="text" value={name} placeholder="No name" handleChange={reqEditName} name="Room Name"/> 
+	            			: null 
+	            	}
+
+	            	<PropBoxInp id="scaleX" size={inputSize}  value={properties.scale.x} handleChange={reqEditScaleX} name="Scale X"/>
+	            	
+	            	<PropBoxInp id="scaleY" size={inputSize}  value={properties.scale.y} handleChange={reqEditScaleY} name="Scale Y"/> 
+	            	
+	            	<PropBoxInp id="scaleZ" size={inputSize}  value={properties.scale.z} handleChange={reqEditScaleZ} name="Scale Z"/> 
+	            	
+	            	<PropBoxInp id="posX" size={inputSize}  value={properties.position.x} handleChange={reqEditPosX} name="Position X"/> 
+	            	
+	            	<PropBoxInp id="posY" size={inputSize}  value={properties.position.y} handleChange={reqEditPosY} name="Position Y"/> 
+	            	
+	            	<PropBoxInp id="posZ" size={inputSize}  value={properties.position.z} handleChange={reqEditPosZ} name="Position Z"/>             	
+	            </div>   
+	            <div style={{height: '10%', width: '100%'}} className="d-flex justify-content-center align-items-center">
+	            	<Button key={'delete'} name={'delete'} click={handleDelete}/>
+	            </div>  
+	        </div>
+		</Draggable>
     );
 }
 
 
 // Property input field
 const PropBoxInp = (props) => {
-
 	return(
-		<div className="d-flex flex-column">
+		<div className="d-flex flex-column" >
             <p className="p-0 m-0">
             	{props.name}
             </p>
-            <Input 
+            <Input
+            	error={props.isError}
             	id={props.id} 
             	placeholder={props.placeholder}
             	size={props.size} 
@@ -1066,6 +1133,10 @@ const getLastStringToNumber = (string) => {
 	catch (err) {
 		throw new Error( err );
 	}
+}
+
+const excludeDepList = name => {
+	return name?.split?.('-')?.[ 0 ];
 }
 
 

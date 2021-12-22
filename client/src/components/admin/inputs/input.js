@@ -14,13 +14,22 @@ function Input( props ){
     }
 
     return(
-        <div style={{width: size.width, height: size.height || '45px'}} id={props.id.concat('-box')} className={`input-bar ${props?.className ?? ''}`}>
+        <div 
+            error={props.error} 
+            style={{
+                width: size.width, 
+                height: size.height || '45px',
+                border: props.error ? '1px solid red' : 'none' 
+            }} 
+            id={props.id.concat('-box')} 
+            className={`input-bar ${props?.className ?? ''}`}
+        >
             <div id={props.id.concat('-msg-box')} className="input-cover d-flex justify-content-center align-items-center text-center"> 
                 <p id={props.id.concat('-msg')} className="input-msg p-0 m-0">
                     {/* Message will be prompted here */}
                 </p> 
             </div>
-            <input 
+            <input
                 id={props.id} 
                 type={props.type}
                 name={props.name || null} 

@@ -1,9 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 import axios from 'axios';
+import uniqid from 'uniqid';
 
 import '../../../styles/admin/image-ball.css';
 import defaultImg from '../../../images/admin/default-profile.png';
+
+import Skeleton from '@mui/material/Skeleton';
+import Avatar from '@mui/material/Avatar';
+import CircularProgress from '@mui/material/CircularProgress';
 
 import CustomErrorHandler from '../../../modules/customErrorHandler';
 
@@ -12,6 +17,8 @@ const ErrorHandler = new CustomErrorHandler( 5, 5000 );
 const ImageBall = ( props ) => {
 	const [isVisible, setIsVisible] = useState( false );
 	const [newImage, setNewImage] = useState( null );
+	const [state, setState] = useState('idle');
+	const [image, setImage] = useState( null );
 
 	const handleMouseOver = () => setIsVisible( true );
 	const handleMouseLeave = () => setIsVisible( false );
@@ -24,10 +31,15 @@ const ImageBall = ( props ) => {
         	return props?.Event?.emit?.('unauthorized');
         }
 
-		const image = e.target.files[0];
+		const image = e?.target?.files?.[0];
+
+		if( !image ) return;
+
 		const formData = new FormData();
 
 		formData.append('adminImg', image );
+		setState('loading');
+		setNewImage( null );
 
 		await axios.put(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/upload-picture`, formData, {
             headers: {
@@ -35,8 +47,8 @@ const ImageBall = ( props ) => {
             }
         })
 		.then( res => {
-			setNewImage( () => res.data.path );
-
+			setNewImage( res.data.path );
+			setState('idle');
 			props?.Event?.emit?.('changePhoto');
 		})
 		.catch( err => {
@@ -62,6 +74,8 @@ const ImageBall = ( props ) => {
             return props?.Event?.emit?.('unauthorized');
         }
 
+        setState('loading');
+
 		await axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/picture`, {
             headers: {
                 'authentication': `Bearer ${token}`
@@ -70,6 +84,7 @@ const ImageBall = ( props ) => {
 		.then( res => {
 			setNewImage( () => res.data.path );			
 			console.log( res.data.message );
+			setState('idle');
 		})
 		.catch( err => {
 			ErrorHandler.handle( err, getPhoto, 10 );
@@ -95,14 +110,24 @@ const ImageBall = ( props ) => {
 		}
 	}, []);
 
+	useEffect(() => {
+		setImage(() => <Avatar id={uniqid()} sx={{ width: '100%', height: '100%' }} src={newImage}/>);
+	}, [newImage]);
 
 	return(
 		<div 
 			onMouseOver={handleMouseOver}
 			onMouseLeave={handleMouseLeave}
 			className="image-ball d-flex justify-content-center align-items-center"
-		>
-			<img className="image-ball-img loading" width="100%" height="100%" src={ newImage }/>
+		>		
+			{ image }
+			{
+				state === 'loading'
+					? <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)'}}>
+						<CircularProgress/>
+					  </div>
+					: null
+			}
 			{ 
 				props?.active 
 					? (() => (
