@@ -153,7 +153,7 @@ export default function About(){
 								<p style={{ textAlign: 'justify' }}>
 									Utilizing webgl by itself is pretty hard, so why waste time when you can use a library. For rendering 3D 
 									objects we used a library called ThreeJS. Thanks to ThreeJS, everthing becomes much easier! ThreeJS,
-									as what we've said, is a Javascript 3D library that displays 3D or 2D objects on the web brower.
+									as what we've said, is a Javascript 3D library that displays 3D or 2D objects on the web browser.
 								</p>
 								<br/>
 								<p>

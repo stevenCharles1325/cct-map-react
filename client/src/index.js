@@ -3,6 +3,7 @@ import axios from 'axios';
 import ReactDOM from 'react-dom';
 import Admin from './Admin';
 import User from './User';
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { SnackbarProvider } from 'notistack';
 
@@ -12,7 +13,6 @@ import './styles/index.css';
 window.SERVER_PORT = '3500';
 window.AUTH_SERVER_PORT = '4000';
 window.SERVER_HOST = '192.168.101.168';
-
 
 const Main = () => {
   return(  
@@ -46,3 +46,5 @@ ReactDOM.render(
   </React.StrictMode>,
   document.getElementById('root')
 );
+
+serviceWorkerRegistration.register();

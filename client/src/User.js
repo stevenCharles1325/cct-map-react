@@ -37,36 +37,73 @@ function User( props ){
 		});
 	}
 
-	const requestMapData = async () => {
+	const requestMapData = async callback => {
 		await axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/map-data`)
 		.then( res => {
+			localStorage.setItem('mapData', JSON.stringify( res.data.data ));
+
 			setMapData( res.data.data );
 			enqueueSnackbar( res.data.message );
-			setTimeout(() => requestUpdateRecords(), 5000)
+			setTimeout(() => requestUpdateRecords(), 5000);
 		})
 		.catch( err => {
-			ErrorHandler.handle( err, requestMapData, 1 );
+			callback?.();
+			// ErrorHandler.handle( err, requestMapData, 1 );
 		});
 	}
 
-	const requestRefreshData = async () => {
+	const requestRefreshData = async callback => {
 		await axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/map-data`)
 		.then( res => {
+			localStorage.setItem('mapData', JSON.stringify( res.data.data ));
+
 			setMapData( res.data.data );
 			enqueueSnackbar( 'Refreshed the map' );
 		})
 		.catch( err => {
-			ErrorHandler.handle( err, requestMapData, 1 );
+			callback?.();
+			// ErrorHandler.handle( err, requestMapData, 2 );
 		});
 	}
 
-	useEffect(() => requestMapData(), []);
+	const handlePreviousState = () => {
+		const prevData = localStorage.getItem("mapData") ? JSON.parse(localStorage.getItem("mapData")) : null;
+
+		if( prevData ){
+			setMapData( prevData );
+		}
+	}
+
+	useEffect(() => {
+		if( navigator.onLine ){
+			requestMapData(() => handlePreviousState());
+		}
+		else{
+			handlePreviousState();
+		}
+	}, []);
+	
 	useEffect(() => {
 		const refresh = setInterval(() => {
-			requestRefreshData();
+			if( navigator.onLine ){
+				requestRefreshData(() => handlePreviousState());
+			}
+			else{
+				handlePreviousState();
+				clearInterval( refresh );				
+			}
 		}, 300000) // Refreshes every 5mins
 
 		return () => clearInterval( refresh );
+	}, []);
+
+	useEffect(() => {
+		if( navigator.onLine ){
+			enqueueSnackbar('You are online, fetching updates...', { variant: 'info' });
+		}
+		else{
+			enqueueSnackbar('You are offline. Turning offline-mode...', { variant: 'info' });
+		}
 	}, []);
 
 	return (

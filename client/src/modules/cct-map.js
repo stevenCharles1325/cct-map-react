@@ -361,7 +361,7 @@ const MapCanvas = (props) => {
 const Atmosphere = (props) => {
 	const { camera } = useThree();
 	
-	const cloudsRootPath = '/default_models/clouds/FBX Files/'
+	const cloudsRootPath = process.env.PUBLIC_URL + '/default_models/clouds/FBX Files/';
 	const cloud_names = ['Cloud_1.fbx', 'Cloud_2.fbx', 'Cloud_3.fbx', 'Cloud_4.fbx'];
 
 	const cloud1 = useLoader( FBXLoader, cloudsRootPath + cloud_names[ 0 ] );
@@ -445,8 +445,8 @@ const Atmosphere = (props) => {
 
 
 const Land = React.forwardRef(( props, ref ) => {
-	const object_path = '/default_models/circular_grass/10438_Circular_Grass_Patch_v1_iterations-2.obj';
-	const texture_path = '/default_models/circular_grass/10438_Circular_Grass_Patch_v1_Diffuse.jpg';
+	const object_path = process.env.PUBLIC_URL + '/default_models/circular_grass/10438_Circular_Grass_Patch_v1_iterations-2.obj';
+	const texture_path = process.env.PUBLIC_URL + '/default_models/circular_grass/10438_Circular_Grass_Patch_v1_Diffuse.jpg';
 
 	const land = useLoader( OBJLoader, object_path );
 	const texture = useLoader( TextureLoader, texture_path );
