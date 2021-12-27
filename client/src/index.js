@@ -1,4 +1,5 @@
 import React from 'react';
+import axios from 'axios';
 import ReactDOM from 'react-dom';
 import Admin from './Admin';
 import User from './User';
@@ -10,7 +11,8 @@ import './styles/index.css';
 
 window.SERVER_PORT = '3500';
 window.AUTH_SERVER_PORT = '4000';
-window.SERVER_HOST = '192.168.1.3';
+window.SERVER_HOST = '192.168.101.168';
+
 
 const Main = () => {
   return(  

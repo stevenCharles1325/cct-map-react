@@ -82,7 +82,7 @@ auth.post('/auth/sign-in', async ( req, res ) => {
     	fs.readFile( tokens_path, ( err, tokens ) => {
 				if( err ) return res.sendStatus( 500 );
 
-				const parsedTokens = JSON.parse( tokens )
+				const parsedTokens = JSON.parse( tokens );
 
 				parsedTokens.push( refreshToken );
 

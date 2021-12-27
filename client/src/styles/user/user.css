@@ -2,7 +2,8 @@
 	width:  100vw;
 	height: 100vh;
 
-	background: linear-gradient(178.6deg, rgba(210, 49, 49, 0.8) 13.97%, rgba(255, 229, 90, 0.5) 158.68%);
+	/*background: linear-gradient(178.6deg, rgba(210, 49, 49, 0.8) 13.97%, rgba(255, 229, 90, 0.5) 158.68%);*/
+    background-image: radial-gradient( circle farthest-corner at 10% 20%,  rgba(14,174,87,1) 0%, rgba(12,116,117,1) 90% );
 	
 	padding:  0px;
 	margin:  0px;

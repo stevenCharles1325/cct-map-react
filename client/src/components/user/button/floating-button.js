@@ -5,6 +5,7 @@ import { Html } from '@react-three/drei';
 
 import debounce from 'lodash.debounce';
 
+import Button from '@mui/material/Button';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
@@ -13,6 +14,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
+import LoadingButton from '@mui/lab/LoadingButton';
 
 // Style
 import '../../../styles/user/floating-btn.css';
@@ -158,6 +160,7 @@ const FloatingButton = (props) => {
 // 	</div>
 // </div>
 const SearchForm = (props) => {
+	const [loading, setLoading] = useState( false );
 	const { cpPos } = props;
 	
 	const theme = useTheme();
@@ -177,6 +180,10 @@ const SearchForm = (props) => {
 
  	const [isRunAlgo, setIsRunAlgo] = useState( false );
  	const [btnReady, setBtnReady] = useState( false );
+
+ 	const handleLoading = () => {
+ 		setLoading( true );
+ 	}
 
  	const locatePosition = ( val ) => {
  		if( !val?.length || !val ) return null;
@@ -244,6 +251,10 @@ const SearchForm = (props) => {
     	}
     }, [destination, btnReady]);
     
+    useEffect(() => {
+    	if( loading ) setIsRunAlgo( true );
+    }, [loading]);
+
 	return (
 		<Html zIndexRange={[100, 100]}>
 			<Dialog
@@ -262,6 +273,7 @@ const SearchForm = (props) => {
 							<div className="search-inp d-flex justify-content-between align-items-center">
 								<label htmlFor="point-a">Point A: </label>
 								<Autocomplete
+									disabled={loading}
 									sx={{ width: '70%' }}
 									options={labels}
 									onChange={reqSetLocation}
@@ -280,6 +292,7 @@ const SearchForm = (props) => {
 							<div className="search-inp d-flex justify-content-between align-items-center">
 								<label htmlFor="point-b">Point B: </label>
 								<Autocomplete
+									disabled={loading}
 									sx={{ width: '70%' }}
 									disablePortal
 									options={labels}
@@ -295,7 +308,7 @@ const SearchForm = (props) => {
 								/>
 							</div>
 							<div className="col-12 d-flex justify-content-around align-items-center">
-								<button 
+								{/*<button 
 									style={{
 										color: 'white', 
 										background: btnReady 
@@ -307,18 +320,20 @@ const SearchForm = (props) => {
 									onClick={() => setIsRunAlgo(true)}
 								>
 									locate
-								</button>
-								<button 
-									style={{
-										color: 'white', 
-										background: 'rgba(0, 0, 0, 0.6)',
-										transition: '.2s ease-in-out'
-									}} 
-									className="btn" 
-									onClick={props.setOpen}
+								</button>*/}
+								<LoadingButton
+									disabled={!btnReady}
+				                    color={btnReady ? "success" : "error"}
+				                    onClick={handleLoading}
+				                    loading={loading}
+				                    loadingIndicator="Loading"
+				                    variant="outlined"
 								>
+									Locate
+								</LoadingButton>
+								<Button onClick={props.setOpen}>
 									disregard
-								</button>
+								</Button>
 							</div>
 						</div>
 					</div>

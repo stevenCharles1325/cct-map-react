@@ -30,7 +30,7 @@ export default function Button( props ){
     return(
         <button 
             id={ props.id } 
-            disabled={ props.disabled || false } 
+            disabled={ props.disabled ?? false } 
             style={ props.style ?? null } 
             className={ props.className ?? "btn" } 
             type={ props.type } 

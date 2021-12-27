@@ -1,6 +1,5 @@
 // Libs
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-
 import { Redirect, Route, Switch, Link } from 'react-router-dom';
 
 import axios from 'axios';
@@ -47,9 +46,7 @@ const ErrorPage = React.lazy(() => import('./views/admin/error'));
 const PageNotFound = React.lazy(() => import('./views/admin/pageNotFound'));
 
 
-
-
-export default function Admin(){
+export default function Admin( props ){
 	const [bundle, setBundle] = useState( null );
 	const [view, setView] = useState( null );
 	const [screenWidth, setScreenWidth] = useState( window.innerWidth );
@@ -97,10 +94,10 @@ export default function Admin(){
 		emitEvents();
 
 		setBundle({ 
-				dirs: directories,
-				Event: Event,
-				ErrorHandler: ErrorHandler
-			});
+			dirs: directories,
+			Event: Event,
+			ErrorHandler: ErrorHandler,
+		});
 	}, []);
 
 

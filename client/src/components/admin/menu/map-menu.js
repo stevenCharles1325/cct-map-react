@@ -6,6 +6,12 @@ import axios from 'axios';
 import ImageBall from '../image/image-ball';
 import Divider from '@mui/material/Divider';
 import Draggable from 'react-draggable';
+import LoadingButton from '@mui/lab/LoadingButton';
+import CancelIcon from '@mui/icons-material/Cancel';
+import IconButton from '@mui/material/IconButton';
+import SaveIcon from '@mui/icons-material/Save';
+import CancelPresentationIcon from '@mui/icons-material/CancelPresentation';
+import Button from '@mui/material/Button';
 
 import CircStyleLoad from '../load-bar/circ-load';
 
@@ -189,19 +195,25 @@ function createButton( id, tipMsg, icon, callback, disabled = false ){
 
 function ImportBox( props ){
     const [file, setFile] = useState( null );
-    const [filename, setFilename] = useState('Click to upload 3D object!');
-    const [boxMessage, setBoxMessage] = useState('Select file first');
+    const [filename, setFilename] = useState('Click to select 3D object!');
+    // const [boxMessage, setBoxMessage] = useState('Select file first');
+    const [loading, setLoading] = React.useState(false);
+
+    const handleUploadButton = () => {
+        setLoading( true );
+    }
 
     const selectFileHandler = (e) => {
-        setBoxMessage(() => 'Upload this 3d object?');
+        // setBoxMessage(() => 'Upload this 3d object?');
+        if( !e ) return;
 
         setFile(() => e.target?.files?.[0]);
         setFilename(() => e.target?.files?.[0]?.name);
     }
 
 
-    const uploadSubmitHandler = async (e) => {
-        if( boxMessage === 'Uploading 3d object') return;
+    const uploadSubmitHandler = async () => {
+        if( !loading ) return;
         
         const token = Cookies.get('token');
         const rtoken = Cookies.get('rtoken');
@@ -210,13 +222,11 @@ function ImportBox( props ){
             return props?.Event?.emit?.('unauthorized');
         }
 
-        e.preventDefault();
-
         const formData = new FormData();
 
         if( !file ) return;
         
-        setBoxMessage(() => 'Uploading 3d object');
+        // setBoxMessage(() => 'Uploading 3d object');
 
         formData.append('object', file);
 
@@ -230,16 +240,17 @@ function ImportBox( props ){
             const { fileName, filePath } = res.data;
 
             props.reqSubmit( {fileName, filePath} );
+            setLoading( false );
             props.onClose();
         })
         .catch( err => {
-            ErrorHandler.handle( err, uploadSubmitHandler, 13, e );
+            ErrorHandler.handle( err, uploadSubmitHandler, 13 );
 
             if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
                 return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
-                    setTimeout(() => uploadSubmitHandler(e), 1000);
+                    setTimeout(() => uploadSubmitHandler(), 1000);
                 })
                 .catch( err => props?.Event?.emit?.('unauthorized'));
             }
@@ -248,22 +259,31 @@ function ImportBox( props ){
 
     useEffect(() => {
         if( !filename ) {
-            setFilename('Click to upload 3D object!');
-            setBoxMessage('Select file first');
+            setFilename('Click to select 3D object!');
+            // setBoxMessage('Select file first');
         }
 
     }, [filename]);
 
+    useEffect(() => {
+        if( loading ){
+            uploadSubmitHandler();
+        }
+    }, [loading]);
+
     return (
         <div className="import-box d-flex flex-column p-3 align-items-center justify-content-around">
             <div className="container-fluid d-flex flex-row-reverse mb-2">
-                <button style={{width: '20px', height: '20px'}} className="btn btn-danger" style={{color: 'rgba(0, 0, 0, 0.8)'}} onClick={props.onClose} >close</button>
+                <IconButton onClick={props.onClose}>
+                    <CancelIcon/>
+                </IconButton>
+                {/*<button style={{width: '20px', height: '20px'}} className="btn btn-danger" style={{color: 'rgba(0, 0, 0, 0.8)'}} onClick={props.onClose} >close</button>*/}
             </div>
             <h4 className="ib-title">Wanna upload your 3D object?</h4>    
-            <form onSubmit={uploadSubmitHandler} style={{width: '80%', height:'250px', borderRadius: '5px'}} className="d-flex flex-column justify-content-around align-items-center">
+            <form style={{width: '80%', height:'250px', borderRadius: '5px'}} className="d-flex flex-column justify-content-around align-items-center">
                 <div className="ib-form-box">
                     <input 
-                        disabled={ boxMessage === 'Uploading 3d object' ? true : false } 
+                        disabled={ loading } 
                         className="ib-input" 
                         type="file" 
                         accept=".obj" 
@@ -272,14 +292,17 @@ function ImportBox( props ){
                     />
                     <label className="ib-label">{ filename }</label>
                 </div>
-                <button 
-                    disabled={ boxMessage !== 'Upload this 3d object?' ? true : false }
-                    type="submit" 
-                    style={{color: 'rgba(0, 0, 0, 0.4)'}} 
-                    className="btn btn-block btn-success"
-                > 
-                    { boxMessage } 
-                </button>    
+                <LoadingButton
+                    disabled={ !file ? true : false }
+                    color="success"
+                    onClick={handleUploadButton}
+                    loading={loading}
+                    loadingPosition="start"
+                    startIcon={<SaveIcon />}
+                    variant="outlined"
+                >
+                    Upload
+                </LoadingButton>   
             </form>
         </div>
     );
@@ -464,13 +487,21 @@ const Manual = ( props ) => {
                     <br/>
                 </div>
                 <div style={{height: '10%'}} className="d-flex justify-content-center align-items-center">
-                    <button 
+                    {/*<button 
                         onClick={() => props?.setIsManual( false )} 
                         style={{color: 'black'}} 
                         className="btn btn-dark"
                     >
                         CLOSE
-                    </button>
+                    </button>*/}
+                    <Button 
+                        variant="outlined" 
+                        color="primary" 
+                        startIcon={<CancelPresentationIcon/>} 
+                        onClick={() => props?.setIsManual?.( false )}
+                    >
+                        Close
+                    </Button>
                 </div>
             </div>
         </Draggable>

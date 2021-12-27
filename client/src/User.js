@@ -6,7 +6,6 @@ import { Switch, Route, Redirect, Link } from 'react-router-dom';
 import CustomErrorHandler from './modules/customErrorHandler';
 import { useSnackbar } from 'notistack';
 
-
 // Loader
 import MainLoader from './components/user/loader/main-loader';
 
@@ -50,7 +49,25 @@ function User( props ){
 		});
 	}
 
+	const requestRefreshData = async () => {
+		await axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/map-data`)
+		.then( res => {
+			setMapData( res.data.data );
+			enqueueSnackbar( 'Refreshed the map' );
+		})
+		.catch( err => {
+			ErrorHandler.handle( err, requestMapData, 1 );
+		});
+	}
+
 	useEffect(() => requestMapData(), []);
+	useEffect(() => {
+		const refresh = setInterval(() => {
+			requestRefreshData();
+		}, 300000) // Refreshes every 5mins
+
+		return () => clearInterval( refresh );
+	}, []);
 
 	return (
 		<div className="user">

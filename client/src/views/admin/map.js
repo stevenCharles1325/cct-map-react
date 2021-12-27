@@ -39,7 +39,7 @@ import {
 	Checkpoints, 
 	CheckpointGen 
 } from '../../modules/map-checkpoints';
-import Button from '../../components/admin/buttons/button';
+import CustomButton from '../../components/admin/buttons/button';
 import MapMenu from '../../components/admin/menu/map-menu';
 import { Input } from '../../components/admin/inputs/input';
 import Alert from '@mui/material/Alert';
@@ -56,11 +56,14 @@ import PositionCursor from '../../modules/position-cursor';
 import FirstPersonControls from '../../modules/FirstPersonControls';
 import CheckpointGenerator from '../../modules/checkpoint-generator';
 
-
-// Loading components
+import Button from '@mui/material/Button';
+import LoadingButton from '@mui/lab/LoadingButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import IconButton from '@mui/material/IconButton';
 import CircularProgress from '@mui/material/CircularProgress';
 import CircStyleLoad from '../../components/admin/load-bar/circ-load';
 import InfiniteStyleLoad from '../../components/admin/load-bar/inf-load';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 const width = window.innerWidth;
 const height = window.innerHeight;
@@ -182,6 +185,7 @@ const MapView = (props) => {
 
 	const [isCheckpointGen, setIsCheckpointGen] = useState( false );
 	const [checkpointGen, setCheckpointGen] = useState( null );
+	const [isDoneEditing, setIsDoneEditing] = useState( false );
 
 	const initGenState = () => ({
 		initPosition: [ 0, 0, 0 ],
@@ -448,6 +452,13 @@ const MapView = (props) => {
 	}, [checkPoints]);
 
 	useEffect(() => {
+		if( isDoneEditing ){
+			restrictedCheckpointNames = [ ...checkPoints.map( cp => excludeDepList(MAP.getRootName( cp.name )).toLowerCase()) ];
+			setIsDoneEditing( false );
+		}
+	}, [isDoneEditing]);
+
+	useEffect(() => {
 		if( propBoxCont ){
 			setPropBox( null );
 			setTimeout(() => {
@@ -456,8 +467,9 @@ const MapView = (props) => {
 						scene={scene}
 						remove={setDeleteObj}
 						close={reqSetPropBox} 
-						setCheckPoints={setCheckPoints}
 						properties={propBoxCont} 
+						setCheckPoints={setCheckPoints}
+						setIsDoneEditing={setIsDoneEditing}
 					/>
 				);
 			}, 1000);
@@ -707,6 +719,7 @@ const MapView = (props) => {
 			    <BottomBar 
 			    	control={ setControls } 
 		    		messenger={ setMapMessage }
+			    	isCheckPoint={ isCheckPoint }
 			    	setCheckpoint={ setIsCheckPoint }
 		    		setIsMeasureLine={ setIsMeasureLine }
 		    		setIsCheckpointGen={ setIsCheckpointGen }
@@ -732,12 +745,12 @@ const CustomAlert = props => {
 		    		{
 		    			props.isLoading
 		    				? <div className="col-md-3">
-					            	<CircularProgress/>
+					            	<CircularProgress color="success"/>
 					        	</div>
 					        : null
 		    		}
 		        	<div className="col-md-9 text-center d-flex justify-content-center align-items-center">
-		        		<b><h5 style={{ color: 'rgba(25, 25, 255)' }} className="p-0 m-0 text-uppercase">{ props.message }</h5></b>
+		        		<b><h5 style={{ color: '#78e08f' }} className="p-0 m-0 text-uppercase">{ props.message }</h5></b>
 		        	</div>
 		    	</div>
 		    </Alert>
@@ -752,6 +765,14 @@ const BottomBar = (props) => {
 	const [positionCursor, setPositionCursor] = useState( false );
 	const [openToolBox, setOpenToolBox] = useState( false );
 	const [checkpointGen, setCheckpointGen] = useState( false );
+	const [isACheckpointAllowed, setIsCheckpointAllowed] = useState( true );
+
+	const handleCheckpointNotAllowed = () => setIsCheckpointAllowed( false );
+	const handleCheckpointAllowed = e => {
+		if( e.target.localName === 'canvas' ){
+			setIsCheckpointAllowed( true );
+		}
+	}
 
 	const handleCreateCheckPoint = () => {
 		props.messenger( (mapMessage) => [...mapMessage, 'Please wait...'] );
@@ -809,9 +830,11 @@ const BottomBar = (props) => {
 		props.setIsPositionCursor( () => positionCursor );
 	}, [positionCursor]);
 
-	// useEffect(() => {
-	// 	props.setIsCheckpointGen( () => checkpointGen );
-	// }, [checkpointGen]);
+	useEffect(() => {
+		window.addEventListener('click', handleCheckpointAllowed);
+
+		return () => window.removeEventListener('click', handleCheckpointAllowed);		
+	}, []);
 
 	return(
 		<div className="map-btm-bar d-flex justify-content-around align-items-center">
@@ -827,20 +850,20 @@ const BottomBar = (props) => {
 						}} 
 				className="map-tool-box"
 			>
-				<Button
+				<CustomButton
 					className="tool-button"
 					shortcutKey={ true }
 					name="Measure line"
 					click={ () => handleMeasureLine() }
 				/>
 
-				<Button 
+				<CustomButton 
 					className="tool-button"
 					name="Position cursor"
 					click={ () => handlePositionCursor() }
 				/>
 
-				<Button 
+				<CustomButton 
 					className="tool-button"
 					shortcutKey={ true }
 					name="Checkpoint generator"
@@ -848,7 +871,7 @@ const BottomBar = (props) => {
 				/>
 			</div>
 			<div className="col-3 d-flex justify-content-center align-items-center">
-	 			<Button 
+	 			<CustomButton 
 	 				shortcutKey={ true } 
 	 				name="Tools" 
 	 				click={() => handleToolBox()}
@@ -856,20 +879,28 @@ const BottomBar = (props) => {
 	 		</div>					
 			*/}
 			<div className="col-4 map-view-switch d-flex justify-content-center align-items-center">
-				<Button 
-					className={`${switched === 'free' ? "map-view-selected" : ''} map-vs-btn map-view-fpc`}
+				<CustomButton 
+					className={`${switched === 'free' ? "map-view-selected non-selectable" : ''} map-vs-btn map-view-fpc`}
 					name="Free" 
 					click={() => handleFreeControl()}
 				/>
-				<Button 
-					className={`${switched === 'orbit' ? "map-view-selected" : ''} map-vs-btn map-view-oc`} 
+				<CustomButton 
+					className={`${switched === 'orbit' ? "map-view-selected non-selectable" : ''} map-vs-btn map-view-oc`} 
 					name="Orbit" 
 					click={() => handleOrbitControl()}
 				/>
 			</div>
 
 			<div className="col-3 d-flex justify-content-center align-items-center">
-				<Button shortcutKey={true} name="Place Checkpoint" click={handleCreateCheckPoint}/>
+				<CustomButton 
+					disabled={ !isACheckpointAllowed } 
+					shortcutKey={true} 
+					name="Place Checkpoint" 
+					click={() => {
+						handleCreateCheckPoint();
+						handleCheckpointNotAllowed();
+					}}
+				/>
 			</div>
 		</div>
 	);
@@ -951,14 +982,18 @@ const PropertyBox = (props) => {
 
     // Object name
     const reqEditName = (e) => {
-
-    	if( excludeDepList( e.target.value ).toLowerCase() !== excludeDepList(MAP.getRootName( properties.name )).toLowerCase() ){
-	    	if( restrictedCheckpointNames.includes( excludeDepList(e.target.value).toLowerCase()) ){
-	    		setIsNameError( true );
+    	if( name.length ){
+	    	if( excludeDepList( e.target.value ).toLowerCase() !== excludeDepList(MAP.getRootName( properties.name )).toLowerCase() ){
+		    	if( restrictedCheckpointNames.includes( excludeDepList(e.target.value).toLowerCase()) ){
+		    		setIsNameError( true );
+		    	}
+		    	else{
+		    		setIsNameError( false );
+		    	}	    
 	    	}
-	    	else{
-	    		setIsNameError( false );
-	    	}	    
+    	}
+    	else{
+    		setIsNameError( true );
     	}
 
     	setName( e.target.value );
@@ -1011,19 +1046,24 @@ const PropertyBox = (props) => {
     }
 
     const handleClose = () => {
-    	if( !isNameError ){
+    	if( !isNameError && name.length ){
     		const meshData = scene.getObjectById( properties.id );
 	        properties.name = `${baseName}${name.toUpperCase()}`;
 	    	meshData.name = properties.name;
     	}
 
+    	props.setIsDoneEditing( true );
     	props.close();
     }
+
 	return(
 		<Draggable>
 	        <div className="obj-prop-box d-flex flex-column justify-content-around align-items-center p-3">
 	            <div style={{height: '8%'}} className="container-fluid d-flex flex-row-reverse pr-2 mb-2">
-	                <Button listenTo='Enter' name="close" click={handleClose}/>
+	                {/*<CustomButton listenTo='Enter' name="close" click={handleClose}/>*/}
+	                <IconButton onClick={handleClose}>
+	                	<CancelIcon/>
+	                </IconButton>
 	            </div>
 	            <div  style={{height: '10%'}} style={{height: '50px'}}  className="text-center">
 	                <h2>Properties</h2>
@@ -1048,7 +1088,9 @@ const PropertyBox = (props) => {
 	            	<PropBoxInp id="posZ" size={inputSize}  value={properties.position.z} handleChange={reqEditPosZ} name="Position Z"/>             	
 	            </div>   
 	            <div style={{height: '10%', width: '100%'}} className="d-flex justify-content-center align-items-center">
-	            	<Button key={'delete'} name={'delete'} click={handleDelete}/>
+	            	<Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={handleDelete}>
+			    		Delete
+			    	</Button>
 	            </div>  
 	        </div>
 		</Draggable>

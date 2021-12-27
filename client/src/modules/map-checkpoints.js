@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-
+import uniqid from 'uniqid';
 import * as THREE from 'three';
 
 import Button from '../components/admin/buttons/button';
@@ -131,7 +131,7 @@ function Checkpoints ( props ){
 			material={defaultMaterial}
 			onDoubleClick={handleClick}
 			// onPointerLeave={ handleHoverOut }
-			name={`checkpoint_${props.index}_`} 			
+			name={`checkpoint_${props.index}_${uniqid()}`} 			
 			// onPointerEnter={ isPlaced ? handleHover : null }
 		>
 		</mesh>

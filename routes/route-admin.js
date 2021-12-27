@@ -1,3 +1,4 @@
+require('dotenv').config();
 
 var express = require('express');
 var router = express.Router();
@@ -207,14 +208,23 @@ router.post('/update-map', authentication, async (req, res, next) => {
   scene = Object.values(BSON.deserialize( new Uint8Array( scene.data ) ));
   cpPos = Object.values(BSON.deserialize( new Uint8Array( cpPos.data ) ));
 
-  fs.writeFile(scene_path, JSON.stringify(scene, null, 4), (err) => {
-    if( err ) return res.status(503).json({message: `Couldn't fulfill the request to save data`});
+  fs.readFile( scene_path, (err, stringData) => {
+    if( err ) return res.status( 503 ).json({ message: `Couldn't fulfill the request to save data` });
 
-    fs.writeFile(cpPos_path, JSON.stringify(cpPos, null, 4), (err) => {
-      if( err ) return res.status(503).json({message: `Couldn't fulfill the request to save data`});
+    if( JSON.stringify( scene ) === JSON.stringify(JSON.parse( stringData )) ){
+      return res.json({ isDiffer: false });
+    }
+    else{
+      fs.writeFile(scene_path, JSON.stringify(scene, null, 4), (err) => {
+        if( err ) return res.status( 503 ).json({ message: `Couldn't fulfill the request to save data` });
 
-      return res.status(200).json({message: 'Map\'s been saved'});
-    });
+        fs.writeFile(cpPos_path, JSON.stringify(cpPos, null, 4), (err) => {
+          if( err ) return res.status( 503 ).json({ message: `Couldn't fulfill the request to save data` });
+
+          return res.status( 200 ).json({ isDiffer: true, message: 'Map\'s been saved' });
+        });
+      });
+    }
   });
 });
 
