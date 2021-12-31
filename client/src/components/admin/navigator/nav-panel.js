@@ -27,13 +27,15 @@ export default function NavPanel( props ){
             return props?.Event?.emit?.('unauthorized');
         }
 
-        await axios.delete(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/sign-out`, {
+        await axios.delete(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/sign-out/token/${ rtoken }`, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
         })
-        .then( () => {
+        .then(() => {
             Cookies.remove('token');
+            Cookies.remove('rtoken');
+
             return props?.Event?.emit?.('exit')
         })
         .catch( err => {

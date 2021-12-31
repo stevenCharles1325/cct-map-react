@@ -34,8 +34,11 @@ router.get('/update-records', async (req, res) => {
     if( err ) return res.sendStatus( 503 );
 
     const date = new Date().toString();
+    
     const currentYear = date.split(' ')[ 3 ];
+    const currentDay = date.split(' ')[ 2 ];
     const currentMonth = date.split(' ')[ 1 ];
+
     let numberTime = Number(date.split(' ')[ 4 ].split(':')[0]);
     let currentTime = numberTime > 12 ? `${numberTime - 12} PM` : `${numberTime} AM`
 

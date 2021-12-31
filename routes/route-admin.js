@@ -52,25 +52,36 @@ router.get('/', authentication, async (req, res, next) => {
   return res.status( 200 ).json( admin_data );  
 });
 
-  
+
 // GRAPH-DATA route.
 router.get('/graph-data', authentication, async (req, res, next) => {
   fs.readFile(graph_path, (err, records) => {
     if( err ) return res.sendStatus( 503 );
 
     const date = new Date().toString();
+
     const currentYear = date.split(' ')[ 3 ];
+    const currentDay = date.split(' ')[ 2 ];
     const currentMonth = date.split(' ')[ 1 ];
+
     let numberTime = Number(date.split(' ')[ 4 ].split(':')[0]);
     let currentTime = numberTime > 12 ? `${numberTime - 12} PM` : `${numberTime} AM`
 
     let convertedRecords = JSON.parse( records );
 
-    convertedRecords.currRate.forEach( (rate, index) => {
-      if( index > numberTime - 12 + 5 ){
+    // convertedRecords.currRate.forEach((rate, index) => {
+    //   if( index > numberTime - 12 + 5 ){
+    //     convertedRecords.currRate[ index ] = 0;
+    //   }
+    // }); 
+
+    if( convertedRecords.day !== currentDay ){
+      convertedRecords.currRate.forEach((rate, index) => {
         convertedRecords.currRate[ index ] = 0;
-      }
-    }); 
+      });
+
+      convertedRecords.day = currentDay;
+    }
 
     if( convertedRecords.year !== currentYear ){
       convertedRecords.year = currentYear;
@@ -80,12 +91,11 @@ router.get('/graph-data', authentication, async (req, res, next) => {
       });      
     }
 
-    if( numberTime < 7 || numberTime > 18 ){
-      convertedRecords.currRate.forEach( (rate, index) => {
-        convertedRecords.currRate[ index ] = 0;
-      }); 
-    }
-
+    // if( numberTime < 7 || numberTime > 18 ){
+    //   convertedRecords.currRate.forEach((rate, index) => {
+    //     convertedRecords.currRate[ index ] = 0;
+    //   }); 
+    // }
 
     fs.writeFile(graph_path, JSON.stringify( convertedRecords, null, 4 ), async (err) => {
         if( err ) console.log( err );
@@ -148,6 +158,8 @@ router.post('/obj-upload', authentication, async (req, res, next) => {
     res.status( 200 ).json({ fileName: object_name, filePath: `/models/${object_name}`});
   });
 });
+
+
 
 
 ///////////////////// GET ADMIN PICTURE  ////////////////////////
@@ -251,16 +263,16 @@ router.put('/set-admin', authentication, async(req, res, next) => {
 
 
 // ADMIN-STATUS route.
-router.delete('/sign-out', authentication, async ( req, res ) => {
+router.delete('/sign-out/token/:token', authentication, async ( req, res ) => {
   fs.readFile( tokens_path, ( err, tokens ) => {
     if( err ) return res.sendStatus( 500 );
 
-    const parsedTokens = JSON.parse( tokens ).filter( token => token !== req.body.token );
+    const parsedTokens = JSON.parse( tokens ).filter( token => token !== req.params.token );
 
     fs.writeFile( tokens_path, JSON.stringify( parsedTokens, null, 4 ), ( err ) => {
       if( err ) return res.sendStatus( 500 );
 
-        return res.sendStatus( 203 );
+        return res.sendStatus( 200 );
     }); 
   });
 });

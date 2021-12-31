@@ -108,7 +108,6 @@ auth.post('/auth/sign-in', async ( req, res ) => {
 
 
 auth.post('/auth/refresh-token', async ( req, res ) => {
-	console.log('hereee', req.body.token);
 
 	fs.readFile( tokens_path, ( err, tokens ) => {
 		if( err ) return res.sendStatus( 500 );
