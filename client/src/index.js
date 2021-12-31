@@ -12,9 +12,27 @@ import './styles/index.css';
 
 window.SERVER_PORT = '3500';
 window.AUTH_SERVER_PORT = '4000';
-window.SERVER_HOST = '192.168.101.168';
+window.SERVER_HOST = 'localhost';
 
 const Main = () => {
+  const handleNumberInputFields = e => {
+    if( e?.target?.attributes?.["1"]?.nodeValue === "number" ){
+      if( (e?.which < 48 || e?.which > 57) && 
+        (e?.which !== 9 && e?.which !== 8 &&
+         e?.which !== 189 && e?.which !== 190 &&
+         e?.which !== 37 && e?.which !== 39)
+        ){
+        return e.preventDefault();
+      }
+    }
+  }
+
+  React.useEffect(() => {
+    window.addEventListener('keydown', handleNumberInputFields);
+
+    return () => window.removeEventListener('keydown', handleNumberInputFields); 
+  }, []);
+
   return(  
     <SnackbarProvider 
       anchorOrigin={{
@@ -47,4 +65,4 @@ ReactDOM.render(
   document.getElementById('root')
 );
 
-serviceWorkerRegistration.register();
+serviceWorkerRegistration.unregister();

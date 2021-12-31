@@ -17,7 +17,7 @@ export default function Settings( props ){
     const validator = new Validator();
 
     const [admin, setAdmin] = useState( null );
-
+    const [disabled, setDisabled] = useState( true );
     const [username, setUsername] = useState( null );
     const [password, setPassword] = useState( null );
     const [email, setEmail] = useState( null );
@@ -90,7 +90,12 @@ export default function Settings( props ){
                 'authentication': `Bearer ${token}`
             }
         })
-        .then( res => setSysMessage({ variant: 'success', message: res.data.message }))
+        .then( res => {
+            setSysMessage({ variant: 'success', message: res.data.message });
+            setTimeout(() => {
+                setSysMessage({ variant: 'warning', message: 'Please refresh the page.' });
+            }, 4000);
+        })
         .catch( err => {
             ErrorHandler.handle( err, requestSetAdmin, 5, data );
 
@@ -159,9 +164,22 @@ export default function Settings( props ){
         if( sysMessage ){
             setTimeout(() => {
                 setSysMessage( null );
-            }, [3000]);
+            }, 3000);
         }
     }, [sysMessage]);
+
+    useEffect(() => {
+        if( email === admin?.email && 
+            username === admin?.username &&
+            password === admin?.password &&
+            number === admin?.number 
+        ){
+            setDisabled( true );
+        }
+        else{
+            setDisabled( false );
+        }
+    }, [email, number, username, password, admin]);
 
     return(
         <div className="settings">
@@ -198,7 +216,7 @@ export default function Settings( props ){
                         type="password" 
                         name="password" 
                         placeholder="Enter new password" 
-                        peekBtn={createPeekButton("set-password")}
+                        // peekBtn={createPeekButton("set-password")}
                     />
                     <Input 
                         id="set-cPassword" 
@@ -222,14 +240,16 @@ export default function Settings( props ){
                                     title: "Save",
                                     variant: 'outlined',
                                     sx: { color: yellow[ 200 ], borderColor: yellow[ 200 ] }, 
-                                    clickHandler: () => saveHandler()
+                                    clickHandler: () => saveHandler(),
+                                    disabled: disabled
                                 }, 
                                 {
                                     id: "settings-reset", 
                                     title: "Reset",
                                     variant: 'filled',
                                     sx: { bgcolor: red[ 200 ] },
-                                    clickHandler: () => resetHandler()
+                                    clickHandler: () => resetHandler(),
+                                    disabled: disabled
                                 }
                             ]
                         )}
@@ -262,6 +282,16 @@ function produceMessageContainer( ids ){
 
 
 function produceBtn( ids ){
-    return ids.map( id => (<Button key={id.id} onClick={id.clickHandler} variant={id.variant} sx={ id.sx }>{ id.title }</Button>) );
+    return ids.map( id => (
+        <Button 
+            disabled={id.disabled}
+            key={id.id} 
+            onClick={id.clickHandler} 
+            variant={id.variant} 
+            sx={ id.sx }
+        >
+            { id.title }
+        </Button>
+    ));
 }
 

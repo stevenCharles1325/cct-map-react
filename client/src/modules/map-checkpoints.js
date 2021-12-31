@@ -46,6 +46,7 @@ function Checkpoints ( props ){
 
 
 	useEffect(() => {
+		props.isPlaced( isPlaced );
 		!isPlaced 
 			? window.addEventListener('click', place) 
 			: window.removeEventListener('click', place);

@@ -86,16 +86,13 @@ function MapMenu( props ){
     const manualHandler = () => setIsManual(isManual => !isManual);    
     
     // -----------------------------------------
-
     const saveShortcut = (e) => {
-        if( e.ctrlKey ){
+        if( e.ctrlKey && e.key === 's' && !e.altKey && !e.shiftKey ){
             e.preventDefault(); 
             
-            if( e.key === "s" ){
-                setSaving( true );
+            setSaving( true );
 
-                setTimeout(() => setSaving( false ), 1000);
-            }
+            setTimeout(() => setSaving( false ), 1000);
         }
     }
 
@@ -319,10 +316,10 @@ const Manual = ( props ) => {
             <div 
                 style={{
                     position: 'absolute',
-                    top: '15%',
+                    top: '7%',
                     left: '10%',
                     width: '500px', 
-                    height: '65%', 
+                    height: '80%', 
                     borderRadius: '24px',
                     backgroundColor: 'white',
                 }}
@@ -483,6 +480,39 @@ const Manual = ( props ) => {
                             the canvas.`
                         }
                     </ManualContent>
+                    <div 
+                        style={{
+                            backgroundColor: 'rgba(202, 202, 10, 0.9)', 
+                            width: '100%', 
+                            height: 'fit-content',
+                            textAlign: 'justify'
+                        }}
+
+                        className="py-2 px-3 rounded"
+                    >
+                        <h4 style={{color: 'rgba(0, 0, 0, 0.9)'}} className="p-0 m-0">REMEMBER❗️</h4>
+                        <br/>
+                        <p style={{color: 'rgba(0, 0, 0, 0.9)'}}>
+                            1.) This application only serves path for CCT building "A", therefore, there should only
+                            be one building inside the 3D virtual locator, though you can upload multiple buildings
+                            but the application will tell you if the scene or the 3D virtual locator's size is
+                            too large. When the application says "Oops! Maybe the scene is too big" then we can
+                            expect that there are more than one 3D building in the scene or the scale of the 3D
+                            building is too big, and by that we can act accordingly.
+                        </p>  
+                        <br/>
+                        <p style={{color: 'rgba(0, 0, 0, 0.9)'}}>
+                            2.) Be careful to not resize the screen when modifying 3D virtual locator's data because
+                            every time you resize the screen, the application checks if you are in an unavailable 
+                            screen size.
+                        </p>
+                        <br/>
+                        <p style={{color: 'rgba(0, 0, 0, 0.9)'}}>
+                            3.) When the you are facing in an awkward view after changing the controls you can switch
+                            control again to fix it.
+                        </p> 
+                    </div>
+                    <br/>
                     <h3 style={{textAlign: 'center', color: '#dff9fb'}}>THANK YOU FOR READING! 🎉</h3>
                     <br/>
                 </div>

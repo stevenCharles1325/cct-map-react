@@ -43,7 +43,7 @@ export default function Signup( props ){
     }    
 
     const requestSignUp = async ( data ) => {
-        await axios.post(`httpss://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/sign-up`, data)
+        await axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/sign-up`, data)
         .then( res => {
             Cookies.set('token', res.data.accessToken);  
             Cookies.set('rtoken', res.data.refreshToken);

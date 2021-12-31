@@ -1,4 +1,5 @@
 import React from 'react';
+import uniqid from 'uniqid';
 
 import OpacityIcon from '@mui/icons-material/Opacity';
 import FlightIcon from '@mui/icons-material/Flight';
@@ -41,6 +42,7 @@ const Manual = props => {
 	const [contents, setContents] = React.useState([
 			[
 				<IconPurpose
+					key={uniqid()}
 	          		icon={<OpacityIcon/>}
 	          		purpose={
 	          			<>
@@ -50,6 +52,7 @@ const Manual = props => {
 	          		}
 	          	/>,
 	          	<IconPurpose
+	          		key={uniqid()}
 	          		icon={<CloseIcon/>}
 	          		purpose={
 	          			<>
@@ -59,6 +62,7 @@ const Manual = props => {
 	          		}
 	          	/>,
 				<IconPurpose
+					key={uniqid()}
 	          		icon={<FlightIcon/>}
 	          		purpose={
 	          			<>
@@ -70,6 +74,7 @@ const Manual = props => {
 			],
 			[
 				<IconPurpose
+					key={uniqid()}
 	          		icon={
 	          			<>
 		          			<ArrowDropUpIcon/>
@@ -84,6 +89,7 @@ const Manual = props => {
 	          		}
 	          	/>,
 	          	<IconPurpose
+	          		key={uniqid()}
 	          		icon={<MenuBookIcon/>}
 	          		purpose={
 	          			<>
@@ -93,6 +99,7 @@ const Manual = props => {
 	          		}
 	          	/>,
 	          	<IconPurpose
+	          		key={uniqid()}
 	          		icon={<InfoIcon/>}
 	          		purpose={
 	          			<>
@@ -104,6 +111,7 @@ const Manual = props => {
 			],
 			[
 				<IconPurpose
+					key={uniqid()}
 	          		icon={<BubbleChartIcon/>}
 	          		purpose={
 	          			<>
@@ -113,6 +121,7 @@ const Manual = props => {
 	          		}
 	          	/>,
 	          	<IconPurpose
+	          		key={uniqid()}
 	          		icon={<SearchIcon/>}
 	          		purpose={
 	          			<>
@@ -125,6 +134,7 @@ const Manual = props => {
 	          		}
 	          	/>,
 	          	<IconPurpose
+	          		key={uniqid()}
 	          		icon={<CheckBoxOutlineBlankIcon/>}
 	          		purpose={
 	          			<>
@@ -157,7 +167,7 @@ const Manual = props => {
 	        <DialogContent>
 				<DialogContentText>
 					These are the icons that you will see inside the app, and so 
-					here's their purposes.
+					here's their purpose.
 				</DialogContentText>
 				<br/>
 				<Divider/>

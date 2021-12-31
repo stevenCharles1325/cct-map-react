@@ -485,7 +485,8 @@ const MapView = (props) => {
 	}
 
 	const handleTransparency = async () => {
-		setTransparent( !transparent );
+		if( scene )
+			setTransparent( !transparent );
 	}
 
 	const handleClear = async () => {

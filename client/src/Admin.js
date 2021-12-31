@@ -1,6 +1,7 @@
 // Libs
 import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Redirect, Route, Switch, Link } from 'react-router-dom';
+import debounce from 'lodash.debounce';
 
 import axios from 'axios';
 import Cookies from 'js-cookie';
@@ -82,11 +83,20 @@ export default function Admin( props ){
 			? path.isRoot()
 				? setView( <Redirect to={ path.home() }/>  )
 				: <Redirect to={ path.pathname }/>
-			: setView( path.notFound() );	
+			: setView( path.notFound() );
 	}
 
 	const resize = (e) => {
 		setScreenWidth(() => e.currentTarget.innerWidth);
+	}
+
+	const MainApp = () => {
+		return(
+			<Suspense fallback={<Loading />}>	
+				{ bundle ? routeHandler( bundle ) : null }
+				{ view }
+			</Suspense>
+		);
 	}
 
 	useEffect(() => {				
@@ -100,30 +110,21 @@ export default function Admin( props ){
 		});
 	}, []);
 
-
 	useEffect(() => {
 		window.addEventListener('resize', resize);
 
 		return () => window.removeEventListener('resize', resize);
 	}, []);
 
-	
-	const MainApp = () => {
-		return(
-			<Suspense fallback={<Loading />}>	
-				{ bundle ? routeHandler( bundle ) : null }
-				{ view }
-			</Suspense>
-		);
+	const handleScreen = () => {
+		return screenWidth <= 950
+			? <Unavailable/>
+			: <MainApp/>
 	}
 
 	return(
 		<div className="admin">
-			{ 
-				screenWidth <= 950 
-					? <Unavailable />
-					: <MainApp />
-			}
+			{ handleScreen() }
 		</div>
 	);
 }

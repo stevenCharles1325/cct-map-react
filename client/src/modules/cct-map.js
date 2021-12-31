@@ -199,6 +199,12 @@ const ObjectBuilder = (props) => {
 				: defaultMaterial;
 	}
 
+	const getPositionCenterPoint = () => [
+			(Object.values(position)[0] / 2) - (Object.values(scale)[0] / 2), 
+			Object.values(position)[1] + 4000, 
+			(Object.values(position)[1] / 2) - (Object.values(scale)[2] / 2)
+		]
+
 	return(
 		<>
 			<Html
@@ -207,7 +213,7 @@ const ObjectBuilder = (props) => {
 					width: '150px'
 				}}
 				zIndexRange={[100, 50]}
-				position={[0, Object.values(position)[1] + 4000, 0]}
+				position={getPositionCenterPoint()}
 			>
 				CCT BUILDING A
 			</Html>

@@ -186,6 +186,7 @@ const MapView = (props) => {
 	const [isCheckpointGen, setIsCheckpointGen] = useState( false );
 	const [checkpointGen, setCheckpointGen] = useState( null );
 	const [isDoneEditing, setIsDoneEditing] = useState( false );
+	const [isCheckpointPlaced, setIsCheckpointPlaced] = useState( true );
 
 	const initGenState = () => ({
 		initPosition: [ 0, 0, 0 ],
@@ -430,6 +431,7 @@ const MapView = (props) => {
 					setControls={setControls}	
 					key={`checkpoint_${objectCount}`} 
 					saveCheckpoint={reqSetCheckPoints} 
+					isPlaced={val => setIsCheckpointPlaced( val )}
 				/>
 			]);
 
@@ -651,18 +653,33 @@ const MapView = (props) => {
 				}
 			});
 
-			const mapBundle = {
-				scene: BSON.serialize(objects), 
-				cpPos: BSON.serialize(checkPoints.map(elem => ({
-					name: elem.name, 
-					position: elem.position
-				})))
+			let mapBundle = null;
+
+			try{
+				mapBundle = {
+					scene: BSON.serialize(objects), 
+					cpPos: BSON.serialize(checkPoints.map(elem => ({
+						name: elem.name, 
+						position: elem.position
+					})))
+				}
+			}
+			catch( err ){
+				setMapMessage( mapMessage => [
+					...mapMessage, 
+					'Oops! Maybe the scene is too big.'
+				]);
+
+				setIsSaving( false );
+				return false;
 			}
 
-			let returnValue = await requestSaveMapData( mapBundle );
-			setIsSaving( isSaving => !isSaving );
+			if( mapBundle ){
+				let returnValue = await requestSaveMapData( mapBundle );
+				setIsSaving( isSaving => !isSaving );
 
-			return returnValue;
+				return returnValue;
+			}
 		}	
 	}
 
@@ -674,57 +691,65 @@ const MapView = (props) => {
                     : null
             }
 		    <Suspense fallback={<MAP.Loader />}>
-			    <MapMenu
-			    	switch={enableMenu} 
-			    	setManual={setManual}
-			    	reqSetUpload={setUpload} 			    	
-			    	messenger={setMapMessage}
-			    	reqSaveMap={() => requestSaveMap()} 
-			    />
-			    	<MAP.Messenger message={mapMessage} messenger={setMapMessage}/>
-					<Canvas mode="concurrent" shadowMap colorManagement>
-					    <Suspense fallback={<MAP.Loader />}>
-						    <MAP.MapCanvas 
-						    	type="admin"
-						    	control={Controls}
-						    	setScene={setScene}
-						    	setCam={setPersCam}
-						    	deleteObj={deleteObj}
-						    	reqSetDelete={setDeleteObj}
+			    {
+			    	scene && isCheckpointPlaced
+			    		? <MapMenu
+					    	switch={enableMenu} 
+					    	setManual={setManual}
+					    	reqSetUpload={setUpload} 			    	
+					    	messenger={setMapMessage}
+					    	reqSaveMap={() => requestSaveMap()} 
+					    />
+					    : null
+			    }
+		    	<MAP.Messenger message={mapMessage} messenger={setMapMessage}/>
+				<Canvas mode="concurrent" shadowMap colorManagement>
+				    <Suspense fallback={<MAP.Loader />}>
+					    <MAP.MapCanvas 
+					    	type="admin"
+					    	control={Controls}
+					    	setScene={setScene}
+					    	setCam={setPersCam}
+					    	deleteObj={deleteObj}
+					    	reqSetDelete={setDeleteObj}
+					    >
+					    	{ label }		
+					    	{ objList }
+					    	{ measureLine }
+					    	{ positionCursor }
+					    	{ memoizedLabel() }
+					    	<GizmoHelper
+						    	alignment="top-left"
+						    	margin={[width * 0.15, height * 0.15]}
 						    >
-						    	{ label }		
-						    	{ objList }
-						    	{ measureLine }
-						    	{ positionCursor }
-						    	{ memoizedLabel() }
-						    	<GizmoHelper
-							    	alignment="top-left"
-							    	margin={[width * 0.15, height * 0.15]}
-							    >
-							    	<GizmoViewport 
-							    		axisColors={[
-							    			'rgba(130, 204, 221,1.0)', 
-							    			'rgba(250, 211, 144,1.0)', 
-							    			'rgba(184, 233, 148,1.0)'
-							    		]}
-							    		labelColor="rgba(60, 99, 130,1.0)"
-							    	/>
-							    </GizmoHelper>
-						    </MAP.MapCanvas>
-					    </Suspense>
-					</Canvas>
-					{ manual }
-			    	{ checkpointGen }		
-			    	{ state.selected ? propBox : null }
-			    <BottomBar 
-			    	control={ setControls } 
-		    		messenger={ setMapMessage }
-			    	isCheckPoint={ isCheckPoint }
-			    	setCheckpoint={ setIsCheckPoint }
-		    		setIsMeasureLine={ setIsMeasureLine }
-		    		setIsCheckpointGen={ setIsCheckpointGen }
-		    		setIsPositionCursor={ setIsPositionCursor }
-			    />
+						    	<GizmoViewport 
+						    		axisColors={[
+						    			'rgba(130, 204, 221,1.0)', 
+						    			'rgba(250, 211, 144,1.0)', 
+						    			'rgba(184, 233, 148,1.0)'
+						    		]}
+						    		labelColor="rgba(60, 99, 130,1.0)"
+						    	/>
+						    </GizmoHelper>
+					    </MAP.MapCanvas>
+				    </Suspense>
+				</Canvas>
+				{ manual }
+		    	{ checkpointGen }		
+		    	{ state.selected ? propBox : null }
+			    {
+			    	scene && isCheckpointPlaced
+			    		? <BottomBar 
+					    	control={ setControls } 
+				    		messenger={ setMapMessage }
+					    	isCheckpointPlaced={ isCheckpointPlaced }
+					    	setCheckpoint={ setIsCheckPoint }
+				    		setIsMeasureLine={ setIsMeasureLine }
+				    		setIsCheckpointGen={ setIsCheckpointGen }
+				    		setIsPositionCursor={ setIsPositionCursor }
+					    />
+					    : null
+			    }
 		    </Suspense>
 		</div>
  	);
@@ -765,14 +790,19 @@ const BottomBar = (props) => {
 	const [positionCursor, setPositionCursor] = useState( false );
 	const [openToolBox, setOpenToolBox] = useState( false );
 	const [checkpointGen, setCheckpointGen] = useState( false );
-	const [isACheckpointAllowed, setIsCheckpointAllowed] = useState( true );
+	// const [isACheckpointAllowed, setIsCheckpointAllowed] = useState( true );
 
-	const handleCheckpointNotAllowed = () => setIsCheckpointAllowed( false );
-	const handleCheckpointAllowed = e => {
-		if( e.target.localName === 'canvas' ){
-			setIsCheckpointAllowed( true );
-		}
-	}
+	// const handleCheckpointNotAllowed = () => setIsCheckpointAllowed( false );
+	// const handleCheckpointAllowed = e => {
+	// 	if( e.target.localName === 'canvas' ){
+	// 		setIsCheckpointAllowed( true );
+	// 		return window.removeEventListener('click', handleCheckpointAllowed);
+	// 	}
+	// 	else{
+	// 		e.stopPropagation();
+	// 		e.preventDefault();
+	// 	}
+	// }
 
 	const handleCreateCheckPoint = () => {
 		props.messenger( (mapMessage) => [...mapMessage, 'Please wait...'] );
@@ -830,11 +860,11 @@ const BottomBar = (props) => {
 		props.setIsPositionCursor( () => positionCursor );
 	}, [positionCursor]);
 
-	useEffect(() => {
-		window.addEventListener('click', handleCheckpointAllowed);
+	// useEffect(() => {
+	// 	window.addEventListener('click', handleCheckpointAllowed);
 
-		return () => window.removeEventListener('click', handleCheckpointAllowed);		
-	}, []);
+	// 	return () => window.removeEventListener('click', handleCheckpointAllowed);		
+	// }, []);
 
 	return(
 		<div className="map-btm-bar d-flex justify-content-around align-items-center">
@@ -893,12 +923,12 @@ const BottomBar = (props) => {
 
 			<div className="col-3 d-flex justify-content-center align-items-center">
 				<CustomButton 
-					disabled={ !isACheckpointAllowed } 
+					// disabled={ !isACheckpointAllowed } 
 					shortcutKey={true} 
 					name="Place Checkpoint" 
 					click={() => {
 						handleCreateCheckPoint();
-						handleCheckpointNotAllowed();
+						// handleCheckpointNotAllowed();
 					}}
 				/>
 			</div>
@@ -1046,7 +1076,7 @@ const PropertyBox = (props) => {
     }
 
     const handleClose = () => {
-    	if( !isNameError && name.length ){
+    	if( !isNameError && name.length && checkpointType ){
     		const meshData = scene.getObjectById( properties.id );
 	        properties.name = `${baseName}${name.toUpperCase()}`;
 	    	meshData.name = properties.name;

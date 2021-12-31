@@ -331,7 +331,7 @@ const SearchForm = (props) => {
 								>
 									Locate
 								</LoadingButton>
-								<Button onClick={props.setOpen}>
+								<Button disabled={!btnReady} onClick={props.setOpen}>
 									disregard
 								</Button>
 							</div>

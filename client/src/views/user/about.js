@@ -145,8 +145,8 @@ export default function About(){
 									the four main technologies we used, to create everything that you see inside this application. 
 									React is a library for creating user interfaces, but we were not really satisfied with just
 									React itself, so we had used MUI (Material UI), which is a library of reusable components for
-									building, and designing UI (user interface) faster. On the server, we used Node and Express.
-									NodeJS is a runtime environment for Javascript, while ExpressJS is a framework that makes things
+									building, and designing UI (user interface) faster. On the server, we used Node and Express;
+									NodeJS is a runtime environment for Javascript while ExpressJS is a framework that makes things
 									much easier.
 								</p>
 								<br/>

@@ -75,23 +75,16 @@ function User( props ){
 	}
 
 	useEffect(() => {
-		if( navigator.onLine ){
-			requestMapData(() => handlePreviousState());
-		}
-		else{
-			handlePreviousState();
-		}
+		requestMapData(() => handlePreviousState());
 	}, []);
 	
+	// Refreshes the page if the user is online
 	useEffect(() => {
 		const refresh = setInterval(() => {
-			if( navigator.onLine ){
-				requestRefreshData(() => handlePreviousState());
-			}
-			else{
-				handlePreviousState();
-				clearInterval( refresh );				
-			}
+				requestRefreshData(() => {
+					handlePreviousState();
+					clearInterval( refresh );
+				});	
 		}, 300000) // Refreshes every 5mins
 
 		return () => clearInterval( refresh );
