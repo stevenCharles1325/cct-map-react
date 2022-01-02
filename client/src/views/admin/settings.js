@@ -85,7 +85,7 @@ export default function Settings( props ){
             return props?.Event?.emit?.('unauthorized');
         }
 
-        await axios.put(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/set-admin`, data, {
+        await axios.put(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/admin/set-admin`, data, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -100,7 +100,7 @@ export default function Settings( props ){
             ErrorHandler.handle( err, requestSetAdmin, 5, data );
 
             if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
+                return axios.post(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
 
@@ -127,7 +127,7 @@ export default function Settings( props ){
             return props?.Event?.emit?.('unauthorized');
         }
 
-        await axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin`, {
+        await axios.get(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/admin`, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -137,7 +137,7 @@ export default function Settings( props ){
             ErrorHandler.handle( err, fetchAdminData, 6 );
 
             if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
+                return axios.post(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
 

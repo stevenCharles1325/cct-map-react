@@ -27,7 +27,7 @@ export default function NavPanel( props ){
             return props?.Event?.emit?.('unauthorized');
         }
 
-        await axios.delete(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/sign-out/token/${ rtoken }`, {
+        await axios.delete(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/admin/sign-out/token/${ rtoken }`, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -42,7 +42,7 @@ export default function NavPanel( props ){
             ErrorHandler.handle( err, requestSignOut, 11, data );  
 
             if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
+                return axios.post(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
                     setTimeout(() => requestSignOut( data ), 1000);
@@ -65,7 +65,7 @@ export default function NavPanel( props ){
                 return props?.Event?.emit?.('unauthorized');
             }
 
-            axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin`, {
+            axios.get(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/admin`, {
                 headers: {
                     'authentication': `Bearer ${token}`
                 }
@@ -75,7 +75,7 @@ export default function NavPanel( props ){
                 ErrorHandler.handle( err, requestSignOut, 12 );  
                 
                 if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                    return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
+                    return axios.post(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                     .then( res => {
                         Cookies.set('token', res.data.accessToken)
                         setTimeout(() => fetchAdminData(), 1000);

@@ -227,7 +227,7 @@ function ImportBox( props ){
 
         formData.append('object', file);
 
-        await axios.post(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/obj-upload`, formData, {
+        await axios.post(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/admin/obj-upload`, formData, {
             headers: {
                 'Content-Type': 'text/plain',
                 'authentication': `Bearer ${token}`
@@ -244,7 +244,7 @@ function ImportBox( props ){
             ErrorHandler.handle( err, uploadSubmitHandler, 13 );
 
             if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
+                return axios.post(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
                     setTimeout(() => uploadSubmitHandler(), 1000);

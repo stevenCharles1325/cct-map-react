@@ -31,14 +31,14 @@ function User( props ){
 	const { enqueueSnackbar } = useSnackbar();
 
 	const requestUpdateRecords = async () => {
-		await axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/update-records`)
+		await axios.get(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/update-records`)
 		.catch( err => {
 			ErrorHandler.handle( err, requestMapData, 1 );
 		});
 	}
 
 	const requestMapData = async callback => {
-		await axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/map-data`)
+		await axios.get(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/map-data`)
 		.then( res => {
 			localStorage.setItem('mapData', JSON.stringify( res.data.data ));
 
@@ -53,7 +53,7 @@ function User( props ){
 	}
 
 	const requestRefreshData = async callback => {
-		await axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/map-data`)
+		await axios.get(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/map-data`)
 		.then( res => {
 			localStorage.setItem('mapData', JSON.stringify( res.data.data ));
 

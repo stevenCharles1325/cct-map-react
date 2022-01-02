@@ -337,7 +337,7 @@ const MapView = (props) => {
             return props.Event.emit('unauthorized');
         }
 
-		axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/map-data`, {
+		axios.get(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/admin/map-data`, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -349,7 +349,7 @@ const MapView = (props) => {
 			ErrorHandler.handle( err, requestMapData, 3 );
 
 			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
+                return axios.post(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
 
@@ -374,7 +374,7 @@ const MapView = (props) => {
             return props.Event.emit('unauthorized');
         }
 
-		await axios.post(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/update-map`, scene, {
+		await axios.post(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/admin/update-map`, scene, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -387,7 +387,7 @@ const MapView = (props) => {
 			ErrorHandler.handle( err, requestSaveMapData, 4, scene );
 
 			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
+                return axios.post(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
 

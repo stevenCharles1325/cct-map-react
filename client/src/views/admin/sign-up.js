@@ -31,7 +31,7 @@ export default function Signup( props ){
         }
 
     const checkAdminExistence = async () =>{
-        axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/check-existence`)
+        axios.get(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/admin/check-existence`)
         .then( res => {
             if( res.data.adminExist ){
                 return props?.Event?.emit?.('enter');
@@ -43,7 +43,7 @@ export default function Signup( props ){
     }    
 
     const requestSignUp = async ( data ) => {
-        await axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/sign-up`, data)
+        await axios.post(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_AUTH_SERVER_PORT}/auth/sign-up`, data)
         .then( res => {
             Cookies.set('token', res.data.accessToken);  
             Cookies.set('rtoken', res.data.refreshToken);

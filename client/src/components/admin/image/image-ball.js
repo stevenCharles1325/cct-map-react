@@ -41,7 +41,7 @@ const ImageBall = ( props ) => {
 		setState('loading');
 		setNewImage( null );
 
-		await axios.put(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/upload-picture`, formData, {
+		await axios.put(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/admin/upload-picture`, formData, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -55,7 +55,7 @@ const ImageBall = ( props ) => {
 			ErrorHandler.handle( err, handleChangePhoto, 9, e );
 
 			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
+                return axios.post(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
 
@@ -76,7 +76,7 @@ const ImageBall = ( props ) => {
 
         setState('loading');
 
-		await axios.get(`http://${window.SERVER_HOST}:${window.SERVER_PORT}/admin/picture`, {
+		await axios.get(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_SERVER_PORT}/admin/picture`, {
             headers: {
                 'authentication': `Bearer ${token}`
             }
@@ -90,7 +90,7 @@ const ImageBall = ( props ) => {
 			ErrorHandler.handle( err, getPhoto, 10 );
 
 			if( err?.response?.status && (err?.response?.status === 403 || err?.response?.status === 401)){
-                return axios.post(`http://${window.SERVER_HOST}:${window.AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
+                return axios.post(`http://${process.env.REACT_APP_SERVER_HOST}:${process.env.REACT_APP_AUTH_SERVER_PORT}/auth/refresh-token`, { token: rtoken })
                 .then( res => {
                     Cookies.set('token', res.data.accessToken)
 

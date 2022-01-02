@@ -10,17 +10,13 @@ import { SnackbarProvider } from 'notistack';
 import './fonts/Poppins/Poppins-SemiBold.ttf';
 import './styles/index.css';
 
-window.SERVER_PORT = '3500';
-window.AUTH_SERVER_PORT = '4000';
-window.SERVER_HOST = 'localhost';
-
 const Main = () => {
   const handleNumberInputFields = e => {
     if( e?.target?.attributes?.["1"]?.nodeValue === "number" ){
-      if( (e?.which < 48 || e?.which > 57) && 
-        (e?.which !== 9 && e?.which !== 8 &&
-         e?.which !== 189 && e?.which !== 190 &&
-         e?.which !== 37 && e?.which !== 39)
+      if( (e?.which < 48 || e?.which > 57) && // numbers from 0 to 9
+        (e?.which !== 9 && e?.which !== 8 && // exclude backspace and tab
+         e?.which !== 189 && e?.which !== 190 && // exclude negative sign and point
+         e?.which !== 37 && e?.which !== 39) // exclude left and right arrow
         ){
         return e.preventDefault();
       }
