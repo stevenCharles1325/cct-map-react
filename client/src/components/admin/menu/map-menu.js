@@ -21,7 +21,7 @@ import prevImg from '../../../images/admin/preview.png';
 
 import gizmoViewHelper from '../../../images/admin/gizmoViewHelper.PNG';
 import leftPanel from '../../../images/admin/left-panel.PNG';
-import toolBox from '../../../images/admin/tool-box.PNG';
+// import toolBox from '../../../images/admin/tool-box.PNG';
 import controlButtons from '../../../images/admin/control-buttons.PNG';
 import placeCpButton from '../../../images/admin/place-cp-button.PNG';
 
@@ -97,6 +97,8 @@ function MapMenu( props ){
     }
 
     useEffect(() => {
+        const menuRef = menu.current;
+
         if( menu && menu.current ){
             menu.current.onmouseover = requestOpenMapMenu;
             menu.current.onmouseout = requestCloseMapMenu;
@@ -108,6 +110,8 @@ function MapMenu( props ){
                 menu.current.onmouseout = null;    
             }
         }
+
+        return () => menuRef;
     }, []);
 
     useEffect(() => {

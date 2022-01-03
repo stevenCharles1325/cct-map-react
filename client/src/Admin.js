@@ -1,10 +1,7 @@
 // Libs
-import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { Redirect, Route, Switch, Link } from 'react-router-dom';
-import debounce from 'lodash.debounce';
+import React, { useState, useEffect, Suspense } from 'react';
+import { Redirect, Route, Switch } from 'react-router-dom';
 
-import axios from 'axios';
-import Cookies from 'js-cookie';
 
 // Navigation panel icons
 import mapIcon from './images/admin/map.png';
@@ -43,7 +40,7 @@ const Signup = React.lazy(() => import('./views/admin/sign-up'));
 const MapView = React.lazy(() => import('./views/admin/map'));
 const Settings = React.lazy(() => import('./views/admin/settings'));
 const Dashboard = React.lazy(() => import('./views/admin/dashboard'));
-const ErrorPage = React.lazy(() => import('./views/admin/error'));
+// const ErrorPage = React.lazy(() => import('./views/admin/error'));
 const PageNotFound = React.lazy(() => import('./views/admin/pageNotFound'));
 
 

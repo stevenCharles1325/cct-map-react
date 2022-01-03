@@ -42,18 +42,16 @@
 
 
 .search-frame{
-	position: absolute;
+	/*position: absolute;
 	top: 50%;
 	left: 50%;
-	transform: translate(-50%, -50%);
+	transform: translate(-50%, -50%);*/
 
 	width: 100%;
 	height: 100%;
 
 	transition: .2s ease-in-out;
 	background-color: #484444;
-
-	border-radius: 5px;
 }
 
 
@@ -63,8 +61,6 @@
 
 	background-color: #484444;
 	color: #ffffff;
-
-	border-radius: 5px;
 }
 
 .search-frame-form{

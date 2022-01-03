@@ -38,12 +38,13 @@ export default function About(){
 			<div 
 				style={{
 					overflowY: 'auto',
+					overflowX: 'hidden',
 					width: '100%', 
 					height: '100%',
 					lineHeight: '2'
 				}}
 
-				className="p-5"
+				className={ window.innerWidth < 500 ? 'py-3 px-1 d-flex flex-column align-items-center' : 'p-5' }
 			>	
 				<div className="col-12 d-flex justify-content-start align-items-center mb-3">
 					<Tooltip placement="bottom" title="Door Exit" arrow>

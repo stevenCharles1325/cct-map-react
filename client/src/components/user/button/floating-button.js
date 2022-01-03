@@ -12,9 +12,14 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Dialog from '@mui/material/Dialog';
 import DialogContent from '@mui/material/DialogContent';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogActions from '@mui/material/DialogActions';
+
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import LoadingButton from '@mui/lab/LoadingButton';
+import Divider from '@mui/material/Divider';
 
 // Style
 import '../../../styles/user/floating-btn.css';
@@ -258,23 +263,65 @@ const SearchForm = (props) => {
 	return (
 		<Html zIndexRange={[100, 100]}>
 			<Dialog
-				maxWidth="md"
+				maxWidth="sm"
 				open={props.isOpen}
 				fullScreen={fullScreen}
 				onClose={props.setOpen}
-				sx={{ backgroundColor: 'transparent' }}
+				sx={{ backgroundColor: 'transparent', padding: '0px' }}
 			>
-				<DialogContent sx={{ width: '300px', height: '300px', backgroundColor: 'transparent' }}>
-					<div className="search-frame d-flex flex-column justify-content-center align-items-center">
+				<DialogTitle id="responsive-dialog-title">
+		          <b>{"Search your desired destination"}</b>
+		        </DialogTitle>
+				<Divider/>
+				<DialogContent>
+					<DialogContentText>
+						By giving your point-A and point-B we can draw a line
+						that connects them.
+					</DialogContentText>
+					<br/>
+					<Divider/>
+					<div style={{ height: '200px' }} className="p-3 d-flex flex-column justify-content-between align-items-center">
+						<Autocomplete
+							disabled={loading}
+							sx={{ width: '10cm' }}
+							options={labels}
+							onChange={reqSetLocation}
+							onInputChange={reqSetLocation}
+							renderInput={(params) => (
+								<TextField 
+									{...params} 
+									autoFocus
+									variant="standard" 
+									helperText="This can be Starting or Ending point"
+									label="Choose point A"
+								/>
+							)}
+						/>
+						<Autocomplete
+							disabled={loading}
+							sx={{ width: '10cm' }}
+							options={labels}
+							onChange={reqSetDestination}
+							onInputChange={reqSetDestination}
+							renderInput={(params) => (
+								<TextField 
+									{...params} 
+									helperText="This can be Starting or Ending point"
+									variant="standard" 
+									label="Choose point B"
+								/>
+							)}
+						/>
+					</div>
+					{/*<div className="search-frame col-12">
 						<div className="col-12 search-frame-title text-center pt-2 d-flex justify-content-center align-items-center">
 							<h5>Point to Point</h5>
 						</div>
-						<div className="search-frame-form py-3 d-flex flex-column justify-content-around align-items-center">
-							<div className="search-inp d-flex justify-content-between align-items-center">
-								<label htmlFor="point-a">Point A: </label>
+						<div className="search-frame-form row">
+							<div className="col-md-12">
 								<Autocomplete
 									disabled={loading}
-									sx={{ width: '70%' }}
+									sx={{ width: '10cm' }}
 									options={labels}
 									onChange={reqSetLocation}
 									onInputChange={reqSetLocation}
@@ -289,12 +336,10 @@ const SearchForm = (props) => {
 								/>
 							</div>
 							
-							<div className="search-inp d-flex justify-content-between align-items-center">
-								<label htmlFor="point-b">Point B: </label>
+							<div className="col-md-12">
 								<Autocomplete
 									disabled={loading}
-									sx={{ width: '70%' }}
-									disablePortal
+									sx={{ width: '10cm' }}
 									options={labels}
 									onChange={reqSetDestination}
 									onInputChange={reqSetDestination}
@@ -308,7 +353,7 @@ const SearchForm = (props) => {
 								/>
 							</div>
 							<div className="col-12 d-flex justify-content-around align-items-center">
-								{/*<button 
+								<button 
 									style={{
 										color: 'white', 
 										background: btnReady 
@@ -320,7 +365,7 @@ const SearchForm = (props) => {
 									onClick={() => setIsRunAlgo(true)}
 								>
 									locate
-								</button>*/}
+								</button>
 								<LoadingButton
 									disabled={!btnReady}
 				                    color={btnReady ? "success" : "error"}
@@ -336,8 +381,24 @@ const SearchForm = (props) => {
 								</Button>
 							</div>
 						</div>
-					</div>
+					</div>*/}
 				</DialogContent>
+				<Divider/>
+				<DialogActions>
+			        <LoadingButton
+						disabled={!btnReady}
+	                    color={btnReady ? "success" : "error"}
+	                    onClick={handleLoading}
+	                    loading={loading}
+	                    loadingIndicator="Loading"
+	                    variant="outlined"
+					>
+						Locate
+					</LoadingButton>
+					<Button onClick={props.setOpen}>
+						disregard
+					</Button>
+		        </DialogActions>
 			</Dialog>
 		</Html>
 	);

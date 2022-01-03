@@ -72,7 +72,6 @@ const MapView = (props) => {
 
 	const { enqueueSnackbar } = useSnackbar();
 
-
 	useEffect(() => {
 		const qual = Cookie.get('quality');
 		const visited = Cookie.get('visited');
@@ -538,47 +537,48 @@ const MapView = (props) => {
 				mode="concurrent"
 				shadowMap
 			>
-				<Suspense fallback={<MAP.Loader />}>
-					<MAP.MapCanvas 
-						type="user" 
-						update={TWEEN.update}
-						setCam={setCamera} 
-						setScene={setScene} 
-						controller={controller}
-					>
-						{ destinationLabel }
-						{ objects ?? <MAP.Loader /> }
-
-						<Suspense fallback={<MAP.Loader/>}>
-							{ line }
-						</Suspense>
-					</MAP.MapCanvas>
-					{ searchForm }
-				</Suspense>
+				<MAP.MapCanvas 
+					type="user" 
+					update={TWEEN.update}
+					setCam={setCamera} 
+					setScene={setScene} 
+					controller={controller}
+				>
+					{ destinationLabel }
+					{ objects ?? <MAP.Loader /> }
+					<Suspense fallback={<MAP.Loader/>}>
+						{ line }
+					</Suspense>
+				</MAP.MapCanvas>
+				{ searchForm }
 			</Canvas>
 			{
 				scene
-					? <Manual
-						open={manual}
-						setOpen={setManual}
-					/>
+					? (
+						<>
+							<Manual
+								open={manual}
+								setOpen={setManual}
+							/>
+							<Controller 
+								transparent={debouncedTransparency}
+								backward={debouncedMoveBackward}
+								forward={debouncedMoveForward} 
+								flight={debouncedFlight}
+								clear={debouncedClear}
+								disable={disMovement}
+							/>
+							<FloatingButton
+								cpPos={cpPos} 
+								setQuality={debouncedQualitySwitch}
+								setManual={debouncedManualOpener}
+								setSearchForm={val => debounce(() => setSearchForm( val ), 100)()} 
+								setDestination={val => debounce(() => setDestination( val ), 100)()}
+							/>
+						</>
+						)
 					: null
 			}
-			<Controller 
-				transparent={debouncedTransparency}
-				backward={debouncedMoveBackward}
-				forward={debouncedMoveForward} 
-				flight={debouncedFlight}
-				clear={debouncedClear}
-				disable={disMovement}
-			/>
-			<FloatingButton
-				cpPos={cpPos} 
-				setQuality={debouncedQualitySwitch}
-				setManual={debouncedManualOpener}
-				setSearchForm={val => debounce(() => setSearchForm( val ), 100)()} 
-				setDestination={val => debounce(() => setDestination( val ), 100)()}
-			/>
 		</div>
 	);
 }
@@ -617,11 +617,23 @@ const Controller = props => {
 							<FlightIcon sx={{ color: 'white' }} fontSize="medium"/>
 						</IconButton>
 					</Tooltip>
-
+					{/*{
+						!disable
+							? <Tooltip title="Clear path" placement={ isMobile() ? "right" : "bottom" } arrow>
+								<IconButton disabled={disable} sx={{ backgroundColor: '#2f3542' }} onClick={clear}>
+									<ClearIcon sx={{ color: disable ? 'gray' : 'white' }} fontSize="medium"/>
+								</IconButton>
+							</Tooltip>
+							: <IconButton disabled={disable} sx={{ backgroundColor: '#2f3542' }} onClick={clear}>
+								<ClearIcon sx={{ color: disable ? 'gray' : 'white' }} fontSize="medium"/>
+							</IconButton>
+					}*/}	
 					<Tooltip title="Clear path" placement={ isMobile() ? "right" : "bottom" } arrow>
-						<IconButton disabled={disable} sx={{ backgroundColor: '#2f3542' }} onClick={clear}>
-							<ClearIcon sx={{ color: disable ? 'gray' : 'white' }} fontSize="medium"/>
-						</IconButton>
+						<span>
+							<IconButton disabled={disable} sx={{ backgroundColor: '#2f3542' }} onClick={clear}>
+								<ClearIcon sx={{ color: disable ? 'gray' : 'white' }} fontSize="medium"/>
+							</IconButton>
+						</span>			
 					</Tooltip>
 				</Stack>
 			</div>
@@ -634,20 +646,24 @@ const Controller = props => {
 			>	
 				<Stack spacing={2} divider={<Divider flexItem/>}>
 					<Tooltip title="Move forward" placement="right" arrow>
-						<IconButton  
-							disabled={disable} 
-							onClick={forward}
-						>
-							<ArrowDropUpIcon sx={{ color: disable ? 'gray' : 'black' }} fontSize="large"/>
-						</IconButton>
+						<span>
+							<IconButton  
+								disabled={disable} 
+								onClick={forward}
+							>
+								<ArrowDropUpIcon sx={{ color: disable ? 'gray' : 'black' }} fontSize="large"/>
+							</IconButton>
+						</span>
 					</Tooltip>
 					<Tooltip title="Move backward" placement="right" arrow>
-						<IconButton 
-							disabled={disable} 
-							onClick={backward}
-						>
-							<ArrowDropDownIcon sx={{ color: disable ? 'gray' : 'black' }} fontSize="large"/>
-						</IconButton>
+						<span>
+							<IconButton 
+								disabled={disable} 
+								onClick={backward}
+							>
+								<ArrowDropDownIcon sx={{ color: disable ? 'gray' : 'black' }} fontSize="large"/>
+							</IconButton>
+						</span>
 					</Tooltip>
 				</Stack>
 			</div>
