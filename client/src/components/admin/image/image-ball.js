@@ -82,8 +82,11 @@ const ImageBall = ( props ) => {
             }
         })
 		.then( res => {
-			setNewImage( () => res.data.path );			
-			console.log( res.data.message );
+			if( res.data.path && res.data.path.length ){
+				setNewImage( () => res.data.path );			
+				console.log( res.data.message );
+			}
+
 			setState('idle');
 		})
 		.catch( err => {
@@ -111,7 +114,9 @@ const ImageBall = ( props ) => {
 	}, []);
 
 	useEffect(() => {
-		setImage(() => <Avatar id={uniqid()} sx={{ width: '100%', height: '100%' }} src={newImage}/>);
+		if( newImage ){
+			setImage(() => <Avatar id={uniqid()} sx={{ width: '100%', height: '100%' }} src={newImage}/>);
+		}
 	}, [newImage]);
 
 	return(
@@ -120,7 +125,11 @@ const ImageBall = ( props ) => {
 			onMouseLeave={handleMouseLeave}
 			className="image-ball d-flex justify-content-center align-items-center"
 		>		
-			{ image }
+			{ 
+				image 
+					? image
+					: <Avatar id={uniqid()} sx={{ width: '100%', height: '100%' }}/>
+			}
 			{
 				state === 'loading'
 					? <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)'}}>

@@ -110,8 +110,6 @@ function MapMenu( props ){
                 menu.current.onmouseout = null;    
             }
         }
-
-        return () => menuRef;
     }, []);
 
     useEffect(() => {
@@ -136,7 +134,7 @@ function MapMenu( props ){
 
     return (
         <>
-            <div ref={menu} style={{opacity: isOpen ? '1' : '0.1'}} className="map-menu d-flex flex-column align-items-center justify-content-center">
+            <div ref={menu} style={{ opacity: isOpen ? '1' : '0.1' }} className="map-menu d-flex flex-column align-items-center justify-content-center">
                 <div style={{ width: '56px', height: '58px' }} className="mb-3">
                     <ImageBall />
                 </div>

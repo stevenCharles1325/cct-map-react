@@ -910,12 +910,12 @@ const BottomBar = (props) => {
 			*/}
 			<div className="col-4 map-view-switch d-flex justify-content-center align-items-center">
 				<CustomButton 
-					className={`${switched === 'free' ? "map-view-selected non-selectable" : ''} map-vs-btn map-view-fpc`}
+					className={`${switched === 'free' ? "non-selectable" : 'map-view-selected'} map-vs-btn map-view-fpc`}
 					name="Free" 
 					click={() => handleFreeControl()}
 				/>
 				<CustomButton 
-					className={`${switched === 'orbit' ? "map-view-selected non-selectable" : ''} map-vs-btn map-view-oc`} 
+					className={`${switched === 'orbit' ? "non-selectable" : 'map-view-selected'} map-vs-btn map-view-oc`} 
 					name="Orbit" 
 					click={() => handleOrbitControl()}
 				/>
@@ -1098,7 +1098,10 @@ const PropertyBox = (props) => {
 	            <div  style={{height: '10%'}} style={{height: '50px'}}  className="text-center">
 	                <h2>Properties</h2>
 	            </div>
-	            <div  style={{height: '72%'}} className="obj-props d-flex flex-column justify-content-between align-items-center">
+	            <form  
+	            	autoComplete="off"
+	            	style={{height: '72%'}} 
+	            	className="obj-props d-flex flex-column justify-content-between align-items-center">
 	            	{ 
 	            		checkpointType  ? 
 	            			<PropBoxInp isError={isNameError} id="name"  size={inputSize} type="text" value={name} placeholder="No name" handleChange={reqEditName} name="Room Name"/> 
@@ -1116,7 +1119,7 @@ const PropertyBox = (props) => {
 	            	<PropBoxInp id="posY" size={inputSize}  value={properties.position.y} handleChange={reqEditPosY} name="Position Y"/> 
 	            	
 	            	<PropBoxInp id="posZ" size={inputSize}  value={properties.position.z} handleChange={reqEditPosZ} name="Position Z"/>             	
-	            </div>   
+	            </form>   
 	            <div style={{height: '10%', width: '100%'}} className="d-flex justify-content-center align-items-center">
 	            	<Button variant="outlined" color="error" startIcon={<DeleteIcon />} onClick={handleDelete}>
 			    		Delete

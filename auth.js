@@ -38,7 +38,8 @@ auth.post('/auth/sign-up', async ( req, res ) => {
 		username : username,
 		password : password,
 		email : email,
-		number : number
+		number : number,
+		image: ''
 	};
 
 	fs.writeFile( data_path, JSON.stringify(data, null, 4), err => {
@@ -53,7 +54,8 @@ auth.post('/auth/sign-up', async ( req, res ) => {
 			fs.readFile( tokens_path, ( err, tokens ) => {
 				if( err ) return res.sendStatus( 500 );
 
-				const parsedTokens = JSON.parse( tokens ).push( refreshToken );
+				const parsedTokens = JSON.parse( tokens );
+				parsedTokens.push( refreshToken );
 
 				fs.writeFile( tokens_path, JSON.stringify( parsedTokens ), ( err ) => {
 					if( err ) return res.sendStatus( 500 );

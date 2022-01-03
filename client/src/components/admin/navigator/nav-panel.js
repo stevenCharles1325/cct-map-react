@@ -146,8 +146,9 @@ export default function NavPanel( props ){
                         <Button 
                             onClick={ requestSignOut }
                             variant="outlined"
+                            sx={{ borderColor: 'black', color: 'black' }}
                         >
-                            Log out
+                            <b>Log out</b>
                         </Button>
                     </div>
                 </div>

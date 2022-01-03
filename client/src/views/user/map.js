@@ -297,6 +297,7 @@ const MapView = (props) => {
 		if( path.length && (movementIndex > -1 && movementIndex < path.length) && playerState === 'moving' ){
 			const [x, y, z] = path[ movementIndex ];
 
+
 			if( quality === 'high' ){
 				const cameraPosition = camera.position;
 				const cameraTween = new TWEEN.Tween( cameraPosition )
@@ -331,11 +332,19 @@ const MapView = (props) => {
 			}
 			else{
 				camera.position.lerp( new THREE.Vector3(x, y + 250, z + 0.01), 1 ); // No tweening
-				const pathIndex = facing === 'forward'	
-								? movementIndex + 1
-								: movementIndex - 1;
+				if( facing === 'forward' || facing === 'backward' ){
 
-				camera.lookAt( new THREE.Vector3( ...path[ pathIndex ] ));
+					const pathIndex = facing === 'forward'	
+						? movementIndex + 1 > path.length - 1
+							? movementIndex - 1
+							: movementIndex + 1
+						: movementIndex === 0 
+							? movementIndex + 1
+							: movementIndex - 1;
+
+					camera.lookAt( new THREE.Vector3( ...path[ pathIndex ] ));
+				}
+
 				camera.updateProjectionMatrix();
 			}
 
@@ -526,10 +535,10 @@ const MapView = (props) => {
 				}}
 			>
 				<Chip 
-					icon={<BubbleChartIcon fontSize="small" sx={{ color: 'white' }}/>} 
+					icon={<BubbleChartIcon fontSize="small" sx={{ color: 'black' }}/>} 
 					label={`Quality: ${ quality }`} 
-					variant="outlined"
-					sx={{ color: 'white' }}
+					variant="filled"
+					sx={{ color: 'black', backgroundColor: 'white' }}
 				/>
 			</div>
 	    	<MAP.Messenger message={mapMessage} messenger={setMapMessage} />		
@@ -607,14 +616,14 @@ const Controller = props => {
 					direction={ isMobile() ? 'column' : 'row' }
 				>
 					<Tooltip title="Transparent" placement={ isMobile() ? "right" : "bottom" } arrow>
-						<IconButton sx={{ backgroundColor: '#2f3542' }} onClick={transparent}>
-							<OpacityIcon sx={{ color: 'white' }} fontSize="medium"/>
+						<IconButton sx={{ backgroundColor: 'white' }} onClick={transparent}>
+							<OpacityIcon sx={{ color: '#2f3542' }} fontSize="medium"/>
 						</IconButton>
 					</Tooltip>
 
 					<Tooltip title="Flight mode" placement={ isMobile() ? "right" : "bottom" } arrow>
-						<IconButton sx={{ backgroundColor: '#2f3542' }} onClick={flight}>
-							<FlightIcon sx={{ color: 'white' }} fontSize="medium"/>
+						<IconButton sx={{ backgroundColor: 'white' }} onClick={flight}>
+							<FlightIcon sx={{ color: '#2f3542' }} fontSize="medium"/>
 						</IconButton>
 					</Tooltip>
 					{/*{
@@ -630,8 +639,8 @@ const Controller = props => {
 					}*/}	
 					<Tooltip title="Clear path" placement={ isMobile() ? "right" : "bottom" } arrow>
 						<span>
-							<IconButton disabled={disable} sx={{ backgroundColor: '#2f3542' }} onClick={clear}>
-								<ClearIcon sx={{ color: disable ? 'gray' : 'white' }} fontSize="medium"/>
+							<IconButton disabled={disable} sx={{ backgroundColor: 'white' }} onClick={clear}>
+								<ClearIcon sx={{ color: disable ? 'rgba(0, 0, 0, 0.7)' : 'black' }} fontSize="medium"/>
 							</IconButton>
 						</span>			
 					</Tooltip>
@@ -651,7 +660,7 @@ const Controller = props => {
 								disabled={disable} 
 								onClick={forward}
 							>
-								<ArrowDropUpIcon sx={{ color: disable ? 'gray' : 'black' }} fontSize="large"/>
+								<ArrowDropUpIcon sx={{ color: disable ? 'rgba(0, 0, 0, 0.7)' : 'white' }} fontSize="large"/>
 							</IconButton>
 						</span>
 					</Tooltip>
@@ -661,7 +670,7 @@ const Controller = props => {
 								disabled={disable} 
 								onClick={backward}
 							>
-								<ArrowDropDownIcon sx={{ color: disable ? 'gray' : 'black' }} fontSize="large"/>
+								<ArrowDropDownIcon sx={{ color: disable ? 'rgba(0, 0, 0, 0.7)' : 'white' }} fontSize="large"/>
 							</IconButton>
 						</span>
 					</Tooltip>

@@ -237,7 +237,9 @@ const SearchForm = (props) => {
 
     useEffect(() => {
     	if( isRunAlgo ){
-    		if( destination.start && destination.end ){
+    		if(( destination.start && destination.end ) && 
+    			( destination.start.name !== destination.end.name )
+    			){
     			reqRunP2PAlgo();
     		}
 			setIsRunAlgo(() => false);
@@ -248,7 +250,9 @@ const SearchForm = (props) => {
     }, [isRunAlgo, destination]);
 
     useEffect(() => {
-		if( destination.start && destination.end ){
+		if(( destination.start && destination.end ) && 
+			( destination.start.name !== destination.end.name )
+			){
 			setBtnReady(() => true);
 		}
     	else{
@@ -283,7 +287,7 @@ const SearchForm = (props) => {
 					<div style={{ height: '200px' }} className="p-3 d-flex flex-column justify-content-between align-items-center">
 						<Autocomplete
 							disabled={loading}
-							sx={{ width: '10cm' }}
+							sx={{ width: '100%' }}
 							options={labels}
 							onChange={reqSetLocation}
 							onInputChange={reqSetLocation}
@@ -299,7 +303,7 @@ const SearchForm = (props) => {
 						/>
 						<Autocomplete
 							disabled={loading}
-							sx={{ width: '10cm' }}
+							sx={{ width: '100%' }}
 							options={labels}
 							onChange={reqSetDestination}
 							onInputChange={reqSetDestination}
