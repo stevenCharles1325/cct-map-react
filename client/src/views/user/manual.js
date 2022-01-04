@@ -53,7 +53,7 @@ const Manual = props => {
 	          	/>,
 	          	<IconPurpose
 	          		key={uniqid()}
-	          		icon={<CloseIcon/>}
+	          		icon={<FlightIcon/>}
 	          		purpose={
 	          			<>
 		          			<u>Flight Mode Button:</u>
@@ -63,7 +63,7 @@ const Manual = props => {
 	          	/>,
 				<IconPurpose
 					key={uniqid()}
-	          		icon={<FlightIcon/>}
+	          		icon={<CloseIcon/>}
 	          		purpose={
 	          			<>
 		          			<u>Clear Path Button:</u>

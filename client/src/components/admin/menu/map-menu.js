@@ -513,6 +513,11 @@ const Manual = ( props ) => {
                             3.) When the you are facing in an awkward view after changing the controls you can switch
                             control again to fix it.
                         </p> 
+                        <br/>
+                        <p style={{color: 'rgba(0, 0, 0, 0.9)'}}>
+                            4.) When the you are in "FREE" control mode, you cannot use the zoom functionality. Although,
+                            you can use it, but it does not zoom the map, instead it zooms the browser's html contents.
+                        </p> 
                     </div>
                     <br/>
                     <h3 style={{textAlign: 'center', color: '#dff9fb'}}>THANK YOU FOR READING! 🎉</h3>

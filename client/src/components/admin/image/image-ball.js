@@ -130,6 +130,7 @@ const ImageBall = ( props ) => {
 					? image
 					: <Avatar id={uniqid()} sx={{ width: '100%', height: '100%' }}/>
 			}
+			{/*<Avatar id={uniqid()} sx={{ width: '100%', height: '100%' }}/>*/}
 			{
 				state === 'loading'
 					? <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)'}}>

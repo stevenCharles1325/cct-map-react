@@ -762,7 +762,8 @@ const CustomAlert = props => {
 		        position: 'absolute',
 		        left: '50%',
 		        top: '3vh',
-		        transform: 'translate(-50%, 0%)'
+		        transform: 'translate(-50%, 0%)',
+		        zIndex: '1000'
 		    }}
 		>
 		    <Alert icon={false} variant="outlined" severity={props.variant}>
