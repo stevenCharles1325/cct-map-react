@@ -58,12 +58,12 @@ is connected to **CONNECTOR3**.
 
 ###### `USER-SIDE`
 
-![User-side](https://drive.google.com/uc?export=view&id=1Waea1Yv2EElZfF7omssMmG2_kFBVnkLE)
+![User-side](https://drive.google.com/uc?export=view&id=1Wuv-J5-YDrm3_Mdh0ywA7nbCKHxf1NaL)
 
 
 ###### `ADMINISTRATOR-SIDE`
 
-![Administrator-side](https://drive.google.com/uc?export=view&id=1hox7fQwbXyNM6RLUEoOVjNuNdz6-LKGg)
+![Administrator-side](https://drive.google.com/uc?export=view&id=1jYxaQt0cukS-BBDODZRYoZn_SMdx3e3-)
 
 
 ### `HOW TO DOWNLOAD THIS APPLICATION?`
